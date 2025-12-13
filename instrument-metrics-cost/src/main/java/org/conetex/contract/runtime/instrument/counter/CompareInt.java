@@ -1,0 +1,56 @@
+package org.conetex.contract.runtime.instrument.counter;
+
+public class CompareInt implements Counter {
+
+    private static boolean isInProgress = false;
+
+    private static CompareInt head = new CompareInt();
+
+    private CompareInt previousCounter = null;
+
+    private long count = Long.MIN_VALUE;
+
+    static {
+        System.out.println("org/conetex/contract/runtime/instrument/counter " + CompareInt.class + " loaded. count: '" + head.count + "'");
+    }
+
+    private CompareInt(){}
+
+    public static synchronized void increment() {
+        if (isInProgress) {
+            // We are already inside increment() → endless recursion detected
+            return;
+        }
+        isInProgress = true;
+        try {
+            if (head.count == Long.MAX_VALUE) {
+                CompareInt newCounter = new CompareInt();
+                newCounter.previousCounter = head;
+                head = newCounter;
+            } else {
+                head.count++;
+            }
+        } finally {
+            isInProgress = false;
+        }
+    }
+
+    public static synchronized void reset() {
+        head.count = Long.MAX_VALUE;
+        head.previousCounter = null;
+    }
+
+    public static synchronized CompareInt getHead() {
+        return head;
+    }
+
+    public CompareInt getPrevious() {
+        return this.previousCounter;
+    }
+
+    public long getCount() {
+        return this.count;
+    }
+
+}
+

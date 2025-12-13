@@ -1,41 +1,76 @@
 package org.conetex.contract.runtime.instrument.metrics.cost;
 
-import org.conetex.contract.runtime.instrument.RetransformingClassFileTransformer;
+//import org.conetex.contract.runtime.instrument.RetransformingClassFileTransformer;
+import org.conetex.contract.runtime.instrument.counter.*;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+
+import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class ClassFileTransformerForCounting implements RetransformingClassFileTransformer {
+public class ClassFileTransformerForCounting implements //Retransforming
+        ClassFileTransformer {
 
     private String mainClassJvmName;
 
-    @Override
+    //@Override
     public void initMainClassJvmName(String mainClassJvmName) {
         this.mainClassJvmName = mainClassJvmName;
     }
 
+    //@Override
+    public void resetCounters() {
+        ArithmeticAddSubNeg.reset();
+        ArithmeticDivRem.reset();
+        ArithmeticMul.reset();
+        ArrayLoad.reset();
+        ArrayNew.reset();
+        ArrayStore.reset();
+        CompareInt.reset();
+        CompareLong.reset();
+        CompareObject.reset();
+        ExceptionThrow.reset();
+        FieldLoad.reset();
+        FieldStore.reset();
+        Jump.reset();
+        MethodCall.reset();
+        MethodEntry.reset();
+        Monitor.reset();
+        VariableLoad.reset();
+        VariableStore.reset();
+        TypeCheck.reset();
+    }
+
     private final Set<String> handledClasses;
 
-    @Override
+    //@Override
     public Set<String> getHandledClasses() {
         return handledClasses;
     }
 
     private final Set<String> transformFailedClasses;
 
-    @Override
+    //@Override
     public Set<String> getTransformFailedClasses() {
         return transformFailedClasses;
+    }
+
+    private final Set<String> transformSkippedClasses;
+
+    //@Override
+    public Set<String> getTransformSkippedClasses() {
+        return transformSkippedClasses;
     }
 
     public ClassFileTransformerForCounting() {
         this.handledClasses = new TreeSet<>();
         this.transformFailedClasses = new TreeSet<>();
+        this.transformSkippedClasses = new TreeSet<>();
     }
 
     @Override
@@ -55,13 +90,6 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
             System.out.println("transform mainClass: " + classJvmName + " ");
         }
 
-        if (classJvmName.contains("org/objectweb/asm/")) { // example of how to skip transform
-            System.out.println("t noTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
-                    classBeingRedefined + " (classBeingRedefined) | " +
-                    (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");
-            return classfileBuffer;
-        }
-
         if (this.handledClasses.contains(classJvmName)) {
             System.out.println("t noReTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
                     classBeingRedefined + " (classBeingRedefined) | " +
@@ -69,10 +97,23 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
             return classfileBuffer;
         }
 
+        this.handledClasses.add(classJvmName);
+
+        if (classJvmName.contains("org/objectweb/asm/")
+                || classJvmName.startsWith("org/conetex/contract/runtime/instrument")
+                || classJvmName.startsWith("org/conetex/contract/runtime/Agent")
+        ) { // skip transform
+            System.out.println("t noTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
+                    classBeingRedefined + " (classBeingRedefined) | " +
+                    (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");
+            this.transformSkippedClasses.add(classJvmName);
+            return classfileBuffer;
+        }
+
         System.out.println("t doTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
                 classBeingRedefined + " (classBeingRedefined) | " +
                 (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");
-        this.handledClasses.add(classJvmName);
+
         try {
             return transform(classfileBuffer);
         }
@@ -84,17 +125,17 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
         return classfileBuffer;
     }
 
-    @Override
+    //@Override
     public void triggerRetransform(Instrumentation inst, Class<?>[] allClasses) {
         for (Class<?> clazz : allClasses) {
             String classJvmName = clazz.getName().replace('.', '/');
+
+            System.out.println("retransform .....: '" + classJvmName + "' (classJvmName)");
+
+
             if(   this.handledClasses.contains( classJvmName )   ) {
                 System.out.println("retransform obsolete: '" + classJvmName +
                         "' (classJvmName) is already transformed");
-                continue;
-            }
-            if(classJvmName.equals("java/lang/Object") ) { // example of how to skip retransform
-                System.out.println("retransform skipped: '" + classJvmName + "' (classJvmName)");
                 continue;
             }
 
@@ -103,6 +144,17 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
                 continue;
             }
 
+/*
+            // TODO maybe obsolete
+            if( classJvmName.contains("org/objectweb/asm/") ||
+                    classJvmName.startsWith("org/conetex/contract/runtime/instrument")
+                    || classJvmName.startsWith("org/conetex/contract/runtime/Agent")
+//                    || classJvmName.startsWith("java/util/TreeSet")
+            ) { // skip retransform
+                System.out.println("retransform skipped: '" + classJvmName + "' (classJvmName)");
+                continue;
+            }
+*/
             try {
                 inst.retransformClasses(clazz);
             } catch (UnmodifiableClassException e) {
@@ -119,7 +171,7 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
         System.out.println(" classWriter->");
         ClassReader reader = new ClassReader(classBytes);
         ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
-        ClassVisitor visitor = new MethodCallCounter(writer);
+        ClassVisitor visitor = new MethodMetricsVisitor(writer);
         reader.accept(visitor, ClassReader.EXPAND_FRAMES);
         byte[] re = writer.toByteArray();
         System.out.println(" <-classWriter");

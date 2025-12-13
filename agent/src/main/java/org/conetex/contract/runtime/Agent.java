@@ -1,12 +1,12 @@
 package org.conetex.contract.runtime;
 
-import org.conetex.contract.runtime.instrument.RetransformingClassFileTransformer;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +42,7 @@ public class Agent {
 
         String bootstrapJarPath = args.get(ARG_PATH_TO_TRANSFORMER_JAR);
         if (bootstrapJarPath == null || bootstrapJarPath.isEmpty()) {
-            throw new IllegalArgumentException("Missing required agent argument: " + ARG_PATH_TO_TRANSFORMER_JAR + "=<path-to-bootstrap-jar>");
+            throw new IllegalArgumentException("premain Missing required agent argument: " + ARG_PATH_TO_TRANSFORMER_JAR + "=<path-to-bootstrap-jar>");
         }
         Path bootstrapPath = agentDir.resolve(bootstrapJarPath);
         JarFile bootstrapJar;
@@ -56,33 +56,42 @@ public class Agent {
         assert appendToBootstrapClassLoaderSearchStr != null;
         if(! appendToBootstrapClassLoaderSearchStr.equals("false")){
             inst.appendToBootstrapClassLoaderSearch(bootstrapJar);
+
+            // TODO not clean:
+            /*
+            try {
+                inst.appendToBootstrapClassLoaderSearch( new JarFile( agentDir.resolve("../../instrument/targetCopy/commons-cli-1.8.0-sources.jar").toFile() ) );
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            */
         }
 
-        System.out.println("Redefine supported: " + inst.isRedefineClassesSupported());
-        System.out.println("Retransform supported: " + inst.isRetransformClassesSupported());
-        System.out.println("NativeMethodPrefix supported: " + inst.isNativeMethodPrefixSupported());
+        System.out.println("premain Redefine supported: " + inst.isRedefineClassesSupported());
+        System.out.println("premain Retransform supported: " + inst.isRetransformClassesSupported());
+        System.out.println("premain NativeMethodPrefix supported: " + inst.isNativeMethodPrefixSupported());
 
         String command = System.getProperty("sun.java.command");
-        System.out.println("sun.java.command: " + command);
+        System.out.println("premain sun.java.command: " + command);
         assert command != null;
 
         String mainClassJavaStr;
         if(command.endsWith(".jar")) {
             mainClassJavaStr = getMainAttributeFromJar(command, "Main-Class");
-            System.out.println("mainClassStr of jar from sun.java.command: " + mainClassJavaStr);
-            System.out.println("Build-Jdk-Spec of jar from sun.java.command: " + getMainAttributeFromJar(command, "Build-Jdk-Spec"));
+            System.out.println("premain mainClassStr of jar from sun.java.command: " + mainClassJavaStr);
+            System.out.println("premain Build-Jdk-Spec of jar from sun.java.command: " + getMainAttributeFromJar(command, "Build-Jdk-Spec"));
         }
         else {
             mainClassJavaStr = command;
-            System.out.println("mainClassStr equals sun.java.command");
-            System.out.println("Build-Jdk-Spec unknown, because command does not end with jar");
+            System.out.println("premain mainClassStr equals sun.java.command");
+            System.out.println("premain Build-Jdk-Spec unknown, because command does not end with jar");
         }
         assert mainClassJavaStr != null;
         String mainClassJvmStr = mainClassJavaStr.replace('.', '/');
-        System.out.println("mainClassJvmStr from sun.java.command: " + mainClassJvmStr);
+        System.out.println("premain mainClassJvmStr from sun.java.command: " + mainClassJvmStr);
 
         Class<?>[] classes = inst.getAllLoadedClasses();
-        System.out.println("allLoadedClasses size: " + classes.length);
+        System.out.println("premain allLoadedClasses size: " + classes.length);
 
         String transformerClassStr = getMainAttributeFromJar(bootstrapJar, "Transformer-Class");
         Class<?> transformerClass;
@@ -92,27 +101,49 @@ public class Agent {
             throw new RuntimeException(e);
         }
 
-        System.out.println("==> addTransformer '" + agentArgs + "' | '" + inst + "'");
-        RetransformingClassFileTransformer transformer;
+        System.out.println("premain prepare transformer '" + agentArgs + "' | '" + inst + "'");
+        ClassFileTransformer transformer;
         try {
-            transformer = (RetransformingClassFileTransformer) transformerClass.getDeclaredConstructor().newInstance();
+            transformer = (ClassFileTransformer) transformerClass.getDeclaredConstructor().newInstance();
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
-        transformer.initMainClassJvmName(mainClassJvmStr);
-        System.out.println("createdTransformer " + transformer);
+
+        // call initMainClassJvmName( mainClassJvmStr );
+        try {
+            Method initMethod = transformer.getClass().getMethod("initMainClassJvmName", String.class);
+            initMethod.invoke(transformer, mainClassJvmStr);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to call initMainClassJvmName", e);
+        }
+        System.out.println("premain createdTransformer " + transformer);
 
         inst.addTransformer(transformer, true);
-        System.out.println("<== addTransformer " );
+        System.out.println("premain transformer added");
 
-        transformer.triggerRetransform(inst, inst.getAllLoadedClasses());
-        System.out.println("...");
+        // call triggerRetransform( inst, inst.getAllLoadedClasses() )
+        try {
+            Method retransformMethod = transformer.getClass().getMethod("triggerRetransform", Instrumentation.class, Class[].class);
+            retransformMethod.invoke(transformer, inst, inst.getAllLoadedClasses());
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to call triggerRetransform", e);
+        }
+
+        // call resetCounters( )
+        try {
+            Method resetMethod = transformer.getClass().getMethod("resetCounters");
+            resetMethod.invoke(transformer);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to call resetCounters", e);
+        }
+
+        System.out.println("premain end");
     }
 
     private static String getMainAttributeFromJar(String jarPath, String attributeName) {
         File jarFile = new File(jarPath);
         if (!jarFile.exists() || !jarFile.isFile()) {
-            System.err.println("The specified file does not exist or is not a valid file.");
+            System.err.println("premain The specified file does not exist or is not a valid file.");
             return null;
         }
         return getMainAttributeFromJar(jarFile, attributeName);
@@ -125,16 +156,16 @@ public class Agent {
                 Attributes attributes = manifest.getMainAttributes();
                 String mainClass = attributes.getValue(attributeName);
                 if (mainClass != null) {
-                    System.out.println("Main-Class: " + mainClass);
+                    System.out.println("premain Main-Class: " + mainClass);
                 } else {
-                    System.out.println("No Main-Class attribute found in the manifest.");
+                    System.out.println("premain No Main-Class attribute found in the manifest.");
                 }
                 return mainClass;
             } else {
-                System.out.println("No manifest found in the JAR file.");
+                System.out.println("premain No manifest found in the JAR file.");
             }
         } catch (Exception e) {
-            System.err.println("Error reading the JAR file: " + e.getMessage());
+            System.err.println("premain Error reading the JAR file: " + e.getMessage());
         }
         return null;
     }

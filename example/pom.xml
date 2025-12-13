@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>org.conetex.contract.runtime</groupId>
-            <artifactId>instrument</artifactId>
+            <artifactId>instrument-metrics-cost</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

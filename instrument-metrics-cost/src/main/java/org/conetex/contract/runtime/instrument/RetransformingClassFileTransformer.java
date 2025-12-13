@@ -10,8 +10,12 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
 
     Set<String> getTransformFailedClasses();
 
+    Set<String> getTransformSkippedClasses();
+
     void triggerRetransform(Instrumentation inst, Class<?>[] allClasses);
 
     void initMainClassJvmName(String mainClassJvmName);
+
+    void resetCounters();
 
 }

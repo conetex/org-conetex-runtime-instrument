@@ -11,10 +11,11 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>instrument</module>
+        <!--<module>instrument</module>-->
         <module>instrument-metrics-cost</module>
         <module>agent</module>
         <module>example</module>
+        <module>example2</module>
     </modules>
 
     <properties>
