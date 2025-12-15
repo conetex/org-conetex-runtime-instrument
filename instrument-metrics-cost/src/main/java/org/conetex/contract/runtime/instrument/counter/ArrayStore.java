@@ -2,15 +2,11 @@ package org.conetex.contract.runtime.instrument.counter;
 
 import org.conetex.contract.runtime.instrument.interfaces.Counter;
 
-public class ArrayStore implements Counter {
+public class ArrayStore extends AbstractCounter {
 
     private static boolean isInProgress = false;
 
     private static ArrayStore head = new ArrayStore();
-
-    private ArrayStore previousCounter = null;
-
-    private long count = Long.MIN_VALUE;
 
     static {
         System.out.println("org/conetex/contract/runtime/instrument/counter " + ArrayStore.class + " loaded. count: '" + head.count + "'");
@@ -25,7 +21,7 @@ public class ArrayStore implements Counter {
         }
         isInProgress = true;
         try {
-            if (head.count == Long.MAX_VALUE) {
+            if (head.count == MAX_VALUE) {
                 ArrayStore newCounter = new ArrayStore();
                 newCounter.previousCounter = head;
                 head = newCounter;
@@ -38,20 +34,12 @@ public class ArrayStore implements Counter {
     }
 
     public static synchronized void reset() {
-        head.count = Long.MAX_VALUE;
+        head.count = MIN_VALUE;
         head.previousCounter = null;
     }
 
     public static synchronized ArrayStore getHead() {
         return head;
-    }
-
-    public ArrayStore getPrevious() {
-        return this.previousCounter;
-    }
-
-    public long getCount() {
-        return this.count;
     }
 
 }

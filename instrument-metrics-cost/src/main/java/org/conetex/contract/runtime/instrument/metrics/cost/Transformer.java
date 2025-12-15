@@ -1,5 +1,6 @@
 package org.conetex.contract.runtime.instrument.metrics.cost;
 
+import org.conetex.contract.runtime.instrument.Report;
 import org.conetex.contract.runtime.instrument.interfaces.Counter;
 import org.conetex.contract.runtime.instrument.interfaces.RetransformingClassFileTransformer;
 import org.conetex.contract.runtime.instrument.counter.*;
@@ -11,6 +12,7 @@ import org.objectweb.asm.ClassWriter;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -267,4 +269,16 @@ public class Transformer implements RetransformingClassFileTransformer {
         return classBytes;
     }
 
+    @Override
+    public long[] report(){
+        System.out.println("Long min:  " + Long.MIN_VALUE);
+        System.out.println("Long max:  " + Long.MAX_VALUE);
+        System.out.println("AbstractCounter min:  " + AbstractCounter.MIN_VALUE);
+        System.out.println("AbstractCounter max:  " + AbstractCounter.MAX_VALUE);
+        System.out.println("Shutdown-Hook started.");
+        long[] totalCost =  Report.calculateTotalCost(this);
+        System.out.println("overall costs:");
+        System.out.println(Arrays.toString(totalCost));
+        return totalCost;
+    }
 }

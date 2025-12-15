@@ -5,6 +5,7 @@ import org.conetex.contract.runtime.instrument.interfaces.RetransformingClassFil
 
 public class Report {
 
+    // check for arithmetic TODO delete it
     public static void main(String[] args){
         long c = Long.MAX_VALUE;
         System.out.println("max:  " + Long.MAX_VALUE);
@@ -21,12 +22,34 @@ public class Report {
         System.out.println("resL3: " + resL3);
     }
 
-    public static long calculateWeightedAverage(Counter[] counters, int[] weights) {
-        long weightedAvr = 0;  // Accumulate the weighted sums as a double to preserve precision
+    public static long[] calculateTotalCost(RetransformingClassFileTransformer transformer) {
+        long[] result = new long[0];
+        int[] weights = transformer.getCounterWeights();
+
+        Counter[] counters = transformer.getCounters();
+        int i = 0;
+        while (counters != null) {
+            // increase result
+            long[] newResult = new long[result.length + 1];
+            System.arraycopy(result, 0, newResult, 0, result.length);
+            result = newResult;
+
+            // store result part
+            result[i] = calculateWeightedAverage(counters, weights);
+
+            // prepare next level
+            counters = CounterCounter.countCounters(counters);
+            i++;
+        }
+        return result;
+    }
+
+    private static long calculateWeightedAverage(Counter[] counters, int[] weights) {
+        long weightedAvr = 0;
         for (int i = 0; i < counters.length; i++) {
             if(counters[i] != null) {
-                            // <-- average ----------------------------->   <-- weighted -->
-                weightedAvr += (counters[i].getCount() / counters.length) / weights[i]      ;
+                            // <-- weight ------------------------->   <-- average -->
+                weightedAvr += (counters[i].getCount() / weights[i]) / counters.length;
             }
         }
         return weightedAvr;

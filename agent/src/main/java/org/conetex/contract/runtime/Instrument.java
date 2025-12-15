@@ -125,7 +125,26 @@ public class Instrument {
         }
 
         System.out.println("premain end");
+
+        // add Shutdown-Hook
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                try {
+                    Method reportMethod = transformer.getClass().getMethod("report");
+                    reportMethod.invoke(transformer);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException("Failed to call report", e);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }));
+
     }
+
+
+
+
 
     private static Map<String,String> parseAgentArgs(String agentArgs) {
         Map<String,String> map = new TreeMap<>();
