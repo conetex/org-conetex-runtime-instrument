@@ -47,10 +47,9 @@
                     <archive>
                         <manifest>
                             <!-- JAR has no main -->
-                            <!-- <mainClass>org.conetex.contract.runtime.Agent</mainClass> -->
                         </manifest>
                         <manifestEntries>
-                            <Transformer-Class>org.conetex.contract.runtime.instrument.metrics.cost.ClassFileTransformerForCounting</Transformer-Class>
+                            <Transformer-Class>org.conetex.contract.runtime.instrument.metrics.cost.Transformer</Transformer-Class>
                             <appendToBootstrapClassLoaderSearch>true</appendToBootstrapClassLoaderSearch>
                         </manifestEntries>
                     </archive>

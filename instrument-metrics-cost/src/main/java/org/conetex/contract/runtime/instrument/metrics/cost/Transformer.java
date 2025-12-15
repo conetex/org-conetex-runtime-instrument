@@ -2,9 +2,8 @@ package org.conetex.contract.runtime.instrument.metrics.cost;
 
 import org.conetex.contract.runtime.instrument.interfaces.Counter;
 import org.conetex.contract.runtime.instrument.interfaces.RetransformingClassFileTransformer;
-
-//import org.conetex.contract.runtime.instrument.RetransformingClassFileTransformer;
 import org.conetex.contract.runtime.instrument.counter.*;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -15,7 +14,7 @@ import java.security.ProtectionDomain;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class ClassFileTransformerForCounting implements RetransformingClassFileTransformer {
+public class Transformer implements RetransformingClassFileTransformer {
 
     private String mainClassJvmName;
 
@@ -31,10 +30,10 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
         return this.counters;
     }
 
-    private final float[] weights;
+    private final int[] weights;
 
     @Override
-    public float[] getCounterWeights() {
+    public int[] getCounterWeights() {
         return this.weights;
     }
 
@@ -82,7 +81,7 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
         return transformSkippedClasses;
     }
 
-    public ClassFileTransformerForCounting() {
+    public Transformer() {
         this.handledClasses = new TreeSet<>();
         this.transformFailedClasses = new TreeSet<>();
         this.transformSkippedClasses = new TreeSet<>();
@@ -121,35 +120,35 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
             TypeCheck.getHead()
         };
 
-        this.weights = new float[] {
-            ArithmeticAddSubNeg.WEIGHT,
-            ArithmeticDivRem.WEIGHT,
-            ArithmeticMul.WEIGHT,
+        this.weights = new int[] {
+                1, // ArithmeticAddSubNeg
+                1, // ArithmeticDivRem
+                1, // ArithmeticMul
 
-            ArrayLoad.WEIGHT,
-            ArrayNew.WEIGHT,
-            ArrayStore.WEIGHT,
+                1, // ArrayLoad
+                1, // ArrayNew
+                1, // ArrayStore
 
-            CompareInt.WEIGHT,
-            CompareLong.WEIGHT,
-            CompareObject.WEIGHT,
+                1, // CompareInt
+                1, // CompareLong
+                1, // CompareObject
 
-            ExceptionThrow.WEIGHT,
+                1, // ExceptionThrow
 
-            FieldLoad.WEIGHT,
-            FieldStore.WEIGHT,
+                1, // FieldLoad
+                1, // FieldStore
 
-            Jump.WEIGHT,
+                1, // Jump
 
-            MethodCall.WEIGHT,
-            MethodEntry.WEIGHT,
+                1, // MethodCall
+                1, // MethodEntry
 
-            Monitor.WEIGHT,
+                1, // Monitor
 
-            VariableLoad.WEIGHT,
-            VariableStore.WEIGHT,
+                1, // VariableLoad
+                1, // VariableStore
 
-            TypeCheck.WEIGHT
+                1  // TypeCheck
         };
     }
 
@@ -251,7 +250,7 @@ public class ClassFileTransformerForCounting implements RetransformingClassFileT
         System.out.println(" classWriter->");
         ClassReader reader = new ClassReader(classBytes);
         ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
-        ClassVisitor visitor = new MethodMetricsVisitor(writer);
+        ClassVisitor visitor = new Visitor(writer);
         reader.accept(visitor, ClassReader.EXPAND_FRAMES);
         byte[] re = writer.toByteArray();
         System.out.println(" <-classWriter");

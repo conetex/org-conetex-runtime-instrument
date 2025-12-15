@@ -12,14 +12,17 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
 
     Set<String> getTransformSkippedClasses();
 
+    // used by agent for instrumentation
     void triggerRetransform(Instrumentation inst, Class<?>[] allClasses);
 
     void initMainClassJvmName(String mainClassJvmName);
 
+    void resetCounters();
+
+    // used by agent for reporting
     Counter[] getCounters();
 
-    float[] getCounterWeights();
+    int[] getCounterWeights();
 
-    void resetCounters();
 
 }

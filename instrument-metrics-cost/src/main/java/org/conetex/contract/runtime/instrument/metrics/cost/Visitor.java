@@ -6,9 +6,9 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.AdviceAdapter;
 
-public class MethodMetricsVisitor extends ClassVisitor {
+public class Visitor extends ClassVisitor {
 
-    public MethodMetricsVisitor(ClassVisitor cv) {
+    public Visitor(ClassVisitor cv) {
         super(Opcodes.ASM9, cv);
     }
 
