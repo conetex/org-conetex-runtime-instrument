@@ -4,8 +4,6 @@ import org.conetex.contract.runtime.instrument.interfaces.Counter;
 
 public class ArrayNew implements Counter {
 
-    public static final float WEIGHT = 0.05f;
-
     private static boolean isInProgress = false;
 
     private static ArrayNew head = new ArrayNew();

@@ -4,8 +4,6 @@ import org.conetex.contract.runtime.instrument.interfaces.Counter;
 
 public class CompareLong implements Counter {
 
-    public static final float WEIGHT = 0.05f;
-
     private static boolean isInProgress = false;
 
     private static CompareLong head = new CompareLong();
