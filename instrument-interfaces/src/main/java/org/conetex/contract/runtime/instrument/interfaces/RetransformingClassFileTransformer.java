@@ -26,4 +26,6 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
 
 
     long[] report();
+
+    int getCounterWeightsBase();
 }

@@ -59,11 +59,9 @@ public class Transformer implements RetransformingClassFileTransformer {
         };
     }
 
-    private final int[] weights;
-
     @Override
     public int[] getCounterWeights() {
-        return this.weights;
+        return WEIGHTS;
     }
 
     @Override
@@ -110,6 +108,44 @@ public class Transformer implements RetransformingClassFileTransformer {
         return transformSkippedClasses;
     }
 
+    public final static int WEIGHT_BASE = 1000000; // count of 0s are equal to the count of digits in the original weight see costWeights.md
+
+    public final static int[] WEIGHTS = new int[] {
+            35165, // ArithmeticAddSubNeg
+            109890, // ArithmeticDivRem
+            43956, // ArithmeticMul
+
+            48352, // ArrayLoad
+            98901, // ArrayNew
+            65934, // ArrayStore
+
+            30769, // CompareInt
+            39560, // CompareLong
+            43956, // CompareObject
+
+            109890, // ExceptionThrow
+
+            52747, // FieldLoad
+            61539, // FieldStore
+
+            28571, // Jump
+
+            54945, // MethodCall
+            0, // MethodEntry
+
+            76923, // Monitor
+
+            50550, // VariableLoad
+            21978, // VariableStore
+
+            26374  // TypeCheck
+    };
+
+    @Override
+    public int getCounterWeightsBase() {
+        return WEIGHT_BASE;
+    }
+
     public Transformer() {
         this.handledClasses = new TreeSet<>();
         this.transformFailedClasses = new TreeSet<>();
@@ -121,36 +157,6 @@ public class Transformer implements RetransformingClassFileTransformer {
         this.resetCounters();
         this.getCounters();
 
-        this.weights = new int[] {
-                1, // ArithmeticAddSubNeg
-                1, // ArithmeticDivRem
-                1, // ArithmeticMul
-
-                1, // ArrayLoad
-                1, // ArrayNew
-                1, // ArrayStore
-
-                1, // CompareInt
-                1, // CompareLong
-                1, // CompareObject
-
-                1, // ExceptionThrow
-
-                1, // FieldLoad
-                1, // FieldStore
-
-                1, // Jump
-
-                1, // MethodCall
-                1, // MethodEntry
-
-                1, // Monitor
-
-                1, // VariableLoad
-                1, // VariableStore
-
-                1  // TypeCheck
-        };
     }
 
     @Override
@@ -280,4 +286,6 @@ public class Transformer implements RetransformingClassFileTransformer {
         System.out.println(Arrays.toString(totalCost));
         return totalCost;
     }
+
+
 }
