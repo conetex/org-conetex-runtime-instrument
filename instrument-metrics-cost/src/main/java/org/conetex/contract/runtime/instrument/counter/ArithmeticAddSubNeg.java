@@ -56,6 +56,7 @@ public class ArithmeticAddSubNeg extends AbstractCounter {
     }
 
     public static synchronized ArithmeticAddSubNeg getHead() {
+
         return head;
     }
 

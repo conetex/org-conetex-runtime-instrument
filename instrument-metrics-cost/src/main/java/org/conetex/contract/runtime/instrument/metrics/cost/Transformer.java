@@ -25,11 +25,38 @@ public class Transformer implements RetransformingClassFileTransformer {
         this.mainClassJvmName = mainClassJvmName;
     }
 
-    private final Counter[] counters;
-
     @Override
     public Counter[] getCounters() {
-        return this.counters;
+        return new Counter[]{
+                ArithmeticAddSubNeg.getHead(),
+                ArithmeticDivRem.getHead(),
+                ArithmeticMul.getHead(),
+
+                ArrayLoad.getHead(),
+                ArrayNew.getHead(),
+                ArrayStore.getHead(),
+
+                CompareInt.getHead(),
+                CompareLong.getHead(),
+                CompareObject.getHead(),
+
+                ExceptionThrow.getHead(),
+
+                FieldLoad.getHead(),
+                FieldStore.getHead(),
+
+                Jump.getHead(),
+
+                MethodCall.getHead(),
+                MethodEntry.getHead(),
+
+                Monitor.getHead(),
+
+                VariableLoad.getHead(),
+                VariableStore.getHead(),
+
+                TypeCheck.getHead()
+        };
     }
 
     private final int[] weights;
@@ -91,36 +118,8 @@ public class Transformer implements RetransformingClassFileTransformer {
         // creating this array leads to
         // load all classes, before they are needed by transform.
         // this is necessary to avoid transformation loops
-        this.counters = new Counter[]{
-            ArithmeticAddSubNeg.getHead(),
-            ArithmeticDivRem.getHead(),
-            ArithmeticMul.getHead(),
-
-            ArrayLoad.getHead(),
-            ArrayNew.getHead(),
-            ArrayStore.getHead(),
-
-            CompareInt.getHead(),
-            CompareLong.getHead(),
-            CompareObject.getHead(),
-
-            ExceptionThrow.getHead(),
-
-            FieldLoad.getHead(),
-            FieldStore.getHead(),
-
-            Jump.getHead(),
-
-            MethodCall.getHead(),
-            MethodEntry.getHead(),
-
-            Monitor.getHead(),
-
-            VariableLoad.getHead(),
-            VariableStore.getHead(),
-
-            TypeCheck.getHead()
-        };
+        this.resetCounters();
+        this.getCounters();
 
         this.weights = new int[] {
                 1, // ArithmeticAddSubNeg

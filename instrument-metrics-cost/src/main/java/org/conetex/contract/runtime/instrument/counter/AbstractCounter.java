@@ -4,11 +4,11 @@ import org.conetex.contract.runtime.instrument.interfaces.Counter;
 
 public abstract class AbstractCounter implements Counter {
 
-    public final static long MAX_VALUE = Long.MAX_VALUE;
+    public final static long MAX_VALUE = 32;//Long.MAX_VALUE;
 
-    public final static long MIN_VALUE = Long.MIN_VALUE;
+    public final static long MIN_VALUE = 0;//Long.MIN_VALUE;
 
-    protected long count = MIN_VALUE;
+    protected long count = AbstractCounter.MIN_VALUE;
 
     protected AbstractCounter previousCounter = null;
 

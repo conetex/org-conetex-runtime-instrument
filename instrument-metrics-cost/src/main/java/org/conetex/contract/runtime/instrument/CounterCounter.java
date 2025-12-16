@@ -33,25 +33,22 @@ public class CounterCounter extends AbstractCounter {
         CounterCounter[] counterCounter = new CounterCounter[counters.length];
         boolean empty = true;
         for (int i = 0; i < counters.length; i++) {
-            if(counters[i] != null){
-                Counter current = counters[i].getPrevious();
-                if(current != null){
-                    counterCounter[i] = new CounterCounter();
-                    empty = false;
-                    while (current != null) {
+            Counter current;
+            if(counters[i] != null && (current = counters[i].getPrevious()) != null){
+                counterCounter[i] = new CounterCounter();
+                empty = false;
+                while (current != null) {
 
-                        if (counterCounter[i].count == MAX_VALUE) {
-                            CounterCounter newCounter = new CounterCounter();
-                            newCounter.previousCounter = counterCounter[i];
-                            counterCounter[i] = newCounter;
-                        } else {
-                            counterCounter[i].count++;
-                        }
-
-                        current = current.getPrevious();
+                    if (counterCounter[i].count == MAX_VALUE) {
+                        CounterCounter newCounter = new CounterCounter();
+                        newCounter.previousCounter = counterCounter[i];
+                        counterCounter[i] = newCounter;
+                    } else {
+                        counterCounter[i].count++;
                     }
-                }
 
+                    current = current.getPrevious();
+                }
             }
         }
         if(empty){

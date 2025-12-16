@@ -23,19 +23,22 @@ public class Report {
     }
 
     public static long[] calculateTotalCost(RetransformingClassFileTransformer transformer) {
-        long[] result = new long[0];
+        long[] result = new long[1];
         int[] weights = transformer.getCounterWeights();
 
         Counter[] counters = transformer.getCounters();
+        result[0] = calculateWeightedAverage(counters, weights);
+        counters = CounterCounter.countCounters(counters);
+
         int i = 0;
         while (counters != null) {
             // increase result
             long[] newResult = new long[result.length + 1];
-            System.arraycopy(result, 0, newResult, 0, result.length);
+            System.arraycopy(result, 0, newResult, 1, result.length);
             result = newResult;
 
             // store result part
-            result[i] = calculateWeightedAverage(counters, weights);
+            result[0] = calculateWeightedAverage(counters, weights);
 
             // prepare next level
             counters = CounterCounter.countCounters(counters);
@@ -49,6 +52,11 @@ public class Report {
         for (int i = 0; i < counters.length; i++) {
             if(counters[i] != null) {
                             // <-- weight ------------------------->   <-- average -->
+                long c = counters[i].getCount();
+                int w = weights[i];
+                int l = counters.length;
+                long a = c / w;
+                long b = a / l;
                 weightedAvr += (counters[i].getCount() / weights[i]) / counters.length;
             }
         }
