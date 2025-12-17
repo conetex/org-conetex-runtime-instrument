@@ -59,6 +59,10 @@ public class Transformer implements RetransformingClassFileTransformer {
         };
     }
 
+    public double[] xgetCounterWeightsDouble() {
+        return WEIGHTS_DOUBLE;
+    }
+
     @Override
     public int[] getCounterWeights() {
         return WEIGHTS;
@@ -108,42 +112,64 @@ public class Transformer implements RetransformingClassFileTransformer {
         return transformSkippedClasses;
     }
 
-    public final static int WEIGHT_BASE = 1000000; // count of 0s are equal to the count of digits in the original weight see costWeights.md
+    public final static int xWEIGHT_BASE = 1000000; // count of 0s are equal to the count of digits in the original weight see costWeights.md
 
     public final static int[] WEIGHTS = new int[] {
-            35165, // ArithmeticAddSubNeg
-            109890, // ArithmeticDivRem
-            43956, // ArithmeticMul
-
-            48352, // ArrayLoad
-            98901, // ArrayNew
-            65934, // ArrayStore
-
-            30769, // CompareInt
-            39560, // CompareLong
-            43956, // CompareObject
-
-            109890, // ExceptionThrow
-
-            52747, // FieldLoad
-            61539, // FieldStore
-
-            28571, // Jump
-
-            54945, // MethodCall
-            0, // MethodEntry
-
-            76923, // Monitor
-
-            50550, // VariableLoad
-            21978, // VariableStore
-
-            26374  // TypeCheck
+            35,//165, // ArithmeticAddSubNeg
+           109,//890, // ArithmeticDivRem
+            43,//956, // ArithmeticMul
+            48,//352, // ArrayLoad
+            98,//901, // ArrayNew
+            65,//934, // ArrayStore
+            30,//769, // CompareInt
+            39,//560, // CompareLong
+            43,//956, // CompareObject
+           109,//890, // ExceptionThrow
+            52,//747, // FieldLoad
+            61,//539, // FieldStore
+            28,//571, // Jump
+            54,//945, // MethodCall
+             0,//  0, // MethodEntry
+            76,//923, // Monitor
+            50,//550, // VariableLoad
+            21,//978, // VariableStore
+            26,//374  // TypeCheck
     };
 
-    @Override
-    public int getCounterWeightsBase() {
-        return WEIGHT_BASE;
+    public final static double[] WEIGHTS_DOUBLE = new double[] {
+            0.035165, // ArithmeticAddSubNeg
+            0.109890, // ArithmeticDivRem
+            0.043956, // ArithmeticMul
+
+            0.048352, // ArrayLoad
+            0.098901, // ArrayNew
+            0.065934, // ArrayStore
+
+            0.030769, // CompareInt
+            0.039560, // CompareLong
+            0.043956, // CompareObject
+
+            0.109890, // ExceptionThrow
+
+            0.052747, // FieldLoad
+            0.061539, // FieldStore
+
+            0.028571, // Jump
+
+            0.054945, // MethodCall
+            0.0     , // MethodEntry
+
+            0.076923, // Monitor
+
+            0.050550, // VariableLoad
+            0.021978, // VariableStore
+
+            0.026374  // TypeCheck
+    };
+
+
+    public int xgetCounterWeightsBase() {
+        return xWEIGHT_BASE;
     }
 
     public Transformer() {
