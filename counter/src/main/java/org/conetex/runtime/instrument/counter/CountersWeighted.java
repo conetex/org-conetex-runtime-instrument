@@ -6,13 +6,13 @@ import org.conetex.runtime.instrument.interfaces.ChainOfLongs;
 import org.conetex.runtime.instrument.interfaces.ResultLongDividedByInt;
 
 @SuppressWarnings("ClassCanBeRecord")
-public class Counters implements ChainsOfLongs {
+public class CountersWeighted implements ChainsOfLongs {
 
     private final LongLimits minMax;
     private final int[] weights;
     private final ChainOfLongs[] counters;
 
-    public Counters(LongLimits minMax, ChainOfLongs[] counters, int[] weights) {
+    public CountersWeighted(LongLimits minMax, ChainOfLongs[] counters, int[] weights) {
         this.minMax = minMax;
         this.counters = counters;
         this.weights = weights;
@@ -26,12 +26,12 @@ public class Counters implements ChainsOfLongs {
         return countersRaw;
     }
 
-    private ResultLongDividedByInt calculateWeightedAverage(LinkedLong[] counters) {
-        return Arithmetics.calculateWeightedAverage(Counters.transformToLong(counters), this.weights);
+    private ResultLongDividedByInt weightedAverage(LinkedLong[] counters) {
+        return Arithmetics.weightedAverage(CountersWeighted.transformToLong(counters), this.weights);
     }
 
     @Override
-    public ResultLongDividedByInt[] calculateWeightedAverages() {
+    public ResultLongDividedByInt[] average() {
         ResultLongDividedByInt[] result = new ResultLongDividedByInt[1];
 
         LinkedLong[] counters = new LinkedLong[this.counters.length];
@@ -39,7 +39,7 @@ public class Counters implements ChainsOfLongs {
             counters[i] = this.counters[i].peek();
         }
 
-        result[0] = this.calculateWeightedAverage(counters);
+        result[0] = this.weightedAverage(counters);
         counters = this.countPreviousOnAll(counters);
 
         while (this.containsCountableCounters(counters)) {
@@ -49,7 +49,7 @@ public class Counters implements ChainsOfLongs {
             result = newResult;
 
             // store result part
-            result[0] = this.calculateWeightedAverage(counters);
+            result[0] = this.weightedAverage(counters);
 
             // prepare next level
             counters = this.countPreviousOnAll(counters);

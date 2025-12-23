@@ -24,6 +24,7 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
     @SuppressWarnings("unused")
     void initMainClassJvmName(String mainClassJvmName);
 
+    @SuppressWarnings("unused")
     void resetCounters();
 
     // ----------------------------------------------------
@@ -31,6 +32,7 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
 
     ChainsOfLongs getConfig();
 
+    @SuppressWarnings("unused")
     ResultLongDividedByInt[] report();
 
 }

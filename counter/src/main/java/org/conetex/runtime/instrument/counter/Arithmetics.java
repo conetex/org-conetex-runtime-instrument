@@ -48,20 +48,20 @@ public class Arithmetics {
         return weightsSum;
     }
 
-    public static ResultLongDividedByInt calculateWeightedAverage(long[] counters, int[] weights) {
+    public static ResultLongDividedByInt weightedAverage(long[] counters, int[] weights) {
         int weightsSumAlsoUsedAsScale = sum(weights);
-        return calculateWeightedAverage(weightsSumAlsoUsedAsScale, counters, weights, weightsSumAlsoUsedAsScale);
+        return weightedAverage(weightsSumAlsoUsedAsScale, counters, weights, weightsSumAlsoUsedAsScale);
     }
 
-    public static ResultLongDividedByInt calculateWeightedAverage(int scale, long[] counters, int[] weights) {
-        return calculateWeightedAverage(scale, counters, weights, sum(weights));
+    public static ResultLongDividedByInt weightedAverage(int scale, long[] counters, int[] weights) {
+        return weightedAverage(scale, counters, weights, sum(weights));
     }
 
-    public static ResultLongDividedByInt calculateWeightedAverage(long[] counters, int[] weights, int weightsSum) {
-        return calculateWeightedAverage(sum(weights), counters, weights, weightsSum);
+    public static ResultLongDividedByInt weightedAverage(long[] counters, int[] weights, int weightsSum) {
+        return weightedAverage(sum(weights), counters, weights, weightsSum);
     }
 
-    public static ResultLongDividedByInt calculateWeightedAverage(int scale, long[] counters, int[] weights, int weightsSum) {
+    public static ResultLongDividedByInt weightedAverage(int scale, long[] counters, int[] weights, int weightsSum) {
         long weightedAvr = 0;
         long remainder = 0;
         for (int i = 0; i < counters.length; i++) {

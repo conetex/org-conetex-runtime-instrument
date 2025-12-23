@@ -1,7 +1,7 @@
 package org.conetex.runtime.instrument.metrics.cost;
 
 import org.conetex.runtime.instrument.Report;
-import org.conetex.runtime.instrument.counter.Counters;
+import org.conetex.runtime.instrument.counter.CountersWeighted;
 import org.conetex.runtime.instrument.interfaces.ResultLongDividedByInt;
 import org.conetex.runtime.instrument.interfaces.RetransformingClassFileTransformer;
 
@@ -18,6 +18,11 @@ import java.util.TreeSet;
 
 public class Transformer implements RetransformingClassFileTransformer {
 
+    public static final String UNTRANSFORMABLE_PACKAGE_SELF = "org/conetex/runtime/instrument";
+
+    @SuppressWarnings("SpellCheckingInspection")
+    public static final String UNTRANSFORMABLE_PACKAGE_LIBRARY_ASM = "org/objectweb/asm/";
+
     private String mainClassJvmName;
 
     @Override
@@ -26,7 +31,7 @@ public class Transformer implements RetransformingClassFileTransformer {
     }
 
     @Override
-    public Counters getConfig() {
+    public CountersWeighted getConfig() {
         return CostCounters.CONFIG;
     }
 
@@ -112,8 +117,8 @@ public class Transformer implements RetransformingClassFileTransformer {
 
         this.handledClasses.add(classJvmName);
 
-        if (classJvmName.contains("org/objectweb/asm/")
-                || classJvmName.startsWith("org/conetex/runtime/instrument")
+        if (classJvmName.startsWith(UNTRANSFORMABLE_PACKAGE_LIBRARY_ASM)
+                || classJvmName.startsWith(UNTRANSFORMABLE_PACKAGE_SELF)
         ) { // skip transform
             System.out.println("t noTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
                     classBeingRedefined + " (classBeingRedefined) | " +
@@ -156,17 +161,14 @@ public class Transformer implements RetransformingClassFileTransformer {
                 continue;
             }
 
-/*
-            // TODO maybe obsolete
-            if( classJvmName.contains("org/objectweb/asm/") ||
-                    classJvmName.startsWith("org/conetex/runtime/instrument")
-                    || classJvmName.startsWith("org/conetex/runtime/Agent")
-//                    || classJvmName.startsWith("java/util/TreeSet")
+            // maybe obsolete
+            if( classJvmName.startsWith(UNTRANSFORMABLE_PACKAGE_LIBRARY_ASM) ||
+                    classJvmName.startsWith(UNTRANSFORMABLE_PACKAGE_SELF)
             ) { // skip retransform
                 System.out.println("retransform skipped: '" + classJvmName + "' (classJvmName)");
                 continue;
             }
-*/
+
             try {
                 inst.retransformClasses(clazz);
             } catch (UnmodifiableClassException e) {
