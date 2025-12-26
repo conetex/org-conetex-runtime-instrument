@@ -2,7 +2,7 @@ package org.conetex.runtime.instrument.counter;
 
 import org.conetex.runtime.instrument.interfaces.arithmetic.ChainsOfLongs;
 import org.conetex.runtime.instrument.interfaces.counter.LinkedLong;
-import org.conetex.runtime.instrument.interfaces.counter.ChainOfLongs;
+import org.conetex.runtime.instrument.interfaces.counter.Incrementable;
 import org.conetex.runtime.instrument.interfaces.arithmetic.ResultLongDividedByInt;
 
 @SuppressWarnings("ClassCanBeRecord")
@@ -10,9 +10,9 @@ public class CountersWeighted implements ChainsOfLongs {
 
     private final LongLimits minMax;
     private final int[] weights;
-    private final ChainOfLongs[] counters;
+    private final Incrementable[] counters;
 
-    public CountersWeighted(LongLimits minMax, ChainOfLongs[] counters, int[] weights) {
+    public CountersWeighted(LongLimits minMax, Incrementable[] counters, int[] weights) {
         this.minMax = minMax;
         this.counters = counters;
         this.weights = weights;

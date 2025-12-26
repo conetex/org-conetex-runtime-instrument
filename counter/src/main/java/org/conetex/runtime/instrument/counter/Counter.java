@@ -1,25 +1,34 @@
 package org.conetex.runtime.instrument.counter;
 
-import org.conetex.runtime.instrument.interfaces.counter.ChainOfLongs;
+import org.conetex.runtime.instrument.interfaces.counter.Incrementable;
 import org.conetex.runtime.instrument.interfaces.counter.LinkedLong;
+import org.conetex.runtime.instrument.interfaces.counter.LongLimitsConfiguration;
 
-public class Counter implements ChainOfLongs {
+public class Counter implements Incrementable {
 
     private Node top;
 
-    public final synchronized LinkedLong peek() {
-        return this.top;
-    }
+    private boolean incrementationBlocked = false;
 
-    private boolean isInProgress = false;
+    private final LongLimitsConfiguration minMax;
 
-    final LongLimits minMax;
-
-    public Counter(LongLimits config){
+    public Counter(LongLimitsConfiguration config, boolean blockIncrement){
         this.minMax = config;
         this.top = new Node(new Tail(this.minMax), this.minMax);
+        this.incrementationBlocked = blockIncrement;
     }
 
+    @Override
+    public final synchronized void blockIncrement(boolean incrementationBlocked) {
+        this.incrementationBlocked = incrementationBlocked;
+    }
+
+    @Override
+    public final synchronized LinkedLong peek() {
+        return new Node(this.top);
+    }
+
+    @Override
     public final synchronized void reset() {
         this.top = new Node(new Tail(this.minMax), this.minMax);
     }
@@ -39,19 +48,20 @@ public class Counter implements ChainOfLongs {
      * As a result, this method is safe to use in instrumented environments, as it avoids any
      * circular calls or interference caused by instrumented classes or dependencies.
      */
+    @Override
     public final synchronized void increment() {
-        if (this.isInProgress) {
+        if (this.incrementationBlocked) {
             // We are already inside increment() → endless recursion detected
             return;
         }
-        this.isInProgress = true;
+        this.incrementationBlocked = true;
         try {
             if (this.top.value == this.minMax.max()) {
                 this.top = new Node(this.top, this.minMax);
             }
             this.top.value++;
         } finally {
-            this.isInProgress = false;
+            this.incrementationBlocked = false;
         }
     }
 

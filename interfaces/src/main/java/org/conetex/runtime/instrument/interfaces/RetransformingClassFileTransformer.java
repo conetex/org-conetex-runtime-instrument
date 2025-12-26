@@ -31,6 +31,12 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
     void resetCounters();
 
     // ----------------------------------------------------
+    // used by agent for managing
+
+    @SuppressWarnings("unused")
+    void blockIncrement(boolean incrementationBlocked);
+
+    // ----------------------------------------------------
     // used by agent for reporting
 
     ChainsOfLongs getConfig();

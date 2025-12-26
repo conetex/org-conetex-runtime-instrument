@@ -36,25 +36,12 @@ public class Transformer implements RetransformingClassFileTransformer {
 
     @Override
     public void resetCounters() {
-        Counters.ARITHMETIC_ADD_SUB_NEG.reset();
-        Counters.ARITHMETIC_DIV_REM.reset();
-        Counters.ARITHMETIC_MUL.reset();
-        Counters.ARRAY_LOAD.reset();
-        Counters.ARRAY_NEW.reset();
-        Counters.ARRAY_STORE.reset();
-        Counters.COMPARE_INT.reset();
-        Counters.COMPARE_LONG.reset();
-        Counters.COMPARE_OBJECT.reset();
-        Counters.EXCEPTION_THROW.reset();
-        Counters.FIELD_LOAD.reset();
-        Counters.FIELD_STORE.reset();
-        Counters.JUMP.reset();
-        Counters.METHOD_CALL.reset();
-        Counters.METHOD_ENTRY.reset();
-        Counters.MONITOR.reset();
-        Counters.VARIABLE_LOAD.reset();
-        Counters.VARIABLE_STORE.reset();
-        Counters.TYPE_CHECK.reset();
+        Counters.reset();
+    }
+
+    @Override
+    public void blockIncrement(boolean incrementationBlocked) {
+        Counters.blockIncrement(incrementationBlocked);
     }
 
     private final Set<String> handledClasses;
@@ -87,7 +74,7 @@ public class Transformer implements RetransformingClassFileTransformer {
         // calling this leads to
         // load all classes, before they are needed by transform.
         // this is necessary to avoid transformation loops
-        this.getConfig();
+        //this.getConfig();
     }
 
     @Override
@@ -205,9 +192,6 @@ public class Transformer implements RetransformingClassFileTransformer {
 
     @Override
     public ResultLongDividedByInt[] report(){
-        System.out.println("Long min:  " + Long.MIN_VALUE);
-        System.out.println("Long max:  " + Long.MAX_VALUE);
-        System.out.println("Shutdown-Hook started.");
         ResultLongDividedByInt[] totalCost =  Report.calculateTotalCost(this);
         System.out.println("overall costs:");
         System.out.println(Arrays.toString(totalCost));

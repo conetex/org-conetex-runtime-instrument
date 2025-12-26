@@ -1,12 +1,13 @@
 package org.conetex.runtime.instrument.counter;
 
 import org.conetex.runtime.instrument.interfaces.counter.LinkedLong;
+import org.conetex.runtime.instrument.interfaces.counter.LongLimitsConfiguration;
 
 final class Tail implements LinkedLong {
 
     private final long value;
 
-    Tail(LongLimits c){
+    Tail(LongLimitsConfiguration c){
         this.value = c.min();
     }
 

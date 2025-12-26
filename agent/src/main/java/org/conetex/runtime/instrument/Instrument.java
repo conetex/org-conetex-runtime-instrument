@@ -40,6 +40,7 @@ public class Instrument {
             throw new IllegalArgumentException("premain Missing required agent argument: " + ARG_PATH_TO_TRANSFORMER_JAR + ":<path-to-bootstrap-jar>");
         }
         Path bootstrapPath = agentDir.resolve(bootstrapJarPath);
+        System.out.println("transformer: " + bootstrapPath);
         JarFile bootstrapJar;
         try {
             bootstrapJar = new JarFile(bootstrapPath.toFile());
@@ -118,28 +119,47 @@ public class Instrument {
         }
 
         // call resetCounters( )
+        /*
         try {
             Method resetMethod = transformer.getClass().getMethod("resetCounters");
             resetMethod.invoke(transformer);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException("Failed to call resetCounters", e);
         }
-
-        System.out.println("premain end");
+        */
 
         // add Shutdown-Hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutdown-Hook started.");
             try {
+                try {
+                    Method blockIncrementMethod = transformer.getClass().getMethod("blockIncrement", boolean.class);
+                    blockIncrementMethod.invoke(transformer, true);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    throw new RuntimeException("Failed to call blockIncrement(false)", e);
+                }
                 try {
                     Method reportMethod = transformer.getClass().getMethod("report");
                     reportMethod.invoke(transformer);
                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                    throw new RuntimeException("Failed to call report", e);
+                    throw new RuntimeException("Failed to call report (" + e.getMessage() + ")", e);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("ERROR " + e.getClass() + ": " + e.getMessage());
+            }
+            finally {
+                System.out.println("Shutdown-Hook ended.");
             }
         }));
+
+        System.out.println("premain end");
+
+        try {
+            Method blockIncrementMethod = transformer.getClass().getMethod("blockIncrement", boolean.class);
+            blockIncrementMethod.invoke(transformer, false);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to call blockIncrement(false)", e);
+        }
 
     }
 

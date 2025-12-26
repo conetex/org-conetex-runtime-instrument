@@ -4,10 +4,42 @@ import org.conetex.runtime.instrument.interfaces.arithmetic.ResultLongDividedByI
 
 public class Arithmetics {
 
-    private record Result(long value, int remainder, int fraction) implements ResultLongDividedByInt {
+    private record ResultRecord(long value, int remainder, int fraction) implements ResultLongDividedByInt {
+        public String toString2(){
+            return this.value + " (r: " + this.remainder + " | f: " + this.fraction + ")";
+        }
+    }
+
+    @SuppressWarnings("ClassCanBeRecord") // record will cause a method-call and a var-load
+    private static class Result implements ResultLongDividedByInt {
+        private final long value;
+        private final int remainder;
+        private final int fraction;
+        Result(long value, int remainder, int fraction){
+            this.value = value;
+            this.remainder = remainder;
+            this.fraction = fraction;
+        }
+
+        @Override
+        public long value() {
+            return this.value;
+        }
+
+        @Override
+        public int remainder() {
+            return this.remainder;
+        }
+
+        @Override
+        public int fraction() {
+            return this.fraction;
+        }
+
         public String toString(){
             return this.value + " (r: " + this.remainder + " | f: " + this.fraction + ")";
         }
+
     }
 
     public static long add(long a, long b) {
@@ -71,8 +103,8 @@ public class Arithmetics {
         for (int i = 0; i < counters.length; i++) {
             // multiplication may overflow, so we apply division early, and we use method multiply that catches this.
             // addition may also overflow if weightSum is not correct, so we use method add that catches this.
-            weightedAvr = add(weightedAvr, multiply((counters[i] / weightsSum), weights[i]));  // weightedAvr += (count / weightsSum) * weights[i];
-            remainder = add(remainder, multiply(counters[i] % weightsSum, weights[i]));     // remainder += (count % weightsSum) * weights[i];
+            weightedAvr = add(weightedAvr, multiply((counters[i] / weightsSum), weights[i]));  // weightedAvr += (counters[i] / weightsSum) * weights[i];
+            remainder = add(remainder, multiply(counters[i] % weightsSum, weights[i]));     // remainder += (counters[i] % weightsSum) * weights[i];
         }
         long correction = remainder / weightsSum;
         weightedAvr = add(weightedAvr, correction);

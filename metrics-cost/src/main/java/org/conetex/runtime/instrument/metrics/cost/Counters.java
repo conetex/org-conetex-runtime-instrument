@@ -3,55 +3,56 @@ package org.conetex.runtime.instrument.metrics.cost;
 import org.conetex.runtime.instrument.counter.CountersWeighted;
 import org.conetex.runtime.instrument.counter.LongLimits;
 import org.conetex.runtime.instrument.counter.Counter;
-import org.conetex.runtime.instrument.interfaces.counter.ChainOfLongs;
 
 public final class Counters {
 
-    public final static LongLimits CONFIG_MIN_MAX = new LongLimits(0L, 10L);
+    public final static LongLimits CONFIG_MIN_MAX = new LongLimits(0L, Long.MAX_VALUE);
 
-    public static final Counter ARITHMETIC_ADD_SUB_NEG = new Counter(CONFIG_MIN_MAX);
-    public static final Counter ARITHMETIC_DIV_REM = new Counter(CONFIG_MIN_MAX);
-    public static final Counter ARITHMETIC_MUL = new Counter(CONFIG_MIN_MAX);
-    public static final Counter ARRAY_LOAD = new Counter(CONFIG_MIN_MAX);
-    public static final Counter ARRAY_NEW = new Counter(CONFIG_MIN_MAX);
-    public static final Counter ARRAY_STORE = new Counter(CONFIG_MIN_MAX);
-    public static final Counter COMPARE_INT = new Counter(CONFIG_MIN_MAX);
-    public static final Counter COMPARE_LONG = new Counter(CONFIG_MIN_MAX);
-    public static final Counter COMPARE_OBJECT = new Counter(CONFIG_MIN_MAX);
-    public static final Counter EXCEPTION_THROW = new Counter(CONFIG_MIN_MAX);
-    public static final Counter FIELD_LOAD = new Counter(CONFIG_MIN_MAX);
-    public static final Counter FIELD_STORE = new Counter(CONFIG_MIN_MAX);
-    public static final Counter JUMP = new Counter(CONFIG_MIN_MAX);
-    public static final Counter METHOD_CALL = new Counter(CONFIG_MIN_MAX);
-    public static final Counter METHOD_ENTRY = new Counter(CONFIG_MIN_MAX);
-    public static final Counter MONITOR = new Counter(CONFIG_MIN_MAX);
-    public static final Counter VARIABLE_LOAD = new Counter(CONFIG_MIN_MAX);
-    public static final Counter VARIABLE_STORE = new Counter(CONFIG_MIN_MAX);
-    public static final Counter TYPE_CHECK = new Counter(CONFIG_MIN_MAX);
+    public static final Counter ARITHMETIC_ADD_SUB_NEG = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter ARITHMETIC_DIV_REM = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter ARITHMETIC_MUL = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter ARRAY_LOAD = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter ARRAY_NEW = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter ARRAY_STORE = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter COMPARE_INT = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter COMPARE_LONG = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter COMPARE_OBJECT = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter EXCEPTION_THROW = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter FIELD_LOAD = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter FIELD_STORE = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter JUMP = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter METHOD_CALL = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter METHOD_ENTRY = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter MONITOR = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter VARIABLE_LOAD = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter VARIABLE_STORE = new Counter(CONFIG_MIN_MAX, true);
+    public static final Counter TYPE_CHECK = new Counter(CONFIG_MIN_MAX, true);
+
+    public static final Counter[] COUNTERS = new Counter[]{
+                Counters.ARITHMETIC_ADD_SUB_NEG,
+                Counters.ARITHMETIC_DIV_REM,
+                Counters.ARITHMETIC_MUL,
+                Counters.ARRAY_LOAD,
+                Counters.ARRAY_NEW,
+                Counters.ARRAY_STORE,
+                Counters.COMPARE_INT,
+                Counters.COMPARE_LONG,
+                Counters.COMPARE_OBJECT,
+                Counters.EXCEPTION_THROW,
+                Counters.FIELD_LOAD,
+                Counters.FIELD_STORE,
+                Counters.JUMP,
+                Counters.METHOD_CALL,
+                Counters.METHOD_ENTRY,
+                Counters.MONITOR,
+                Counters.VARIABLE_LOAD,
+                Counters.VARIABLE_STORE,
+                Counters.TYPE_CHECK
+    };
 
     public final static CountersWeighted CONFIG = new CountersWeighted(
             CONFIG_MIN_MAX,
-            new ChainOfLongs[]{
-                    Counters.ARITHMETIC_ADD_SUB_NEG,
-                    Counters.ARITHMETIC_DIV_REM,
-                    Counters.ARITHMETIC_MUL,
-                    Counters.ARRAY_LOAD,
-                    Counters.ARRAY_NEW,
-                    Counters.ARRAY_STORE,
-                    Counters.COMPARE_INT,
-                    Counters.COMPARE_LONG,
-                    Counters.COMPARE_OBJECT,
-                    Counters.EXCEPTION_THROW,
-                    Counters.FIELD_LOAD,
-                    Counters.FIELD_STORE,
-                    Counters.JUMP,
-                    Counters.METHOD_CALL,
-                    Counters.METHOD_ENTRY,
-                    Counters.MONITOR,
-                    Counters.VARIABLE_LOAD,
-                    Counters.VARIABLE_STORE,
-                    Counters.TYPE_CHECK
-            },
+            COUNTERS,
             new int[] {
                     35,//165, // ArithmeticAddSubNeg
                     109,//890, // ArithmeticDivRem
@@ -75,6 +76,17 @@ public final class Counters {
             }
             );
 
+    public static void reset() {
+        for(Counter c : COUNTERS){
+            c.reset();
+        }
+    }
+
+    public static void blockIncrement(boolean incrementationBlocked) {
+        for(Counter c : COUNTERS){
+            c.blockIncrement(incrementationBlocked);
+        }
+    }
 
     @SuppressWarnings("unused")
     public static void incrementArithmeticAddSubNeg() {
