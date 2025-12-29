@@ -1,4 +1,4 @@
-package org.conetex.runtime.instrument;
+package org.conetex.runtime.instrument.metrics.cost;
 
 import org.conetex.runtime.instrument.counter.Arithmetics;
 import org.conetex.runtime.instrument.interfaces.*;

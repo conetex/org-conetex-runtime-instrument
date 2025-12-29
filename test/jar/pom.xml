@@ -18,12 +18,6 @@
             <artifactId>metrics-cost</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>org.conetex.runtime.instrument</groupId>
-            <artifactId>counter</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -31,14 +25,32 @@
             <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.conetex.runtime.instrument</groupId>
-            <artifactId>agent</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <!-- use maven-surefire-plugin to run tests with integrated agent and instrument on not finally build jar -->
+            <!--             since ${project.basedir} is <projectRoot>/test/jar and agent is located in <projectRoot>/agent the argLine is:
+                        -javaagent:${project.basedir}/../../agent/target/agent-${project.version}-fat.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                 optional -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar
 
+
+
+
+            -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>
+                        -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}-fat.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                    </argLine>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
 
 </project>

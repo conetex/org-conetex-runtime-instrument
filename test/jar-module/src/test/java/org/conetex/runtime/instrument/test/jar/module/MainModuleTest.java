@@ -1,4 +1,4 @@
-package org.conetex.runtime.instrument.test.jar;
+package org.conetex.runtime.instrument.test.jar.module;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -7,7 +7,7 @@ import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MainTest {
+class MainModuleTest {
 
     @BeforeEach
     void setUp() {
@@ -35,7 +35,7 @@ class MainTest {
         assertFalse( result.contains(Main.TEST_FAILED) );
     }
 
-    //@Test todo for whatever reason this does not work with modules
+    //@Test
     void testsIncrementableInterfaceDefault() {
         // Arrange:
         String result;
@@ -65,7 +65,7 @@ class MainTest {
         assertFalse( result.contains(Main.TEST_FAILED) );
     }
 
-    //@Test todo for whatever reason this does not work with modules
+    @Test
     void testsChainsOfLongsInterface() {
         // Arrange:
         String result;

@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test.jar Main" type="Application" factoryName="Application">
+    <classpathModifications>
+      <entry path="C:\PRO_GITHUB\org-conetex-runtime-instrument\agent\target\agent-0.0.1-SNAPSHOT-fat.jar" />
+    </classpathModifications>
+    <option name="MAIN_CLASS_NAME" value="org.conetex.runtime.instrument.test.jar.Main" />
+    <module name="jar" />
+    <option name="VM_PARAMETERS" value="-Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -javaagent:agent/target/agent-0.0.1-SNAPSHOT.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.conetex.runtime.instrument.test.jar.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

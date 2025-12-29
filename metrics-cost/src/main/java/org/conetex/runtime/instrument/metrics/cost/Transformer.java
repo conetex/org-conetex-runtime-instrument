@@ -1,6 +1,5 @@
 package org.conetex.runtime.instrument.metrics.cost;
 
-import org.conetex.runtime.instrument.Report;
 import org.conetex.runtime.instrument.counter.CountersWeighted;
 import org.conetex.runtime.instrument.interfaces.arithmetic.ResultLongDividedByInt;
 import org.conetex.runtime.instrument.interfaces.RetransformingClassFileTransformer;
@@ -18,9 +17,10 @@ import java.util.TreeSet;
 
 public class Transformer implements RetransformingClassFileTransformer {
 
-    public static final String UNTRANSFORMABLE_PACKAGE_SELF = "xorg/conetex/runtime/instrument";
+    public static final String UNTRANSFORMABLE_PACKAGE_SELF = "org/conetex/runtime/instrument";
 
-    public static final String UNTRANSFORMABLE_CLASSES_SELF_TEST = "xorg/conetex/runtime/instrument/test/jar/Main";
+    public static final String UNTRANSFORMABLE_CLASSES_SELF_TEST = "org/conetex/runtime/instrument/test/jar/Main";
+    public static final String UNTRANSFORMABLE_CLASSES_SELF_TEST_M = "org/conetex/runtime/instrument/test/jar/module/Main";
 
     public static final String UNTRANSFORMABLE_PACKAGE_LIBRARY_ASM = "org/objectweb/asm/";
 
@@ -79,6 +79,7 @@ public class Transformer implements RetransformingClassFileTransformer {
         // load all classes, before they are needed by transform.
         // this is necessary to avoid transformation loops
         //this.getConfig();
+        Counters.reset();
     }
 
     @Override
@@ -108,7 +109,9 @@ public class Transformer implements RetransformingClassFileTransformer {
         this.handledClasses.add(classJvmName);
 
         if ( classJvmName.startsWith(UNTRANSFORMABLE_PACKAGE_LIBRARY_ASM) ||
-                classJvmName.startsWith(UNTRANSFORMABLE_CLASSES_SELF_TEST)    ) {
+                classJvmName.startsWith(UNTRANSFORMABLE_CLASSES_SELF_TEST)  ||
+                classJvmName.startsWith(UNTRANSFORMABLE_CLASSES_SELF_TEST_M)
+                ) {
             System.out.println("t noTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
                     classBeingRedefined + " (classBeingRedefined) | " +
                     (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");
@@ -127,7 +130,9 @@ public class Transformer implements RetransformingClassFileTransformer {
                     classBeingRedefined + " (classBeingRedefined) | " +
                     (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");
             //Runtime.getRuntime().halt(STATUS_BLOCKED);
-            System.exit(STATUS_BLOCKED);
+            System.exit(STATUS_BLOCKED);// todo for whatever reason in module mode Counters appears here. so we have to check for package-self smarter
+            //this.transformSkippedClasses.add(classJvmName);
+            //return classFileBuffer;
         }
 
         System.out.println("t doTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +

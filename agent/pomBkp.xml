@@ -16,12 +16,12 @@
     <dependencies>
         <!-- MUST BE EMPTY                                    -->
         <!-- AVOID DEPENDENCIES TO INSTRUMENT IMPLEMENTATIONS -->
-       <!-- <dependency>
+        <dependency>
             <groupId>org.conetex.runtime.instrument</groupId>
             <artifactId>metrics-cost</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
-        </dependency>-->
+        </dependency>
     </dependencies>
     <!-- IMPLICIT DEPENDENCY: -->
     <!-- INSTRUMENT IMPLEMENTATIONS USED BY THIS AGENT MUST   -->
@@ -50,8 +50,8 @@
                             <!-- <mainClass>org.conetex.runtime.instrument.Agent</mainClass> -->
                         </manifest>
                         <manifestEntries>
-                            <Premain-Class>org.conetex.runtime.instrument.Agent</Premain-Class>
-                            <Agent-Class>org.conetex.runtime.instrument.Agent</Agent-Class>
+                            <Premain-Class>org.conetex.runtime.instrument.agent.Agent</Premain-Class>
+                            <Agent-Class>org.conetex.runtime.instrument.agent.Agent</Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
                         </manifestEntries>

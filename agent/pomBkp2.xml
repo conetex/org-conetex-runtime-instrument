@@ -16,6 +16,12 @@
     <dependencies>
         <!-- MUST BE EMPTY                                    -->
         <!-- AVOID DEPENDENCIES TO INSTRUMENT IMPLEMENTATIONS -->
+        <!--<dependency>
+            <groupId>org.conetex.runtime.instrument</groupId>
+            <artifactId>metrics-cost</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>-->
     </dependencies>
     <!-- IMPLICIT DEPENDENCY: -->
     <!-- INSTRUMENT IMPLEMENTATIONS USED BY THIS AGENT MUST   -->
@@ -27,40 +33,27 @@
 
     <build>
         <plugins>
-            <!-- Maven Jar Plugin for normal JAR -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                        </manifest>
-                        <manifestEntries>
-                            <Premain-Class>org.conetex.runtime.instrument.agent.Agent</Premain-Class>
-                            <Agent-Class>org.conetex.runtime.instrument.agent.Agent</Agent-Class>
-                            <Can-Redefine-Classes>true</Can-Redefine-Classes>
-                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
 
-            <!-- Maven Shade Plugin for Fat JAR - even there are no dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.5.0</version>
+
                 <executions>
                     <execution>
+                        <id>make-agent-jar</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
+
                         <configuration>
+                            <!-- Name des Fat-JARs -->
                             <finalName>${project.artifactId}-${project.version}-fat</finalName>
+
+                            <!-- Manifest-Einträge für Java-Agent -->
                             <transformers>
+
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Premain-Class>org.conetex.runtime.instrument.agent.Agent</Premain-Class>
@@ -70,17 +63,20 @@
                                     </manifestEntries>
                                 </transformer>
 
-                                <!-- if we use META-INF/services -->
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
 
-                            <!-- Important: keep module-info.class -->
-                            <shadeSourcesContent>true</shadeSourcesContent>
+                            <!-- Kein dependency-reduced-pom erzeugen -->
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+
+                            <!-- Falls du später module-info.class behalten willst -->
+                            <shadeSourcesContent>true</shadeSourcesContent>
+
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
+
 </project>

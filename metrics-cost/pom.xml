@@ -32,9 +32,33 @@
 
     </dependencies>
 
+    <properties>
+        <transformer.class>org.conetex.runtime.instrument.metrics.cost.Transformer</transformer.class>
+        <append.to.bootstrap>true</append.to.bootstrap>
+        <!-- if "false" we have to start like this: -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -->
+    </properties>
+
     <build>
         <plugins>
+            <!-- Maven Jar Plugin for normal JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <Transformer-Class>${transformer.class}</Transformer-Class>
+                            <appendToBootstrapClassLoaderSearch>${append.to.bootstrap}</appendToBootstrapClassLoaderSearch>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
 
+            <!-- Maven Shade Plugin for Fat JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -48,26 +72,21 @@
                         </goals>
 
                         <configuration>
-                            <!-- Name des Fat-JARs -->
                             <finalName>${project.artifactId}-${project.version}-fat</finalName>
 
-                            <!-- Manifest-Einträge -->
                             <transformers>
-
-                                <!-- Standard-Manifest -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Transformer-Class>org.conetex.runtime.instrument.metrics.cost.Transformer</Transformer-Class>
-                                        <appendToBootstrapClassLoaderSearch>true</appendToBootstrapClassLoaderSearch>
+                                        <Transformer-Class>${transformer.class}</Transformer-Class>
+                                        <appendToBootstrapClassLoaderSearch>${append.to.bootstrap}</appendToBootstrapClassLoaderSearch>
                                     </manifestEntries>
                                 </transformer>
 
-                                <!-- Falls du META-INF/services nutzt -->
+                                <!-- if we use META-INF/services -->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-
                             </transformers>
 
-                            <!-- Wichtig: module-info.class behalten -->
+                            <!-- Important: keep module-info.class -->
                             <shadeSourcesContent>true</shadeSourcesContent>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
 

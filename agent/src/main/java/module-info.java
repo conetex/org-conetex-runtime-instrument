@@ -1,4 +1,4 @@
-module org.conetex.runtime.instrument {
+module org.conetex.runtime.instrument.agent {
     requires java.instrument;
-    exports org.conetex.runtime.instrument;
+    exports org.conetex.runtime.instrument.agent;
 }

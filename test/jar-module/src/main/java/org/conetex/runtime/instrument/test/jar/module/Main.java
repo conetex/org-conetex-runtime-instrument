@@ -1,4 +1,4 @@
-package org.conetex.runtime.instrument.test.jar;
+package org.conetex.runtime.instrument.test.jar.module;
 
 import org.conetex.runtime.instrument.counter.Counter;
 import org.conetex.runtime.instrument.counter.CountersWeighted;
@@ -8,6 +8,13 @@ import org.conetex.runtime.instrument.metrics.cost.Counters;
 
 import java.io.File;
 
+/*
+
+java --module-path "agent/target/agent-0.0.1-SNAPSHOT.jar;interfaces/target/classes;counter/target/classes;metrics-cost/target/classes;test/jar-module/target/classes;C:\DEV\maven-coba-3.9.9-distributable\local-repository\org\ow2\asm\asm\9.8\asm-9.8.jar;C:\DEV\maven-coba-3.9.9-distributable\local-repository\org\ow2\asm\asm-commons\9.8\asm-commons-9.8.jar;C:\DEV\maven-coba-3.9.9-distributable\local-repository\org\ow2\asm\asm-tree\9.8\asm-tree-9.8.jar" --add-modules org.conetex.runtime.instrument.agent,org.conetex.runtime.instrument.metrics.cost,org.conetex.runtime.instrument.test.jar.module -javaagent:agent/target/agent-0.0.1-SNAPSHOT-fat.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -m org.conetex.runtime.instrument.test.jar.module/org.conetex.runtime.instrument.test.jar.module.Main
+
+
+ */
+
 public class Main {
 
     public static final String TEST_FAILED = "test FAILED";
@@ -15,8 +22,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        System.out.println("org.conetex.runtime.instrument.test.jar MainTest working here: " + new File(".").getAbsolutePath());
-
+        System.out.println("org.conetex.runtime.instrument.test.jar.module MainModule working here: " + new File(".").getAbsolutePath());
         warmup();
 
         // test
@@ -33,7 +39,7 @@ public class Main {
         testsCountersBlockIncrement();
     }
 
-    public static synchronized void warmup() {
+    public static void warmup() {
         // warmup 1
         for (int i = 0; i < Counters.COUNTERS.length; i++) {
             Incrementable c = Counters.COUNTERS[i];
@@ -49,7 +55,7 @@ public class Main {
         Counters.CONFIG.average();
     }
 
-    public static synchronized String testsIncrementableCounterDefault() {
+    public static String testsIncrementableCounterDefault() {
         String testName = "Counter (Incrementable) | default increment";
         long expected = 1;
 
@@ -66,7 +72,7 @@ public class Main {
         return msg.toString();
     }
 
-    public static synchronized String testsIncrementableCounterBlock() {
+    public static String testsIncrementableCounterBlock() {
         String testName = "Counter (Incrementable) | blocked increment";
         long expected = 0;
 
@@ -85,7 +91,7 @@ public class Main {
         return msg.toString();
     }
 
-    public static synchronized String testsIncrementableInterfaceDefault() {
+    public static String testsIncrementableInterfaceDefault() {
         String testName = "Incrementable | default increment";
         long expected = 1;
 
@@ -103,7 +109,7 @@ public class Main {
         return msg.toString();
     }
 
-    public static synchronized String testsIncrementableInterfaceBlock() {
+    public static String testsIncrementableInterfaceBlock() {
         String testName = "Incrementable | blocked increment";
         long expected = 0;
 
@@ -122,7 +128,7 @@ public class Main {
         return msg.toString();
     }
 
-    public static synchronized String testsChainsOfLongsCountersWeighted() {
+    public static String testsChainsOfLongsCountersWeighted() {
         String testName = "CountersWeighted (ChainsOfLongs) | average";
         long expected = 0;
 
@@ -140,7 +146,7 @@ public class Main {
         return msg.toString();
     }
 
-    public static synchronized String testsChainsOfLongsInterface() {
+    public static String testsChainsOfLongsInterface() {
         String testName = "CountersWeighted (ChainsOfLongs) | average";
         long expected = 0;
 
@@ -158,7 +164,7 @@ public class Main {
         return msg.toString();
     }
 
-    public static synchronized String testsCountersReset() {
+    public static String testsCountersReset() {
         String testName = "Counters | reset";
         long expected = 0;
 
@@ -175,7 +181,7 @@ public class Main {
         return msg.toString();
     }
 
-    public static synchronized String testsCountersBlockIncrement() {
+    public static String testsCountersBlockIncrement() {
         String testName = "Counters | blockIncrement";
         long expected = 0;
 
@@ -197,7 +203,7 @@ public class Main {
         return msg.toString();
     }
 
-    private static synchronized String outputResult(long counterAfter, long counterBefore, long expected, String testName, int i) {
+    private static String outputResult(long counterAfter, long counterBefore, long expected, String testName, int i) {
         long counterDiff = (counterAfter - counterBefore);
         String msg = ": '" + testName + "', on: '" + i + "', expected: '" + expected + "', actual: " + counterAfter + " - " + counterBefore + " = " + counterDiff + System.lineSeparator();
         if (counterDiff != expected) {

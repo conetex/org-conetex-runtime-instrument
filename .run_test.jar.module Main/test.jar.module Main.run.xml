@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test.jar.module Main" type="Application" factoryName="Application">
+    <classpathModifications>
+      <entry path="C:\PRO_GITHUB\org-conetex-runtime-instrument\agent\target\agent-0.0.1-SNAPSHOT-fat.jar" />
+    </classpathModifications>
+    <option name="MAIN_CLASS_NAME" value="org.conetex.runtime.instrument.test.jar.module.Main" />
+    <module name="jar-module" />
+    <option name="VM_PARAMETERS" value="--module-path &quot;agent/target/agent-0.0.1-SNAPSHOT.jar;interfaces/target/classes;counter/target/counter-0.0.1-SNAPSHOT.jar;metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT.jar;test/jar-module/target/classes;C:\DEV\maven-coba-3.9.9-distributable\local-repository\org\ow2\asm\asm\9.8\asm-9.8.jar;C:\DEV\maven-coba-3.9.9-distributable\local-repository\org\ow2\asm\asm-commons\9.8\asm-commons-9.8.jar;C:\DEV\maven-coba-3.9.9-distributable\local-repository\org\ow2\asm\asm-tree\9.8\asm-tree-9.8.jar&quot; --add-modules org.conetex.runtime.instrument.agent,org.conetex.runtime.instrument.metrics.cost,org.conetex.runtime.instrument.test.jar.module -javaagent:agent/target/agent-0.0.1-SNAPSHOT.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT.jar -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT.jar -m org.conetex.runtime.instrument.test.jar.module/" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="org.conetex.runtime.instrument.test.jar.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

@@ -1,4 +1,4 @@
-package org.conetex.runtime.instrument;
+package org.conetex.runtime.instrument.agent;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,9 +48,9 @@ public class Instrument {
 
         String appendToBootstrapClassLoaderSearchStr = getMainAttributeFromJar(bootstrapJar, "appendToBootstrapClassLoaderSearch");
         assert appendToBootstrapClassLoaderSearchStr != null;
-        if(! appendToBootstrapClassLoaderSearchStr.equals("false")){
+        if(! appendToBootstrapClassLoaderSearchStr.equals("false")){ // this is not needed if -Xbootclasspath/a:/path/to/bootstrapJar todo: can we find out at runtime?
             // TODO we do not want org.conetex.contract.runtime.instrument:* loaded before this:
-            inst.appendToBootstrapClassLoaderSearch(bootstrapJar);
+            inst.appendToBootstrapClassLoaderSearch(bootstrapJar); // warning will not occur if -Xshare:off todo: can we find out at runtime?
         }
 
         // load classes of transformer before adding it to the instrumentation
