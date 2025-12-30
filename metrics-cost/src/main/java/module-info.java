@@ -1,6 +1,6 @@
 module org.conetex.runtime.instrument.metrics.cost {
-    exports org.conetex.runtime.instrument.metrics.cost to org.conetex.runtime.instrument.test.jar.module;
-    opens org.conetex.runtime.instrument.metrics.cost to org.conetex.runtime.instrument.agent;
+    exports org.conetex.runtime.instrument.metrics.cost;
+    opens org.conetex.runtime.instrument.metrics.cost;
     requires org.conetex.runtime.instrument.counter;
     requires java.instrument;
     requires org.conetex.runtime.instrument.interfaces;

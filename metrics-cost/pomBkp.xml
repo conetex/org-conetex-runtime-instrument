@@ -50,7 +50,7 @@
                             <!-- JAR has no main -->
                         </manifest>
                         <manifestEntries>
-                            <Transformer-Class>org.conetex.runtime.instrument.metrics.cost.Transformer</Transformer-Class>
+                            <Transformer-Class>org.conetex.runtime.instrument.metrics.cost.TransformerOK</Transformer-Class>
                             <appendToBootstrapClassLoaderSearch>true</appendToBootstrapClassLoaderSearch>
                         </manifestEntries>
                     </archive>

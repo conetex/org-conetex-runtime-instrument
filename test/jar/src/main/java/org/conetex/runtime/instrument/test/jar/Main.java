@@ -7,7 +7,9 @@ import org.conetex.runtime.instrument.interfaces.counter.Incrementable;
 import org.conetex.runtime.instrument.metrics.cost.Counters;
 
 import java.io.File;
-
+/*
+java -javaagent:agent/target/agent-0.0.1-SNAPSHOT-fat.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -cp test/jar/target/jar-0.0.1-SNAPSHOT.jar org.conetex.runtime.instrument.test.jar.Main
+ */
 public class Main {
 
     public static final String TEST_FAILED = "test FAILED";

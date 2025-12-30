@@ -45,7 +45,7 @@
                 <version>3.2.5</version>
                 <configuration>
                     <argLine>
-                        -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}-fat.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                        -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
                     </argLine>
                 </configuration>
             </plugin>

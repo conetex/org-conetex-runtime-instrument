@@ -48,11 +48,11 @@
                 <configuration>
                     <archive>
                         <manifest>
+                            <!-- JAR has no main -->
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                         <manifestEntries>
                             <Transformer-Class>${transformer.class}</Transformer-Class>
-                            <appendToBootstrapClassLoaderSearch>${append.to.bootstrap}</appendToBootstrapClassLoaderSearch>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -78,7 +78,6 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Transformer-Class>${transformer.class}</Transformer-Class>
-                                        <appendToBootstrapClassLoaderSearch>${append.to.bootstrap}</appendToBootstrapClassLoaderSearch>
                                     </manifestEntries>
                                 </transformer>
 
@@ -87,7 +86,7 @@
                             </transformers>
 
                             <!-- Important: keep module-info.class -->
-                            <shadeSourcesContent>true</shadeSourcesContent>
+                            <shadeSourcesContent>true</shadeSourcesContent> <!-- todo looks like this does not work BUT however we do not want a module-info.class in fat -->
                             <createDependencyReducedPom>false</createDependencyReducedPom>
 
                         </configuration>
