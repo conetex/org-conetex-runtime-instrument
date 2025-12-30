@@ -28,6 +28,9 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
     void initMainClassJvmName(String mainClassJvmName);
 
     @SuppressWarnings("unused")
+    void addToHandledClasses(String handledClassJvmName);
+
+    @SuppressWarnings("unused")
     void resetCounters();
 
     // ----------------------------------------------------

@@ -33,6 +33,10 @@ public class Transformer implements RetransformingClassFileTransformer {
         this.mainClassJvmName = mainClassJvmName;
     }
 
+    public void addToHandledClasses(String classJvmName) {
+        this.handledClasses.add(classJvmName);
+    }
+
     @Override
     public CountersWeighted getConfig() {
         return Counters.CONFIG;
@@ -78,8 +82,10 @@ public class Transformer implements RetransformingClassFileTransformer {
         // calling this leads to
         // load all classes, before they are needed by transform.
         // this is necessary to avoid transformation loops
-        //this.getConfig();
-        Counters.reset();
+
+        this.getConfig();
+        System.out.println("Counters: " + Counters.class.getModule() + "(module) " + Counters.class.getClassLoader() + "(classLoader)");
+        //Counters.reset();
     }
 
     @Override
@@ -88,8 +94,8 @@ public class Transformer implements RetransformingClassFileTransformer {
         System.out.println("transform: " + loader + " (loader) | " + classJvmName +
                 " (classJvmName) | " + classBeingRedefined + " (classBeingRedefined) | " +
                 (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain) | " + module + "(module)");
-        //return transform(loader, classJvmName, classBeingRedefined, protectionDomain, classFileBuffer);
-        return classFileBuffer;
+        return transform(loader, classJvmName, classBeingRedefined, protectionDomain, classFileBuffer);
+        //return classFileBuffer;
     }
 
     @Override
@@ -131,9 +137,9 @@ public class Transformer implements RetransformingClassFileTransformer {
                     classBeingRedefined + " (classBeingRedefined) | " +
                     (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");
             //Runtime.getRuntime().halt(STATUS_BLOCKED);
-            //System.exit(STATUS_BLOCKED);// todo for whatever reason in module mode Counters appears here. so we have to check for package-self smarter
-            this.transformSkippedClasses.add(classJvmName);
-            return classFileBuffer;
+            System.exit(STATUS_BLOCKED);// todo for whatever reason in module mode Counters appears here. so we have to check for package-self smarter
+            //this.transformSkippedClasses.add(classJvmName);
+            //return classFileBuffer;
         }
 
         System.out.println("t doTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
@@ -156,7 +162,7 @@ public class Transformer implements RetransformingClassFileTransformer {
         for (Class<?> clazz : allClasses) {
             String classJvmName = clazz.getName().replace('.', '/');
 
-            System.out.println("retransform .....: '" + classJvmName + "' (classJvmName)");
+            System.out.println("retransform .....: '" + classJvmName + "' (classJvmName) '" + clazz.getModule() + "' (module) '" + clazz.getClassLoader() + "' (classLoader)");
 
 
             if(   this.handledClasses.contains( classJvmName )   ) {

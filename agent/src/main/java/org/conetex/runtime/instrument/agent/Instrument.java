@@ -49,25 +49,25 @@ public class Instrument {
         String transformerClassStr = getMainAttributeFromJar(bootstrapJar, "Transformer-Class");
         // is transformer loadable?
         Class<?> transformerClass = null;
-        try {
+        /*try {
             transformerClass = Class.forName(transformerClassStr);
         } catch (ClassNotFoundException e) {
             System.out.println("1 can not load " + transformerClassStr + " ");
-        }
+        }*/
         if(transformerClass == null){
             try {
-                transformerClass = Class.forName(transformerClassStr, true, null);
+                transformerClass = Class.forName(transformerClassStr, true, ClassLoader.getSystemClassLoader());
             } catch (ClassNotFoundException e) {
                 System.out.println("2 can not load " + transformerClassStr + " ");
             }
         }
-        if(transformerClass == null){
+        /*if(transformerClass == null){
             try {
                 transformerClass = Class.forName(transformerClassStr, true, ClassLoader.getSystemClassLoader());
             } catch (ClassNotFoundException e) {
                 System.out.println("3 can not load " + transformerClassStr + " ");
             }
-        }
+        }*/
         if(transformerClass == null){
 
             String appendToBootstrapClassLoaderSearchStr = getMainAttributeFromJar(bootstrapJar, "appendToBootstrapClassLoaderSearch");
@@ -77,29 +77,31 @@ public class Instrument {
                 inst.appendToBootstrapClassLoaderSearch(bootstrapJar); // warning will not occur if -Xshare:off todo: can we find out at runtime?
                 System.out.println("added jar to BootstrapClassLoaderSearch");
             }
+
         }
-        if(transformerClass == null){
+        /*if(transformerClass == null){
             try {
                 transformerClass = Class.forName(transformerClassStr);
             } catch (ClassNotFoundException e) {
                 System.out.println("1b can not load " + transformerClassStr + " ");
             }
-        }
+        }*/
         if(transformerClass == null){
             try {
-                transformerClass = Class.forName(transformerClassStr, true, null);
+                transformerClass = Class.forName(transformerClassStr, true, ClassLoader.getSystemClassLoader());
             } catch (ClassNotFoundException e) {
                 System.out.println("2b can not load " + transformerClassStr + " ");
+                throw new RuntimeException(e);
             }
         }
-        if(transformerClass == null){
+        /*if(transformerClass == null){
             try {
                 transformerClass = Class.forName(transformerClassStr, true, ClassLoader.getSystemClassLoader());
             } catch (ClassNotFoundException e) {
                 System.err.println("3b can not load " + transformerClassStr + " ");
                 throw new RuntimeException(e);
             }
-        }
+        }*/
         ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
         ClassLoader instrumentClassLoader = Instrument.class.getClassLoader();
         ClassLoader instClassLoader = inst.getClass().getClassLoader();
@@ -109,12 +111,30 @@ public class Instrument {
         System.out.println("inst.getClass().getModule(): " + inst.getClass().getModule());
         System.out.println("transformerClass.getModule(): " + transformerClass.getModule());
 
-        /* load classes of transformer before adding it to the instrumentation*/
+
+
+        ClassFileTransformer transformer;
+        try {
+            transformer = (ClassFileTransformer) transformerClass.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            Method addToHandledClassesMethod = transformer.getClass().getMethod("addToHandledClasses", String.class);
+            addToHandledClasses(bootstrapFile, transformer, addToHandledClassesMethod);
+        } catch (NoSuchMethodException | IOException e) {
+            throw new RuntimeException("Failed to call addToHandledClassesMethod", e);
+        }
+
+        /* load classes of transformer before adding it to the instrumentation */
         try {
             loadAllClassesFromJar(bootstrapFile, transformerClassLoader);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+
+
 
         System.out.println("premain Redefine supported: " + inst.isRedefineClassesSupported());
         System.out.println("premain Retransform supported: " + inst.isRetransformClassesSupported());
@@ -143,20 +163,17 @@ public class Instrument {
         Class<?>[] classes = inst.getAllLoadedClasses();
         System.out.println("premain allLoadedClasses size: " + classes.length);
 
+        /*
         try {
             transformerClass = Class.forName(transformerClassStr, true, ClassLoader.getSystemClassLoader());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+        */
 
         System.out.println("premain module '" + Instrument.class.getModule());
         System.out.println("premain prepare transformer '" + agentArgs + "' | '" + inst + "'");
-        ClassFileTransformer transformer;
-        try {
-            transformer = (ClassFileTransformer) transformerClass.getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+
 
         // call initMainClassJvmName( mainClassJvmStr );
         try {
@@ -225,6 +242,26 @@ public class Instrument {
             throw new RuntimeException("Failed to call blockIncrement(false)", e);
         }
 
+    }
+
+    public static void addToHandledClasses(File jarFile, ClassFileTransformer transformer, Method addToHandledClassesMethod) throws IOException {
+
+        try (JarInputStream jar = new JarInputStream(new FileInputStream(jarFile))) {
+            JarEntry entry;
+            while ((entry = jar.getNextJarEntry()) != null) {
+                if (entry.getName().endsWith(".class")) {
+                    String className = entry.getName()
+                            .replace(".class", "");
+                    try {
+                        addToHandledClassesMethod.invoke(transformer, className);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        System.out.println("can not addToHandledClassesMethod - " + className + " " + e.getMessage());
+                    }
+                    System.out.println("addToHandledClassesMethod - " + className);
+
+                }
+            }
+        }
     }
 
     public static void loadAllClassesFromJar(File jarFile, ClassLoader loader
