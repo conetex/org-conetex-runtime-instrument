@@ -7,7 +7,7 @@ import org.conetex.runtime.instrument.counter.Counter;
 public final class Counters {
 
     static {
-        System.err.println("loaded: " + Counters.class.getModule() + " (module) - " + Counter.class.getClassLoader() + " (loader)");
+        System.err.println("loaded: " + Counters.class + " (class) - " + Counters.class.getModule() + " (module) - " + Counter.class.getClassLoader() + " (loader)");
     }
 
     public final static LongLimits CONFIG_MIN_MAX = new LongLimits(0L, Long.MAX_VALUE);

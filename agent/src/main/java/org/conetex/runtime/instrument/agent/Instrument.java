@@ -304,22 +304,41 @@ public class Instrument {
         List<String> transformerClassNamesToLoad = getAllClassNamesFromJar(bootstrapFile);
 
         Class<?> transformerClass = null;
-        try {
-            transformerClass = Class.forName(transformerClassStr, true, inst.getClass().getClassLoader());
-        } catch (ClassNotFoundException | NoClassDefFoundError e) {
-            System.err.println("'" + transformerClassStr + "' was not loaded by " + inst.getClass().getClassLoader());
-        }
 
         //loadClassFromModule(transformerClassStr, "org.conetex.runtime.instrument.metrics.cost");
-        //if(transformerClass != null){
-            // load transformer - try module mode
-            Map<String, Class<?>> loadedTransformerClasses = loadClassesFromModules(transformerClassNamesToLoad);
-            transformerClass = loadedTransformerClasses.get(transformerClassStr);
-        //}
-        //else{
-        if(transformerClass == null){
-            throw new RuntimeException("no module mode");
+        // load transformer - try module mode
+        Map<String, Class<?>> loadedTransformerClasses = loadClassesFromModules(transformerClassNamesToLoad);
+        transformerClass = loadedTransformerClasses.get(transformerClassStr);
+        if(transformerClass != null) {
+            System.out.println("'" + transformerClassStr + "' was loaded by " + transformerClass.getClassLoader());
         }
+
+        if(transformerClass == null){
+            // load transformer - try module patch instrument mode
+            try {
+                transformerClass = Class.forName(transformerClassStr, true, inst.getClass().getClassLoader());
+                System.out.println("'" + transformerClassStr + "' was loaded by instClassLoader " + inst.getClass().getClassLoader());
+            } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                System.err.println("'" + transformerClassStr + "' was not loaded by instClassLoader " + inst.getClass().getClassLoader());
+            }
+            if(transformerClass != null) {
+                loadAllClassesFromJar(transformerClassNamesToLoad, inst.getClass().getClassLoader());
+            }
+        }
+
+        if(transformerClass == null){
+            // load transformer - try module patch agent mode
+            try {
+                transformerClass = Class.forName(transformerClassStr, true, Instrument.class.getClassLoader());
+                System.out.println("'" + transformerClassStr + "' was loaded by AgentClassLoader " + Instrument.class.getClassLoader());
+            } catch (ClassNotFoundException | NoClassDefFoundError e) {
+                System.err.println("'" + transformerClassStr + "' was not loaded by AgentClassLoader " + Instrument.class.getClassLoader());
+            }
+            if(transformerClass != null) {
+                loadAllClassesFromJar(transformerClassNamesToLoad, Instrument.class.getClassLoader());
+            }
+        }
+
         if(transformerClass == null){
             // load transformer - try classpath mode
             try {
