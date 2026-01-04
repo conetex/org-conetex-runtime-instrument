@@ -18,8 +18,8 @@ public class Transformer implements RetransformingClassFileTransformer {
 
     public static final String UNTRANSFORMABLE_PACKAGE_SELF = "org/conetex/runtime/instrument";
 
-    public static final String UNTRANSFORMABLE_CLASSES_SELF_TEST = "org/conetex/runtime/instrument/test/jar/Main";
-    public static final String UNTRANSFORMABLE_CLASSES_SELF_TEST_M = "org/conetex/runtime/instrument/test/jar/module/Main";
+    public static final String UNTRANSFORMABLE_CLASSES_SELF_TEST = "xjava/lang/invoke";//"java/io/UnsupportedEncodingException";//""org/conetex/runtime/instrument/test/jar/Main";//
+    public static final String UNTRANSFORMABLE_CLASSES_SELF_TEST_M = "xxjava/lang/invoke/MethodHandle$1";//"xjava/lang/invoke";//"sun";//"com/intellij/rt";
 
     public static final String UNTRANSFORMABLE_PACKAGE_LIBRARY_ASM = "org/objectweb/asm/";
 
@@ -97,8 +97,26 @@ public class Transformer implements RetransformingClassFileTransformer {
         //return classFileBuffer;
     }
 
+
+    private static boolean transformInProgress = false;
+
     @Override
     public byte[] transform(ClassLoader loader, String classJvmName, Class<?> classBeingRedefined,
+                            ProtectionDomain protectionDomain, byte[] classFileBuffer) {
+        if(transformInProgress){
+            throw new CyclicCallException("circle");
+        }
+        transformInProgress = true;
+        try {
+            return transformIntern( loader,  classJvmName,  classBeingRedefined,
+                     protectionDomain,  classFileBuffer);
+        }
+        finally{
+            transformInProgress = false;
+        }
+    }
+
+    private byte[] transformIntern(ClassLoader loader, String classJvmName, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain, byte[] classFileBuffer) {
 
         if (classJvmName.equals(mainClassJvmName)) {
@@ -145,6 +163,11 @@ public class Transformer implements RetransformingClassFileTransformer {
 
         try {
             return transform(classFileBuffer);
+        }
+        catch(CyclicCallException e){
+            System.err.println("circle " + classJvmName + " | " + e.getClass().getName() + " | " +
+                    e.getMessage());
+            this.transformFailedClasses.add(classJvmName);
         }
         catch (Throwable e) {
             System.err.println("t !!! exception 4 " + classJvmName + " | " + e.getClass().getName() + " | " +
@@ -193,15 +216,26 @@ public class Transformer implements RetransformingClassFileTransformer {
         }
     }
 
-    private static byte[] transform(byte[] classBytes) {
-        System.out.println(" classWriter->");
-        ClassReader reader = new ClassReader(classBytes);
-        ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
-        ClassVisitor visitor = new Visitor(writer);
-        reader.accept(visitor, ClassReader.EXPAND_FRAMES);
-        byte[] re = writer.toByteArray();
-        System.out.println(" <-classWriter");
-        return re;
+    public static class CyclicCallException extends IllegalStateException {
+        public CyclicCallException(String message) {
+            super(message);
+        }
+    }
+
+
+    private static synchronized byte[] transform(byte[] classBytes) {
+
+            System.out.println(" classWriter->");
+            ClassReader reader = new ClassReader(classBytes);
+            ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
+            //ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
+            ClassVisitor visitor = new Visitor(writer);
+            reader.accept(visitor, ClassReader.EXPAND_FRAMES);
+            //reader.accept(visitor, ClassReader.SKIP_FRAMES);
+            byte[] re = writer.toByteArray();
+            System.out.println(" <-classWriter");
+            return re;
+
     }
 
     @SuppressWarnings("unused")

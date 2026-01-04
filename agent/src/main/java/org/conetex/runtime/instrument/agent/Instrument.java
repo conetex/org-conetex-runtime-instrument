@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.module.Configuration;
-import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleFinder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -20,7 +19,7 @@ import java.util.jar.*;
 // org.conetex.contract.runtime is the right place
 public class Instrument {
 
-    public static final String ARG_PATH_TO_TRANSFORMER_JAR = "pathToTransformerJar";
+    public static final String ARG_PATHS_OF_INSTRUMENTATION_JARS = "pathToTransformerJar";
 
     static void applyX(String agentArgs, Instrumentation inst) {
         System.out.println("working here: " + new File(".").getAbsolutePath());
@@ -34,9 +33,9 @@ public class Instrument {
 
         Map<String, String> args = parseAgentArgs(agentArgs);
 
-        String bootstrapJarPath = args.get(ARG_PATH_TO_TRANSFORMER_JAR);
+        String bootstrapJarPath = args.get(ARG_PATHS_OF_INSTRUMENTATION_JARS);
         if (bootstrapJarPath == null || bootstrapJarPath.isEmpty()) {
-            throw new IllegalArgumentException("premain Missing required agent argument: " + ARG_PATH_TO_TRANSFORMER_JAR + ":<path-to-bootstrap-jar>");
+            throw new IllegalArgumentException("premain Missing required agent argument: " + ARG_PATHS_OF_INSTRUMENTATION_JARS + ":<path-to-bootstrap-jar>");
         }
         Path bootstrapPath = agentDir.resolve(bootstrapJarPath);
         System.out.println("transformer: " + bootstrapPath);
@@ -286,10 +285,6 @@ public class Instrument {
         });
         */
 
-
-        File bootstrapFile = findTransformerFile(agentArgs);
-        JarFile bootstrapJar = fileToJarFile(bootstrapFile);
-
         // infos on inst
         System.out.println("premain Redefine supported: " + inst.isRedefineClassesSupported());
         System.out.println("premain Retransform supported: " + inst.isRetransformClassesSupported());
@@ -298,85 +293,40 @@ public class Instrument {
         System.out.println("inst.getClass() Module: " + inst.getClass().getModule() + " ClassLoader: " + inst.getClass().getClassLoader());
         System.out.println("Instrument.class Module: " + Instrument.class.getModule() + " ClassLoader: " + Instrument.class.getClassLoader());
 
-        // find transformer names
-        String transformerClassStr = getMainAttributeFromJar(bootstrapJar, "Transformer-Class");
-        System.out.println("transformerClassStr: " + transformerClassStr);
-        List<String> transformerClassNamesToLoad = getAllClassNamesFromJar(bootstrapFile);
+        System.out.println("premain prepare transformer '" + agentArgs + "' | '" + inst + "'");
 
-        Class<?> transformerClass = null;
-
-        //loadClassFromModule(transformerClassStr, "org.conetex.runtime.instrument.metrics.cost");
-        // load transformer - try module mode
-        Map<String, Class<?>> loadedTransformerClasses = loadClassesFromModules(transformerClassNamesToLoad);
-        transformerClass = loadedTransformerClasses.get(transformerClassStr);
-        if(transformerClass != null) {
-            System.out.println("'" + transformerClassStr + "' was loaded by " + transformerClass.getClassLoader());
-        }
-
-        if(transformerClass == null){
-            // load transformer - try module patch instrument mode
-            try {
-                transformerClass = Class.forName(transformerClassStr, true, inst.getClass().getClassLoader());
-                System.out.println("'" + transformerClassStr + "' was loaded by instClassLoader " + inst.getClass().getClassLoader());
-            } catch (ClassNotFoundException | NoClassDefFoundError e) {
-                System.err.println("'" + transformerClassStr + "' was not loaded by instClassLoader " + inst.getClass().getClassLoader());
-            }
-            if(transformerClass != null) {
-                loadAllClassesFromJar(transformerClassNamesToLoad, inst.getClass().getClassLoader());
-            }
-        }
-
-        if(transformerClass == null){
-            // load transformer - try module patch agent mode
-            try {
-                transformerClass = Class.forName(transformerClassStr, true, Instrument.class.getClassLoader());
-                System.out.println("'" + transformerClassStr + "' was loaded by AgentClassLoader " + Instrument.class.getClassLoader());
-            } catch (ClassNotFoundException | NoClassDefFoundError e) {
-                System.err.println("'" + transformerClassStr + "' was not loaded by AgentClassLoader " + Instrument.class.getClassLoader());
-            }
-            if(transformerClass != null) {
-                loadAllClassesFromJar(transformerClassNamesToLoad, Instrument.class.getClassLoader());
-            }
-        }
-
-        if(transformerClass == null){
-            // load transformer - try classpath mode
-            try {
-                transformerClass = Class.forName(transformerClassStr, true, null); // use BootstrapClassLoader
-            } catch (ClassNotFoundException | NoClassDefFoundError e) {
-                //  ======= append
-                //todo: we have to check jar is it fat?
-                System.out.println("add '" + bootstrapFile + "' to BootstrapClassLoaderSearch. -Xbootclasspath was not set?");
-                inst.appendToBootstrapClassLoaderSearch(bootstrapJar); // warning will not occur if -Xshare:off
-            }
-            if(transformerClass == null){
+        File[] instrumentationFiles = findInstrumentationFilesFromAgentArgs(agentArgs);
+        ClassFileTransformer transformer = null;
+        for (File bootstrapFile : instrumentationFiles){
+            // load class
+            Class<?> transformerClass = loadCoreClass(
+                    inst,
+                    new ClassLoader[]{inst.getClass().getClassLoader(), Instrument.class.getClassLoader(), null},
+                    bootstrapFile
+                );
+            if (ClassFileTransformer.class.isAssignableFrom(transformerClass)) {
                 try {
-                    transformerClass = Class.forName(transformerClassStr, true, null);
-                    //transformerClass = Class.forName(transformerClassStr);
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException("BootstrapClassLoader can not load '" + transformerClassStr + "'", e);
+                    // create transformer
+                    transformer = (ClassFileTransformer) transformerClass.getDeclaredConstructor().newInstance();
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                    throw new RuntimeException(e);
                 }
             }
-            // load classes of transformer before adding it to the instrumentation
-            // otherwise we create transformation loops
-            loadAllClassesFromJar(transformerClassNamesToLoad, null);
+        }
+        if(transformer == null){
+            throw new RuntimeException("no transformer created");
         }
 
-        // create transformer
-        System.out.println("premain prepare transformer '" + agentArgs + "' | '" + inst + "'");
-        ClassFileTransformer transformer;
-        try {
-            transformer = (ClassFileTransformer) transformerClass.getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+        // add classes to handled list
         try {
             Method addToHandledClassesMethod = transformer.getClass().getMethod("addToHandledClasses", String.class);
-            addToHandledClasses(bootstrapFile, transformer, addToHandledClassesMethod);
+            for (File bootstrapFileToAddToHandledClasses : instrumentationFiles) {
+                System.out.println("--> '" + bootstrapFileToAddToHandledClasses + "'");
+                addToHandledClasses(bootstrapFileToAddToHandledClasses, transformer, addToHandledClassesMethod);
+            }
         } catch (NoSuchMethodException | IOException e) {
             throw new RuntimeException("Failed to call addToHandledClassesMethod", e);
         }
-
 
 
 
@@ -423,13 +373,7 @@ public class Instrument {
         } catch (ClassNotFoundException e) {
             System.out.println("1 can not load " + transformerClassStr + " ");
         }*/
-        if(transformerClass == null){
-            try {
-                transformerClass = Class.forName(transformerClassStr, true, null);
-            } catch (ClassNotFoundException e) {
-                System.out.println("2 can not load " + transformerClassStr + " ");
-            }
-        }
+
         /*if(transformerClass == null){
             try {
                 transformerClass = Class.forName(transformerClassStr, true, ClassLoader.getSystemClassLoader());
@@ -437,11 +381,7 @@ public class Instrument {
                 System.out.println("3 can not load " + transformerClassStr + " ");
             }
         }*/
-        if(transformerClass == null){
 
-
-
-        }
         /*if(transformerClass == null){
             try {
                 transformerClass = Class.forName(transformerClassStr);
@@ -449,14 +389,7 @@ public class Instrument {
                 System.out.println("1b can not load " + transformerClassStr + " ");
             }
         }*/
-        if(transformerClass == null){
-            try {
-                transformerClass = Class.forName(transformerClassStr, true, ClassLoader.getSystemClassLoader());
-            } catch (ClassNotFoundException e) {
-                System.out.println("2b can not load " + transformerClassStr + " ");
-                throw new RuntimeException(e);
-            }
-        }
+
         /*if(transformerClass == null){
             try {
                 transformerClass = Class.forName(transformerClassStr, true, ClassLoader.getSystemClassLoader());
@@ -495,19 +428,6 @@ public class Instrument {
 
 
 
-
-
-        inst.addTransformer(transformer, true);
-        System.out.println("premain transformer added");
-
-        // call triggerRetransform( inst, inst.getAllLoadedClasses() )
-        try {
-            Method retransformMethod = transformer.getClass().getMethod("triggerRetransform", Instrumentation.class, Class[].class);
-            retransformMethod.invoke(transformer, inst, inst.getAllLoadedClasses());
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException("Failed to call triggerRetransform", e);
-        }
-
         // call resetCounters( )
         /*
         try {
@@ -518,19 +438,36 @@ public class Instrument {
         }
         */
 
+
+
+
+
+        inst.addTransformer(transformer, true);
+        System.out.println("premain transformer added");
+
+        /* call triggerRetransform( inst, inst.getAllLoadedClasses() )
+        try {
+            Method retransformMethod = transformer.getClass().getMethod("triggerRetransform", Instrumentation.class, Class[].class);
+            retransformMethod.invoke(transformer, inst, inst.getAllLoadedClasses());
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to call triggerRetransform", e);
+        }*/
+
         // add Shutdown-Hook
+        /*
+        ClassFileTransformer finalTransformer = transformer;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutdown-Hook started.");
             try {
                 try {
-                    Method blockIncrementMethod = transformer.getClass().getMethod("blockIncrement", boolean.class);
-                    blockIncrementMethod.invoke(transformer, true);
+                    Method blockIncrementMethod = finalTransformer.getClass().getMethod("blockIncrement", boolean.class);
+                    blockIncrementMethod.invoke(finalTransformer, true);
                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException("Failed to call blockIncrement(false)", e);
                 }
                 try {
-                    Method reportMethod = transformer.getClass().getMethod("report");
-                    reportMethod.invoke(transformer);
+                    Method reportMethod = finalTransformer.getClass().getMethod("report");
+                    reportMethod.invoke(finalTransformer);
                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException("Failed to call report (" + e.getMessage() + ")", e);
                 }
@@ -541,8 +478,10 @@ public class Instrument {
                 System.out.println("Shutdown-Hook ended.");
             }
         }));
-
+        */
         System.out.println("premain end");
+/*
+
 
         try {
             Method blockIncrementMethod = transformer.getClass().getMethod("blockIncrement", boolean.class);
@@ -550,8 +489,68 @@ public class Instrument {
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException("Failed to call blockIncrement(false)", e);
         }
-
+*/
     }
+
+    private static Class<?> loadCoreClass(Instrumentation inst,
+                                          ClassLoader[] cls, File bootstrapFile) {
+
+        JarFile bootstrapJar = fileToJarFile(bootstrapFile);
+
+        List<String> allClassNamesToLoad = getAllClassNamesFromJar(bootstrapFile);
+
+        // find coreClass name
+        String coreClassName = getMainAttributeFromJar(bootstrapJar, "Transformer-Class");
+        System.out.println("coreClassStr: " + coreClassName);
+
+        // load coreClass - try module-path mode
+        Map<String, Class<?>> loadedTransformerClasses = loadClassesFromModules(allClassNamesToLoad);
+        Class<?> coreClass = loadedTransformerClasses.get(coreClassName);
+        if(coreClass != null) {
+            System.out.println("'" + coreClassName + "' was loaded in module mode by " + coreClass.getClassLoader());
+            return coreClass;
+        }
+
+        // load coreClass - try classpath mode
+        for(int i = 0; i < cls.length - 1; i++){
+            if(cls[i] == null){
+                // Bootstrap-ClassLoader
+                coreClass = loadClass(coreClassName, null);
+                if(coreClass == null){
+                    //todo: we have to check jar is it fat?
+                    System.out.println("add '" + bootstrapFile + "' to BootstrapClassLoaderSearch. you may want to set -Xbootclasspath.");
+                    inst.appendToBootstrapClassLoaderSearch(bootstrapJar); // warning will not occur if -Xshare:off
+                    coreClass = loadClass(coreClassName, null);
+                }
+            }
+            else{
+                // normal-Classloaders
+                coreClass = loadClass(coreClassName, cls[i]);
+            }
+
+            if(coreClass != null){
+                // load classes of transformer before adding it to the instrumentation
+                // otherwise we create transformation loops
+                loadAllClassesFromJar(allClassNamesToLoad, cls[i]);
+                return coreClass;
+            }
+        }
+
+        throw new RuntimeException("can not load '" + coreClassName + "'");
+    }
+
+    private static Class<?> loadClass(String classStr, ClassLoader cls) {
+        try {
+            Class<?> transformerClass = Class.forName(classStr, true, cls);
+            System.out.println("'" + classStr + "' was loaded by " + cls);
+            return transformerClass;
+        } catch (ClassNotFoundException | NoClassDefFoundError e) {
+            System.err.println("'" + classStr + "' was not loaded by " + cls);
+        }
+        return null;
+    }
+
+
 
     private static JarFile fileToJarFile(File bootstrapFile) {
         JarFile bootstrapJar;
@@ -563,23 +562,33 @@ public class Instrument {
         return bootstrapJar;
     }
 
-    private static File findTransformerFile(String agentArgs) {
+    private static File[] findInstrumentationFilesFromAgentArgs(String agentArgs) {
         Map<String, String> args = parseAgentArgs(agentArgs);
-        String bootstrapJarPath = args.get(ARG_PATH_TO_TRANSFORMER_JAR);
-        if (bootstrapJarPath == null || bootstrapJarPath.isEmpty()) {
-            throw new IllegalArgumentException("premain Missing required agent argument: " + ARG_PATH_TO_TRANSFORMER_JAR + ":<path-to-bootstrap-jar>");
+        String bootstrapJarPathsStr = args.get(ARG_PATHS_OF_INSTRUMENTATION_JARS);
+        if (bootstrapJarPathsStr == null || bootstrapJarPathsStr.isEmpty()) {
+            throw new IllegalArgumentException("premain Missing required agent argument: " + ARG_PATHS_OF_INSTRUMENTATION_JARS + ":<paths-to-instrumentation-jars>");
         }
+
+        String[] bootstrapJarPaths = bootstrapJarPathsStr.split(",");
+        File[] re = new File[bootstrapJarPaths.length];
+        for (int i = 0; i < bootstrapJarPaths.length; i++) {
+            re[i] = findInstrumentationFile(bootstrapJarPaths[i]);
+        }
+        return re;
+    }
+
+    private static File findInstrumentationFile(String bootstrapJarPath) {
 
         File workingDir = (new File(".")).getAbsoluteFile();
         System.out.println("working dir: " + new File(".").getAbsoluteFile());
         Path  bootstrapPathRelativeToWorkingDir = workingDir.toPath().resolve(bootstrapJarPath);
         if(Files.exists(bootstrapPathRelativeToWorkingDir)){
             try {
-                System.out.println("transformer: " + bootstrapPathRelativeToWorkingDir.toFile().getCanonicalFile());
+                System.out.println("instrument jar: " + bootstrapPathRelativeToWorkingDir.toFile().getCanonicalFile());
                 return bootstrapPathRelativeToWorkingDir.toFile().getCanonicalFile();
             } catch (IOException e) {
-                System.err.println("can not find transformer: " + bootstrapPathRelativeToWorkingDir);
-                throw new RuntimeException("can not find transformer " + e);
+                System.err.println("can not find instrument jar: " + bootstrapPathRelativeToWorkingDir);
+                throw new RuntimeException("can not find instrument jar " + e);
             }
         }
 
@@ -587,7 +596,7 @@ public class Instrument {
         try {
             agentPath = Paths.get(Agent.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         } catch (URISyntaxException e) {
-            throw new RuntimeException("can not find transformer " + e);
+            throw new RuntimeException("can not find instrument jar " + e);
         }
         Path agentDir = Files.isDirectory(agentPath) && !agentPath.endsWith("classes") ? agentPath : agentPath.getParent();
         System.out.println("agent dir: " + agentDir);
@@ -595,11 +604,11 @@ public class Instrument {
         Path bootstrapPathRelativeToAgentDir = agentDir.resolve(bootstrapJarPath);
         if(Files.exists(bootstrapPathRelativeToAgentDir)){
             try {
-                System.out.println("transformer: " + bootstrapPathRelativeToAgentDir.toFile().getCanonicalFile());
+                System.out.println("instrument jar: " + bootstrapPathRelativeToAgentDir.toFile().getCanonicalFile());
                 return bootstrapPathRelativeToAgentDir.toFile().getCanonicalFile();
             } catch (IOException e) {
-                System.err.println("can not find transformer: " + bootstrapPathRelativeToAgentDir);
-                throw new RuntimeException("can not find transformer " + e);
+                System.err.println("can not find instrument jar: " + bootstrapPathRelativeToAgentDir);
+                throw new RuntimeException("can not find instrument jar " + e);
             }
         }
 
@@ -652,9 +661,10 @@ public class Instrument {
         for (String className : classNames) {
             try {
                 Class<?> c = Class.forName(className, true, loader);
-                System.out.println("load - " + className + " " + c.getModule().getName());
+                System.out.println("load - class: '" + className + "' module: '" + c.getModule().getName() + "' loader: '" + loader + "'");
             } catch (Throwable t) {
-                System.err.println("error at load - " + className + " " + t.getMessage());
+                System.err.println("error load - class: '" + className + "' loader: '" + loader + "' error: '" + t.getClass() + "' - '" + t.getMessage() + "'");
+                throw new RuntimeException("error load - class: '" + className + "' loader: '" + loader + "'", t);
             }
         }
     }
@@ -681,7 +691,7 @@ public class Instrument {
         Map<String,String> map = new TreeMap<>();
         if (agentArgs == null || agentArgs.trim().isEmpty()) return map;
 
-        String[] parts = agentArgs.split("[,;]");
+        String[] parts = agentArgs.split("[;]");
         for (String rawPart : parts) {
             String part = rawPart.trim();
             if (part.isEmpty()) continue;
