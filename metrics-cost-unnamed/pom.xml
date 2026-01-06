@@ -14,6 +14,8 @@
 
     <properties>
         <bootstrap.class>org.conetex.runtime.instrument.metrics.cost.unnamed.CounterMethods</bootstrap.class>
+        <append.to.bootstrap>true</append.to.bootstrap>
+        <!-- if "false" we have to start like this: -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -->
     </properties>
 
     <build>
@@ -25,7 +27,8 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Transformer-Class>${bootstrap.class}</Transformer-Class>
+                            <coreClass>${bootstrap.class}</coreClass>
+                            <appendToBootstrap>${append.to.bootstrap}</appendToBootstrap>
                         </manifestEntries>
                     </archive>
                 </configuration>

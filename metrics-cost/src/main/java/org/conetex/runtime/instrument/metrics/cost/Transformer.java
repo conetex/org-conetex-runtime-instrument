@@ -140,6 +140,328 @@ private static final String[] EXCLUDES_PACKAGES = new String[]{
 
 ---------------------------------------
 
+answer chatGpt pri
+
+Ja – **Profiler sind genau die Gegenbeispiele** zu „nur Applikationscode instrumentieren“.
+Sie gehen *bewusst* sehr weit, **aber nie vollständig**. Auch kommerzielle Profiler haben harte Ausschlüsse.
+
+Ich gebe dir das **realistische Bild aus echten Profilern** (Async-Profiler, JProfiler, YourKit, Flight Recorder, Glowroot, Elastic APM).
+
+---
+
+# 1️⃣ Grundprinzip von Profilern
+
+Profiler wollen:
+
+* **Callstacks**
+* **Zeit**
+* **Allokationen**
+* **Locks**
+* **IO / CPU / GC**
+
+❗ Aber sie dürfen **nicht**:
+
+* den Classloader brechen
+* Rekursionen erzeugen
+* den GC beeinflussen
+* JIT-Optimierungen zerstören
+* Sicherheitsmechanismen umgehen
+
+➡️ Deshalb **instrumentieren Profiler weniger Bytecode als man denkt**.
+
+---
+
+# 2️⃣ Kategorien von Ausschlüssen bei Profilern
+
+## A) **Unantastbare JVM-Klassen**
+
+Diese werden **nie** instrumentiert – selbst von Profilern:
+
+```text
+java.lang.Object
+java.lang.Class
+java.lang.Thread
+java.lang.ClassLoader
+java.lang.System
+java.lang.invoke.*
+java.lang.ref.*
+sun.misc.Unsafe
+jdk.internal.*
+```
+
+📌 **Warum?**
+
+* HotSpot geht von *exaktem Bytecode* aus
+* JIT setzt Intrinsics voraus
+* Sicherheits- & Performance-Garantien
+
+➡️ Beispiel: **Async-Profiler** nutzt *Sampling*, nicht Instrumentierung, genau deswegen.
+
+---
+
+## B) **Classloading & Bytecode-Frameworks**
+
+```text
+java.lang.instrument.*
+org.objectweb.asm.*
+net.bytebuddy.*
+javassist.*
+```
+
+📌 **Warum?**
+
+* Selbstinstrumentierung
+* Rekursion beim Transformieren
+* Deadlocks im ClassLoader
+
+➡️ Alle Profiler haben explizite „do not touch“-Listen für diese Packages.
+
+---
+
+## C) **Concurrency & Locks (nur sehr gezielt!)**
+
+Profiler:
+
+* **messen Locks**
+* instrumentieren aber **keine Lock-Implementierungen**
+
+```text
+java.util.concurrent.locks.*
+java.util.concurrent.atomic.*
+java.util.concurrent.ForkJoin*
+```
+
+📌 **Warum?**
+
+* Instrumentierung verändert Lock-Timing
+* Deadlocks & Heisenbugs
+
+➡️ Lock-Profiler nutzen:
+
+* JVMTI Events
+* Safepoints
+* OS-Timer
+
+---
+
+## D) **GC & Memory Internals**
+
+```text
+java.lang.ref.*
+java.nio.*
+sun.nio.*
+jdk.internal.ref.*
+```
+
+📌 **Warum?**
+
+* Referenzverarbeitung ist GC-kritisch
+* Bytecode-Änderung = Speicherleak oder Crash
+
+➡️ Allocation-Profiling:
+
+* TLAB Hooks
+* JVMTI ObjectAllocation events
+* Stack walking
+
+---
+
+## E) **JIT & Intrinsics**
+
+```text
+java.lang.Math
+java.lang.String
+java.lang.System.arraycopy
+```
+
+📌 **Warum?**
+
+* HotSpot ersetzt diese Methoden durch native Intrinsics
+* Instrumentierung verhindert Optimierungen
+
+➡️ Profiler *lesen* hier nur CPU-Zeit, kein Bytecode-Edit.
+
+---
+
+## F) **Eigene Profiler-Klassen**
+
+Alle Profiler haben **strikte Self-Exclusion**:
+
+```text
+com.yourkit.*
+com.jprofiler.*
+org.asyncprofiler.*
+```
+
+📌 **Warum?**
+
+* Endlosschleifen
+* verfälschte Messwerte
+
+---
+
+## G) **Logging & Monitoring Libraries**
+
+```text
+org.slf4j.*
+ch.qos.logback.*
+org.apache.logging.*
+```
+
+📌 **Warum?**
+
+* Logging passiert überall
+* Rekursion + massiver Overhead
+
+➡️ Profiler erfassen Logging **nur als Zeitanteil**, nicht instrumentiert.
+
+---
+
+## H) **Native / JNI Boundaries**
+
+```text
+java.lang.Runtime
+java.lang.Process*
+sun.nio.ch.*
+```
+
+📌 **Warum?**
+
+* Native Calls lassen sich nicht sauber instrumentieren
+* Übergänge werden über Stack-Sampling erfasst
+
+---
+
+# 3️⃣ Konkrete Beispiele realer Profiler
+
+## 🔥 Async-Profiler
+
+* **keine Bytecode-Instrumentierung** für Timing
+* Sampling via:
+
+  * perf events
+  * safepoint bias
+* Instrumentiert **nur optional**:
+
+  * Allocation tracking
+* Ausschluss: fast alles JVM-Core
+
+---
+
+## 🧠 JProfiler / YourKit
+
+* Kombination aus:
+
+  * JVMTI
+  * minimaler Bytecode-Instrumentierung
+* Ausschlusslisten enthalten:
+
+  * `java.lang.*`
+  * `java.util.concurrent.*`
+  * `sun.*`
+  * `jdk.internal.*`
+
+---
+
+## 📊 Java Flight Recorder (JFR)
+
+* **gar keine Bytecode-Instrumentierung**
+* Events direkt aus HotSpot
+
+➡️ Maximale Sicherheit, minimale Verzerrung
+
+---
+
+## 🧪 Glowroot / Elastic APM
+
+* instrumentieren:
+
+  * Servlets
+  * JDBC
+  * HTTP Clients
+* schließen aus:
+
+  * JDK
+  * Framework-Internals
+  * Logging
+
+---
+
+# 4️⃣ Beispiel: Typische Profiler-Exclusion-Liste (realistisch)
+
+```java
+String[] PROFILER_EXCLUDES = {
+
+    // JVM Core
+    "java/lang/",
+    "jdk/",
+    "sun/",
+
+    // Classloading & Instrumentation
+    "java/lang/instrument/",
+    "org/objectweb/asm/",
+    "net/bytebuddy/",
+    "javassist/",
+
+    // Concurrency & GC
+    "java/util/concurrent/",
+    "java/lang/ref/",
+    "sun/misc/",
+    "jdk/internal/",
+
+    // JIT Intrinsics
+    "java/lang/String",
+    "java/lang/Math",
+    "java/lang/System",
+
+    // Logging
+    "org/slf4j/",
+    "ch/qos/logback/",
+    "org/apache/logging/",
+
+    // Profiler itself
+    "com/yourprofiler/",
+    "org/asyncprofiler/"
+};
+```
+
+---
+
+# 5️⃣ Wichtigste Erkenntnis (die viele übersehen)
+
+> **Profiler instrumentieren nicht „viel“,
+> sie instrumentieren „strategisch“**.
+
+Je näher du an:
+
+* ClassLoader
+* GC
+* JIT
+* Locks
+* Threading
+
+kommst, desto weniger Bytecode-Instrumentierung –
+und desto mehr **JVMTI / Sampling / VM Events**.
+
+---
+
+Wenn du willst, können wir als Nächstes:
+
+* 🧬 **welche Klassen Profiler *gezielt* instrumentieren**
+* ⚙️ **Hybrid-Architektur: ASM + JVMTI**
+* 📉 **Messverzerrungen durch Instrumentierung**
+* 🧪 **Benchmark: Instrumentierung vs Sampling**
+
+durchgehen.
+
+
+---------------------------------------
+
+
+
+
+
+
     */
     public static final String[] UNTRANSFORMABLE = {
             // type names carefully: class-names do not end with "/" so switch from "startsWith" to "equals"
@@ -147,8 +469,10 @@ private static final String[] EXCLUDES_PACKAGES = new String[]{
             "java/lang/invoke/" , // needed for bootstrap calls
 
             // unblock test-classes
-            "org/conetex/runtime/instrument/test/jar/Main" ,
-            "org/conetex/runtime/instrument/test/jar/module/Main"
+            "org/conetex/runtime/instrument/test/jar/Main"            ,
+            "org/conetex/runtime/instrument/test/jar/MainTest"        ,
+            //"org/conetex/runtime/instrument/test/jar/module/Main"     ,
+            //"org/conetex/runtime/instrument/test/jar/module/MainTest"
 
             // "java/lang/invoke/MethodHandle$1" ,
             // "sun" ,
@@ -279,7 +603,7 @@ private static final String[] EXCLUDES_PACKAGES = new String[]{
 
         for(String untransformable : UNTRANSFORMABLE){
             if (
-                    classJvmName.startsWith(untransformable) ||                                     // todo class only means equals but this does not work with surefire
+                    classJvmName.equals(untransformable) ||                                     // class
                     (untransformable.endsWith("/") && classJvmName.startsWith(untransformable)) // package
             ) {
                 System.out.println("t noTransform: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +

@@ -3,6 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.conetex.runtime.instrument</groupId>
         <artifactId>parent</artifactId>
@@ -13,6 +14,7 @@
     <artifactId>metrics-cost</artifactId>
 
     <dependencies>
+
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
@@ -26,6 +28,11 @@
 
         <dependency>
             <groupId>org.conetex.runtime.instrument</groupId>
+            <artifactId>interfaces</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.conetex.runtime.instrument</groupId>
             <artifactId>counter</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
@@ -34,12 +41,31 @@
 
     <properties>
         <transformer.class>org.conetex.runtime.instrument.metrics.cost.Transformer</transformer.class>
-        <append.to.bootstrap>true</append.to.bootstrap>
-        <!-- if "false" we have to start like this: -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -->
     </properties>
 
     <build>
         <plugins>
+
+            <!-- keep dependencies to use them in test -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.9.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Maven Jar Plugin for normal JAR -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -52,7 +78,7 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                         <manifestEntries>
-                            <Transformer-Class>${transformer.class}</Transformer-Class>
+                            <coreClass>${transformer.class}</coreClass>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -77,7 +103,7 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Transformer-Class>${transformer.class}</Transformer-Class>
+                                        <coreClass>${transformer.class}</coreClass>
                                     </manifestEntries>
                                 </transformer>
 

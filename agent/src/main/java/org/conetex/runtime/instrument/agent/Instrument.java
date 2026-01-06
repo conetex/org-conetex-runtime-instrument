@@ -87,7 +87,7 @@ public class Instrument {
             throw new RuntimeException(e);
         }*/
 
-        String transformerClassStr = getMainAttributeFromJar(bootstrapJar, "Transformer-Class");
+        String transformerClassStr = getMainAttributeFromJar(bootstrapJar, "coreClass");
         Class<?> transformerClass;
         try {
             transformerClass = Class.forName(transformerClassStr, true, inst.getClass().getClassLoader());
@@ -499,8 +499,26 @@ public class Instrument {
         List<String> allClassNamesToLoad = getAllClassNamesFromJar(bootstrapFile);
 
         // find coreClass name
-        String coreClassName = getMainAttributeFromJar(bootstrapJar, "Transformer-Class");
+        String coreClassName = getMainAttributeFromJar(bootstrapJar, "coreClass");
         System.out.println("coreClassStr: " + coreClassName);
+
+        String appendToBootstrapStr = getMainAttributeFromJar(bootstrapJar, "appendToBootstrap");
+        System.out.println("appendToBootstrap: " + appendToBootstrapStr);
+        boolean appendToBootstrap = appendToBootstrapStr != null && appendToBootstrapStr.equals("true");
+
+        // load coreClass - BootstrapClassLoader
+        if(appendToBootstrap){
+            // Bootstrap-ClassLoader
+            inst.appendToBootstrapClassLoaderSearch(bootstrapJar); // warning will not occur if -Xshare:off
+            Class<?> coreClassBootstrap = loadClass(coreClassName, null);
+            if(coreClassBootstrap == null){
+                throw new RuntimeException("can not load '" + coreClassName + "'");
+            }
+            // load classes of transformer before adding it to the instrumentation
+            // otherwise we create transformation loops
+            loadAllClassesFromJar(allClassNamesToLoad, null);
+            return coreClassBootstrap;
+        }
 
         // load coreClass - try module-path mode
         Map<String, Class<?>> loadedTransformerClasses = loadClassesFromModules(allClassNamesToLoad);
@@ -512,11 +530,12 @@ public class Instrument {
 
         // load coreClass - try classpath mode
         for(int i = 0; i < cls.length - 1; i++){
+
+            // todo create run configs with nonfat-jar in classpath. then it is enough to just do "// normal-Classloaders" coreClass = loadClass(coreClassName, cls[i]);
             if(cls[i] == null){
                 // Bootstrap-ClassLoader
                 coreClass = loadClass(coreClassName, null);
                 if(coreClass == null){
-                    //todo: we have to check jar is it fat?
                     System.out.println("add '" + bootstrapFile + "' to BootstrapClassLoaderSearch. you may want to set -Xbootclasspath.");
                     inst.appendToBootstrapClassLoaderSearch(bootstrapJar); // warning will not occur if -Xshare:off
                     coreClass = loadClass(coreClassName, null);
