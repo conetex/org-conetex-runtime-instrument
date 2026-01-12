@@ -61,47 +61,178 @@ public class AVLTree<T extends Comparable<T>> {
         private Node<D> insert(D valueToInsert) {
             int cmp = valueToInsert.compareTo(this.data);
             if (cmp < 0){
-                Node<D> newLeft;
                 if(this.left == null){
-                    newLeft = new Node<D>(valueToInsert);
+                    return this.setLeftUpdateHeight( new Node<D>(valueToInsert) );
                 }
                 else{
-                    newLeft = this.left.insert(valueToInsert);
-                }
-                if( newLeft.height - 1 > (this.right == null ? 0 : this.right.height) ){
-                    // left heavy
-                    if ( newLeft.right == null || (newLeft.left != null && newLeft.left.height >= newLeft.right.height) ) {
-                        // LL
-                        return newLeft.rightRotate(this);
+                    Node<D> newLeft = this.left.insert(valueToInsert);
+                    if( newLeft.height - 1 > (this.right == null ? 0 : this.right.height) ){
+                        // left heavy
+                        if ( newLeft.right == null || (newLeft.left != null && newLeft.left.height >= newLeft.right.height) ) {
+                            // LL
+                            //return newLeft.rootRotateRight(this);
+                            return this.rotateRight(newLeft);
+                        }
+                        // left.right HIGHER ==> LR
+                        //return newLeft.right.rootRotateLeft(newLeft).rootRotateRight( this );
+                        return this.rotateLeftRight(newLeft);
                     }
-                    // left.right HIGHER ==> LR
-                    return newLeft.right.leftRotate(newLeft).rightRotate( this );
+                    return this.setLeftUpdateHeight( newLeft );
                 }
-                return this.rightNoRotate( newLeft );
             }
             if (cmp > 0){
-                Node<D> newRight;
                 if(this.right == null){
-                    newRight = new Node<D>(valueToInsert);
+                    return this.setRightUpdateHeight( new Node<D>(valueToInsert) );
                 }
                 else{
-                    newRight = this.right.insert(valueToInsert);
-                }
-                if( newRight.height - 1 > (this.left == null ? 0 : this.left.height) ){
-                    // right heavy
-                    if( newRight.left == null || (newRight.right != null && newRight.left.height <= newRight.right.height) ){
-                        // RR
-                        return newRight.leftRotate(this);
+                    Node<D> newRight = this.right.insert(valueToInsert);
+                    if( newRight.height - 1 > (this.left == null ? 0 : this.left.height) ){
+                        // right heavy
+                        if( newRight.left == null || (newRight.right != null && newRight.left.height <= newRight.right.height) ){
+                            // RR
+                            //return newRight.rootRotateLeft(this);
+                            return this.rotateLeft(newRight);
+                        }
+                        // right.left HIGHER ==> RL
+                        //return newRight.left.rootRotateRight(newRight).rootRotateLeft( this );
+                        return this.rotateRightLeft(newRight);
                     }
-                    // right.left HIGHER ==> RL
-                    return newRight.left.rightRotate(newRight).leftRotate( this );
+                    return this.setRightUpdateHeight( newRight );
                 }
-                return this.leftNoRotate( newRight );
             }
             // replace data
             this.setData(valueToInsert);
             return this;
         }
+
+
+        private Node<D> updateHeight() {
+            if(this.left == null){
+                if(this.right == null){
+                    this.height = 1;
+                }
+                else{
+                    this.height = 1 + this.right.height;
+                }
+            }
+            else{
+                if(this.right == null){
+                    this.height = 1 + this.left.height;
+                }
+                else{
+                    this.height = 1 + ((this.left.height > this.right.height) ? this.left.height : this.right.height);
+                }
+            }
+            return this;
+        }
+
+
+        // LL
+        private synchronized Node<D> rotateRight(Node<D> newRoot){
+            return newRoot.rootRotateRightUpdateHeight(this);
+        }
+
+        private synchronized Node<D> rootRotateRightUpdateHeight(Node<D> newRight){
+            return this.rootRotateRight(newRight).updateHeight();
+        }
+
+        private Node<D> rootRotateRight(Node<D> newRight) {
+            //synchronized (this.monitorRight) {
+                Node<D> newRightLeft = this.right;
+
+                // Perform rotation
+                this.right = newRight;
+                newRight.left = newRightLeft;
+
+                // Update heights
+                newRight.updateHeight();
+
+                // Return newRight.left
+                return this;
+            //}
+        }
+
+
+        // RR
+        private synchronized Node<D> rotateLeft(Node<D> newRoot){
+            return newRoot.rootRotateLeftUpdateHeight(this);
+        }
+
+        private synchronized Node<D> rootRotateLeftUpdateHeight(Node<D> newLeft) {
+            return this.rootRotateLeft(newLeft).updateHeight();
+        }
+
+        private Node<D> rootRotateLeft(Node<D> newLeft) {
+            //synchronized (this.monitorLeft) {
+                Node<D> newLeftRight = this.left;
+
+                // Perform rotation
+                this.left = newLeft;
+                newLeft.right = newLeftRight;
+
+                // Update heights
+                newLeft.updateHeight();
+
+                // Return newLeft.right
+                return this;
+            //}
+        }
+
+
+        // LR
+        private synchronized Node<D> rotateLeftRight(Node<D> newLeft) {
+            return newLeft.rightRotateLeftRight(this);
+        }
+
+        private synchronized Node<D> rightRotateLeftRight(Node<D> newRight) {
+            return this.right.rootRotateLeftRight(this, newRight);
+        }
+
+        private synchronized Node<D> rootRotateLeftRight(Node<D> newLeft, Node<D> newRight) {
+            return this.rootRotateLeft(newLeft).rootRotateRight(newRight).updateHeight();
+        }
+
+
+        // RL
+        private synchronized Node<D> rotateRightLeft(Node<D> newRight) {
+            return newRight.leftRotateRightLeft(this);
+        }
+
+        private synchronized Node<D> leftRotateRightLeft(Node<D> newLeft) {
+            return this.left.rootRotateRightLeft(this, newLeft);
+        }
+
+        private synchronized Node<D> rootRotateRightLeft(Node<D> newRight, Node<D> newLeft) {
+            return this.rootRotateRight(newRight).rootRotateLeft( newLeft ).updateHeight();
+        }
+
+
+        // rebalancing not needed
+        private synchronized Node<D> setRightUpdateHeight(Node<D> newRight) {
+            //synchronized (this.monitorRight){
+                this.right = newRight;
+                this.updateHeight();
+                return this;
+            //}
+        }
+
+        private synchronized Node<D> setLeftUpdateHeight(Node<D> newLeft) {
+            //synchronized (this.monitorLeft){
+                this.left = newLeft;
+                this.updateHeight();
+                return this;
+            //}
+        }
+
+
+
+
+
+        private void setData(D newData) {
+            this.data = newData;
+        }
+
+
 
         private Node<D> find(D valueToFind) {
             int cmp = valueToFind.compareTo(this.data);
@@ -172,10 +303,10 @@ public class AVLTree<T extends Comparable<T>> {
                 Node<D> newLeft = this.left;
                 if ( newLeft.right == null || (newLeft.left != null && newLeft.left.height >= newLeft.right.height) ) {
                     // LL
-                    return newLeft.rightRotate(this);
+                    return newLeft.rootRotateRightUpdateHeight(this);
                 } else {
                     // LR
-                    return newLeft.right.leftRotate(newLeft).rightRotate(this);
+                    return newLeft.right.rootRotateLeftUpdateHeight(newLeft).rootRotateRightUpdateHeight(this);
                 }
             }
             if (rightHeight > leftHeight + 1) {
@@ -183,97 +314,18 @@ public class AVLTree<T extends Comparable<T>> {
                 Node<D> newRight = this.right;
                 if ( newRight.left == null || (newRight.right != null && newRight.left.height <= newRight.right.height) ) {
                     // RR
-                    return newRight.leftRotate(this);
+                    return newRight.rootRotateLeftUpdateHeight(this);
                 } else {
                     // RL
-                    return newRight.left.rightRotate(newRight).leftRotate(this);
+                    return newRight.left.rootRotateRightUpdateHeight(newRight).rootRotateLeftUpdateHeight(this);
                 }
             }
             this.updateHeight();
             return this;
         }
 
-        private static <T extends Comparable<T>> Node<T> minValueNode(Node<T> node) {
-            Node<T> current = node;
-            while (current.left != null) {
-                current = current.left;
-            }
-            return current;
-        }
 
 
-        private void setData(D newData) {
-            this.data = newData;
-        }
-
-        private synchronized Node<D> rightRotate(Node<D> newRight) {
-            //synchronized (this.monitorRight) {
-                Node<D> newRightLeft = this.right;
-
-                // Perform rotation
-                this.right = newRight;
-                newRight.left = newRightLeft;
-
-                // Update heights
-                newRight.updateHeight();
-                this.updateHeight();
-
-                // Return newRight.left
-                return this;
-            //}
-        }
-
-        private synchronized Node<D> leftRotate(Node<D> newLeft) {
-            //synchronized (this.monitorLeft) {
-                Node<D> newLeftRight = this.left;
-
-                // Perform rotation
-                this.left = newLeft;
-                newLeft.right = newLeftRight;
-
-                // Update heights
-                newLeft.updateHeight();
-                this.updateHeight();
-
-                // Return newLeft.right
-                return this;
-            //}
-        }
-
-        private synchronized Node<D> leftNoRotate(Node<D> newRight) {
-            //synchronized (this.monitorRight){
-                this.right = newRight;
-                this.updateHeight();
-                return this;
-            //}
-        }
-
-        private synchronized Node<D> rightNoRotate(Node<D> newLeft) {
-            //synchronized (this.monitorLeft){
-                this.left = newLeft;
-                this.updateHeight();
-                return this;
-            //}
-        }
-
-        private void updateHeight() {
-            if(this.left == null){
-                if(this.right == null){
-                    this.height = 1;
-                }
-                else{
-                    this.height = 1 + this.right.height;
-                }
-            }
-            else{
-                if(this.right == null){
-                    this.height = 1 + this.left.height;
-                }
-                else{
-                    this.height = 1 + ((this.left.height > this.right.height) ? this.left.height : this.right.height);
-                }
-            }
-        }
 
         @Override
         public D data() {
