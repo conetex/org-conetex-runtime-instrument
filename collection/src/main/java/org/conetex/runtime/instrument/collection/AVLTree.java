@@ -227,33 +227,22 @@ public class AVLTree<T extends Comparable<T>> {
         private Node<D> rotateLeftRightNew(Node<D> newLeft) {
             if(newLeft == this.left){
                 // newLeft is not new ==> make it new
-
-                Node<D> reA = new Node<>(
+                return new Node<>(
                         newLeft.right.data,
                         new Node<>(newLeft.data, newLeft.left, newLeft.right.left),
                         new Node<>(this.data, newLeft.right.right, this.right)
                 );
-
-                // Update heights
-                reA.updateHeight();
-                return reA;
             }
             else{
                 // newLeft is new ==> update it
-
-                D data = newLeft.right.data; // but remember data before update
+                D dataR = newLeft.right.data; // but remember data before update
                 newLeft.right = newLeft.right.left;
                 newLeft.updateHeight();
-
-                Node<D> reA = new Node<>(
-                        data,
+                return new Node<>(
+                        dataR,
                         newLeft,
                         new Node<>(this.data, newLeft.right.right, this.right)
                 );
-
-                // Update heights
-                reA.updateHeight();
-                return reA;
             }
         }
 
@@ -272,8 +261,25 @@ public class AVLTree<T extends Comparable<T>> {
 
         // RL
         private Node<D> rotateRightLeftNew(Node<D> newRight) {
-            // todo implement
-            return null;
+            if(newRight == this.right){
+                // newRight is not new ==> make it new
+                return new Node<D>(
+                        newRight.left.data,
+                        new Node<D>(this.data, this.left, newRight.left.left),
+                        new Node<D>(newRight.data, newRight.left.right, newRight.right)
+                );
+            }
+            else{
+                // newRight is new ==> update it
+                D dataL = newRight.left.data; // but remember data before update
+                newRight.left = newRight.left.right;
+                newRight.updateHeight();
+                return new Node<D>(
+                        dataL,
+                        new Node<D>(this.data, this.left, newRight.left.left),
+                        newRight
+                );
+            }
         }
 
         private synchronized Node<D> rotateRightLeft(Node<D> newRight) {
