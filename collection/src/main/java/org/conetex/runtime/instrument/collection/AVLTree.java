@@ -258,8 +258,7 @@ public class AVLTree<T extends Comparable<T>> {
             return this.rootRotateLeft(newLeft).rootRotateRight(newRight).updateHeight();
         }
 
-
-
+        
         // RL
         private Node<D> rotateRightLeftNew(Node<D> newRight) {
             if(newRight == this.right){
