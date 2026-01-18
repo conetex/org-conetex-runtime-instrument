@@ -106,8 +106,8 @@ public class AVLTree<T extends Comparable<T>> {
             }
 
             @Override
-            Node<K, K> create() {
-                return new Key<>(super.key);
+            void takeOverKeyValue(Node<K, K> other) {
+                super.key = other.key;
             }
 
             @Override
@@ -204,8 +204,10 @@ public class AVLTree<T extends Comparable<T>> {
                 return new KeyValue<>(super.key, this.value, left, right);
             }
 
-            Node<K, V> create() {
-                return new KeyValue<>(super.key, this.value);
+            @Override
+            void takeOverKeyValue(Node<K, V> other) {
+                super.key = other.key;
+                this.value = other.value();
             }
 
             @Override
@@ -220,9 +222,6 @@ public class AVLTree<T extends Comparable<T>> {
 
         }
     }
-
-
-
 
     private static abstract class Node<K extends Comparable<K>, V>{
 
@@ -248,7 +247,7 @@ public class AVLTree<T extends Comparable<T>> {
 
         abstract Node<K, V> create(Node<K, V> left, Node<K, V> right);
 
-        abstract Node<K, V> create();
+        abstract void takeOverKeyValue(Node<K, V> other);
 
         public abstract V value();
 
@@ -493,7 +492,7 @@ public class AVLTree<T extends Comparable<T>> {
                         newValueNode = newValueNode.left;
                     }
                     // copy data from successor to this
-                    this.key = newValueNode.key;
+                    this.takeOverKeyValue(newValueNode);
                     // remove successor
                     valueToRemove = newValueNode.key;
                 }
@@ -528,7 +527,6 @@ public class AVLTree<T extends Comparable<T>> {
                     }
                 }
             }
-
 
         }
 
