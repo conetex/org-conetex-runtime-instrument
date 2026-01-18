@@ -13,14 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class AVLTreeTest {
 
     // Hilfsmethode: liest das private Feld 'root' via Reflection
-    private Object getRootObject(AVLTree<?> tree) throws Exception {
+    private Object getRootObject(AVLTree.Set<?> tree) throws Exception {
         Field rootField = AVLTree.class.getDeclaredField("root");
         rootField.setAccessible(true);
         return rootField.get(tree);
     }
 
     // Hilfsmethode: rekursive Inorder-Sammlung via Reflection (unabhängig von den package-methoden)
-    private <D extends Comparable<D>> List<D> collectInOrderReflectively(AVLTree<D> tree) throws Exception {
+    private <D extends Comparable<D>> List<D> collectInOrderReflectively(AVLTree.Set<D> tree) throws Exception {
         Object root = getRootObject(tree);
         List<D> out = new ArrayList<>();
         if (root == null) return out;
@@ -51,7 +51,7 @@ class AVLTreeTest {
     }
 
     // Hilfsmethode: ruft die package-private Traversal-Methoden via Reflection auf (um deren Code zu decken)
-    private void invokeTraversals(AVLTree<?> tree) throws Exception {
+    private void invokeTraversals(AVLTree.Set<?> tree) throws Exception {
         Object root = getRootObject(tree);
         Class<?> nodeClass = Class.forName("org.conetex.runtime.instrument.collection.AVLTree$Node");
 
@@ -71,7 +71,7 @@ class AVLTreeTest {
 
     @Test
     void testLLRotation() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Insert 3,2,1 -> LL case -> right rotation
         tree.insertIntoTree(3);
         tree.insertIntoTree(2);
@@ -87,7 +87,7 @@ class AVLTreeTest {
 
     @Test
     void testRRRotation() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Insert 1,2,3 -> RR case -> left rotation
         tree.insertIntoTree(1);
         tree.insertIntoTree(2);
@@ -101,7 +101,7 @@ class AVLTreeTest {
 
     @Test
     void testLRRotation() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Insert 3,1,2 -> LR case
         tree.insertIntoTree(3);
         tree.insertIntoTree(1);
@@ -115,7 +115,7 @@ class AVLTreeTest {
 
     @Test
     void testRLRotation() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Insert 1,3,2 -> RL case
         tree.insertIntoTree(1);
         tree.insertIntoTree(3);
@@ -129,7 +129,7 @@ class AVLTreeTest {
 
     @Test
     void testDuplicateInsertReplaces() throws Exception {
-        AVLTree<String> tree = new AVLTree<>();
+        AVLTree.Set<String> tree = new AVLTree.Set<>();
         tree.insertIntoTree("b");
         tree.insertIntoTree("a");
         tree.insertIntoTree("c");
@@ -142,13 +142,13 @@ class AVLTreeTest {
 
     @Test
     void testInsertNullThrows() {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         assertThrows(NullPointerException.class, () -> tree.insertIntoTree(null));
     }
 
     @Test
     void testDeleteTriggersLLRotation() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Aufbau so, dass nach dem Löschen eines rechten Knotens ein left-heavy Fall entsteht (LL)
         // Sequenz gewählt aus klassischen AVL-Beispielen
         int[] inserts = {30, 20, 40, 10, 25, 5, 15, 2};
@@ -169,7 +169,7 @@ class AVLTreeTest {
 
     @Test
     void testDeleteTriggersRRRotation() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Aufbau so, dass nach dem Löschen eines linken Knotens ein right-heavy Fall entsteht (RR)
         int[] inserts = {10, 20, 5, 30, 25, 40, 35, 45};
         for (int v : inserts) tree.insertIntoTree(v);
@@ -187,7 +187,7 @@ class AVLTreeTest {
 
     @Test
     void testDeleteTriggersLRRotation() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Aufbau für LR-Fall nach Löschung: linkes Kind hat rechten schweren Teil
         int[] inserts = {30, 10, 40, 5, 20, 15, 25, 17};
         for (int v : inserts) tree.insertIntoTree(v);
@@ -205,7 +205,7 @@ class AVLTreeTest {
 
     @Test
     void testDeleteTriggersRLRotation() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Aufbau für RL-Fall nach Löschung: rechtes Kind hat linken schweren Teil
         int[] inserts = {30, 10, 40, 5, 20, 15, 25, 22};
         for (int v : inserts) tree.insertIntoTree(v);
@@ -222,7 +222,7 @@ class AVLTreeTest {
 
     @Test
     void testDeleteLeafAndOneChildAndTwoChildren() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
 
         // Aufbau ähnlich zu deinem main-Beispiel
         int[] inserts = {3,2,1,4,5,6,7,16,25,19,20,5};
@@ -267,7 +267,7 @@ class AVLTreeTest {
 
     @Test
     void testDeleteRootAndComplexCase() throws Exception {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Build a tree where root will be deleted and successor logic used
         int[] inserts = {20,10,30,5,15,12,17};
         for (int v : inserts) tree.insertIntoTree(v);

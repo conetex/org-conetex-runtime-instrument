@@ -2,118 +2,423 @@ package org.conetex.runtime.instrument.collection;
 
 public class AVLTree<T extends Comparable<T>> {
 
-    private Node<T> root;
+    public static class Set<T extends Comparable<T>> {
 
-    public void insertIntoTree(T valueToInsert) {
-        if(valueToInsert == null){
-            throw new NullPointerException("can not insert null");
+        private Node<T,T> root;
+
+        public void insertIntoTree(T valueToInsert) {
+            if(valueToInsert == null){
+                throw new NullPointerException("can not insert null");
+            }
+
+            Node<T, T> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    this.root = new Key<>(valueToInsert);
+                    return;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,T> newRoot = theRoot.insert(new Key<>(valueToInsert));
+            synchronized(this) {
+                this.root = newRoot;
+            }
         }
-        if(this.root == null){
-            this.root = new Node<T>(valueToInsert);
+
+        public void deleteFromTree(T keyToDelete) {
+            if(keyToDelete == null){
+                throw new NullPointerException("can not delete null");
+            }
+
+            Node<T,T> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    return;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,T> newRoot = theRoot.delete(keyToDelete);
+            synchronized(this) {
+                this.root = newRoot;
+            }
         }
-        else{
-            this.root = this.root.insert(valueToInsert);
+
+        public T findInTree(T keyToFind) {
+            if(keyToFind == null){
+                throw new NullPointerException("can not find null");
+            }
+
+            Node<T,T> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    return null;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,T> result = theRoot.find(keyToFind);
+            if(result == null){
+                return null;
+            }
+            return result.value();
+        }
+
+        // Utility functions for traversal
+        void preOrder(Node<?,?> node) {
+            if (node != null) {
+                System.out.print(node.key + " ");
+                preOrder(node.left);
+                preOrder(node.right);
+            }
+        }
+
+        void inOrder(Node<?,?> node) {
+            if (node != null) {
+                inOrder(node.left);
+                System.out.print(node.key + " ");
+                inOrder(node.right);
+            }
+        }
+
+        void postOrder(Node<?,?> node) {
+            if (node != null) {
+                postOrder(node.left);
+                postOrder(node.right);
+                System.out.print(node.key + " ");
+            }
+        }
+
+        private static class Key<K extends Comparable<K>> extends Node<K, K> implements Entry<K, K>{
+
+            private Key(K newKey, Node<K, K> left, Node<K, K> right) {
+                super(newKey, left, right);
+            }
+
+            @Override
+            Node<K, K> create(Node<K, K> left, Node<K, K> right) {
+                return new Key<>(super.key, left, right);
+            }
+
+            private Key(K newKey) {
+                super(newKey);
+            }
+
+            @Override
+            Node<K, K> create() {
+                return new Key<>(super.key);
+            }
+
+            @Override
+            public K key() {
+                return super.key;
+            }
+
+            @Override
+            public K value() {
+                return super.key;
+            }
+
         }
     }
 
-    public void deleteFromTree(T valueToDelete) {
-        if (valueToDelete == null) {
-            return;
+    public static class Map<T extends Comparable<T>, V> {
+
+        private Node<T,V> root;
+
+        public void insertIntoTree(T valueToInsert, V v) {
+            if(valueToInsert == null){
+                throw new NullPointerException("can not insert null");
+            }
+
+            Node<T, V> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    this.root = new KeyValue<T,V>(valueToInsert, v);
+                    return;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,V> newRoot = theRoot.insert(new KeyValue<T,V>(valueToInsert, v));
+            synchronized(this) {
+                this.root = newRoot;
+            }
         }
-        if (this.root != null) {
-            this.root = this.root.delete(valueToDelete);
+
+        public void deleteFromTree(T keyToDelete) {
+            if(keyToDelete == null){
+                throw new NullPointerException("can not delete null");
+            }
+
+            Node<T,V> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    return;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,V> newRoot = theRoot.delete(keyToDelete);
+            synchronized(this) {
+                this.root = newRoot;
+            }
+        }
+
+        public V findInTree(T keyToFind) {
+            if(keyToFind == null){
+                throw new NullPointerException("can not find null");
+            }
+
+            Node<T,V> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    return null;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,V> result = theRoot.find(keyToFind);
+            if(result == null){
+                return null;
+            }
+            return result.value();
+        }
+
+        private static class KeyValue<K extends Comparable<K>, V> extends Node<K, V> implements Entry<K, V>{
+
+            private V value;
+
+            private KeyValue(K newKey, V newValue, Node<K, V> left, Node<K, V> right) {
+                super(newKey, left, right);
+                this.value = newValue;
+            }
+
+            private KeyValue(K newKey, V newValue) {
+                super(newKey);
+                this.value = newValue;
+            }
+
+            Node<K, V> create(Node<K, V> left, Node<K, V> right) {
+                return new KeyValue<>(super.key, this.value, left, right);
+            }
+
+            Node<K, V> create() {
+                return new KeyValue<>(super.key, this.value);
+            }
+
+            @Override
+            public K key() {
+                return super.key;
+            }
+
+            @Override
+            public V value() {
+                return this.value;
+            }
+
         }
     }
 
-    public Entry<T> findInTree(T valueToFind) {
-        if(valueToFind == null){
-            throw new NullPointerException("can not find null");
-        }
-        if(this.root == null){
-            return null;
-        }
-        else{
-            return this.root.find(valueToFind);
-        }
-    }
 
-    public static interface Entry<I extends Comparable<I>>{
-        public I data();
-    }
 
-    private static class Node<D extends Comparable<D>> implements Entry<D> {
 
-        private D data;
+    private static abstract class Node<K extends Comparable<K>, V>{
+
+        private K key;
         private int height;
 
-        private final Object monitorLeft = new Object();
-        private final Object monitorRight = new Object();
+        private Node<K, V> left;
+        private Node<K, V> right;
 
-        private Node<D> left;
-        private Node<D> right;
-
-        private Node(D newData) {
-            setData(newData);
+        private Node(K newKey) {
+            this.key = newKey;
+            this.left = null;
+            this.right = null;
             this.height = 1;
         }
 
-        private Node(D data, Node<D> left, Node<D> right) {
-            this.data = data;
+        private Node(K newKey, Node<K, V> left, Node<K, V> right) {
+            this.key = newKey;
             this.left = left;
             this.right = right;
             this.updateHeight();
         }
 
+        abstract Node<K, V> create(Node<K, V> left, Node<K, V> right);
+
+        abstract Node<K, V> create();
+
+        public abstract V value();
+
+        public K key() {
+            return this.key;
+        }
+
         // Insert a key into the AVL tree and return the new root of the subtree
-        private Node<D> insert(D valueToInsert) {
-            int cmp = valueToInsert.compareTo(this.data);
+        private Node<K, V> insert(Node<K, V> nodeToInsert) {
+            int cmp = nodeToInsert.key.compareTo(this.key);
             if (cmp < 0){
-                if(this.left == null){
-                    return this.setLeftUpdateHeight( new Node<D>(valueToInsert) );
-                }
-                else{
-                    Node<D> newLeft = this.left.insert(valueToInsert);
-                    if( newLeft.height - 1 > (this.right == null ? 0 : this.right.height) ){
-                        // left heavy
-                        if ( newLeft.right == null || (newLeft.left != null && newLeft.left.height >= newLeft.right.height) ) {
-                            // LL
-                            //return newLeft.rootRotateRight(this);
-                            return this.rotateRightNew(newLeft);
+                Node<K, V> oldLeft;
+                while(true) {
+                    synchronized (this) {
+                        if (this.left == null) {
+                            return this.setLeftUpdateHeight(nodeToInsert);
                         }
-                        // left.right HIGHER ==> LR
-                        //return newLeft.right.rootRotateLeft(newLeft).rootRotateRight( this );
-                        return this.rotateLeftRightNew(newLeft);
+                        oldLeft = this.left;
                     }
-                    return this.setLeftUpdateHeight( newLeft );
+                    Node<K, V> newLeft = oldLeft.insert(nodeToInsert);
+                    synchronized (this) {
+                        if (this.left != oldLeft) {
+                            // another thread changed this.left ==> retry
+                            continue;
+                        }
+                        // no other thread changed this.left in between
+                        if (newLeft.height - 1 > (this.right == null ? 0 : this.right.height)) {
+                            // left heavy
+                            if (newLeft.right == null || (newLeft.left != null && newLeft.left.height >= newLeft.right.height)) {
+                                // LL
+                                return this.rotateRightNew(newLeft, oldLeft);
+                            }
+                            // left.right HIGHER ==> LR
+                            return this.rotateLeftRightNew(newLeft, oldLeft);
+                        }
+                        return this.setLeftUpdateHeight(newLeft);
+                    }
                 }
             }
             if (cmp > 0){
-                if(this.right == null){
-                    return this.setRightUpdateHeight( new Node<D>(valueToInsert) );
-                }
-                else{
-                    Node<D> newRight = this.right.insert(valueToInsert);
-                    if( newRight.height - 1 > (this.left == null ? 0 : this.left.height) ){
-                        // right heavy
-                        if( newRight.left == null || (newRight.right != null && newRight.left.height <= newRight.right.height) ){
-                            // RR
-                            //return newRight.rootRotateLeft(this);
-                            return this.rotateLeftNew(newRight);
+                Node<K, V> oldRight;
+                while(true) {
+                    synchronized (this) {
+                        if (this.right == null) {
+                            return this.setRightUpdateHeight(nodeToInsert);
                         }
-                        // right.left HIGHER ==> RL
-                        //return newRight.left.rootRotateRight(newRight).rootRotateLeft( this );
-                        return this.rotateRightLeftNew(newRight);
+                        oldRight = this.right;
                     }
-                    return this.setRightUpdateHeight( newRight );
+                    Node<K, V> newRight = oldRight.insert(nodeToInsert);
+                    synchronized (this) {
+                        if (this.right == oldRight) {
+                            // no other thread changed this.right in between
+                            if (newRight.height - 1 > (this.left == null ? 0 : this.left.height)) {
+                                // right heavy
+                                if (newRight.left == null || (newRight.right != null && newRight.left.height <= newRight.right.height)) {
+                                    // RR
+                                    return this.rotateLeftNew(newRight, oldRight);
+                                }
+                                // right.left HIGHER ==> RL
+                                return this.rotateRightLeftNew(newRight, oldRight);
+                            }
+                            return this.setRightUpdateHeight(newRight);
+                        }   // else: another thread changed this.left ==> retry
+                    }
                 }
             }
             // replace data
-            this.setData(valueToInsert);
+            this.key = nodeToInsert.key;
+            synchronized (this) {
+                nodeToInsert.left = this.left;
+                nodeToInsert.right = this.right;
+            }
+            return nodeToInsert;
+        }
+
+        // LL
+        private Node<K, V> rotateRightNew(Node<K, V> newRoot, Node<K, V> oldLeft) {
+
+            // Perform rotation
+            Node<K, V> newThis = this.create(newRoot.right, this.right);
+
+            if(newRoot == oldLeft){
+                // newRoot is not new ==> make it new
+                return newRoot.create(newRoot.left, newThis);
+            }
+            else{
+                // newRoot is new ==> we can change it
+                newRoot.right = newThis;
+                // Update heights
+                newRoot.updateHeight();
+                return newRoot;
+            }
+
+        }
+
+        // RR
+        private Node<K, V> rotateLeftNew(Node<K, V> newRoot, Node<K, V> oldRight) {
+
+            // Perform rotation
+            Node<K, V> newThis = this.create(this.left, newRoot.left);
+
+            if(newRoot == oldRight){
+                // newRoot is not new ==> make it new
+                return newRoot.create(newThis, newRoot.right);
+            }
+            else{
+                // newRoot is new ==> we can change it
+                newRoot.left = newThis;
+                newRoot.updateHeight();
+                return newRoot;
+            }
+
+        }
+
+        // LR
+        private Node<K, V> rotateLeftRightNew(Node<K, V> newLeft, Node<K, V> oldLeft) {
+            if(newLeft == oldLeft){
+                // newLeft is not new ==> make it new
+                return newLeft.right.create(
+                        newLeft.create(newLeft.left, newLeft.right.left),
+                        this.create(newLeft.right.right, this.right)
+                );
+            }
+            else{
+                // newLeft is new ==> update it
+                Node<K, V> newLeftRight = newLeft.right; // but remember data before update
+                newLeft.right = newLeft.right.left;
+                newLeft.updateHeight();
+                return newLeftRight.create(
+                        newLeft,
+                        this.create(newLeft.right.right, this.right)
+                );
+            }
+        }
+
+        // RL
+        private Node<K, V> rotateRightLeftNew(Node<K, V> newRight, Node<K, V> oldRight) {
+            if(newRight == oldRight){
+                // newRight is not new ==> make it new
+                return newRight.left.create(
+                        this.create(this.left, newRight.left.left),
+                        newRight.create(newRight.left.right, newRight.right)
+                );
+            }
+            else{
+                // newRight is new ==> update it
+                Node<K, V> newRightLeft = newRight.left; // but remember data before update
+                newRight.left = newRight.left.right;
+                newRight.updateHeight();
+                return newRightLeft.create(
+                        this.create(this.left, newRight.left.left),
+                        newRight
+                );
+            }
+        }
+
+        // rebalancing not needed
+        private Node<K, V> setRightUpdateHeight(Node<K, V> newRight) {
+            this.right = newRight;
+            this.updateHeight();
             return this;
         }
 
+        private Node<K, V> setLeftUpdateHeight(Node<K, V> newLeft) {
+            this.left = newLeft;
+            this.updateHeight();
+            return this;
+        }
 
-        private Node<D> updateHeight() {
+        private void updateHeight() {
             if(this.left == null){
                 if(this.right == null){
                     this.height = 1;
@@ -130,200 +435,105 @@ public class AVLTree<T extends Comparable<T>> {
                     this.height = 1 + ((this.left.height > this.right.height) ? this.left.height : this.right.height);
                 }
             }
-            return this;
         }
 
+        private Node<K, V> delete(K valueToRemove) {
+            int cmp = valueToRemove.compareTo(this.key);
 
-        // LL
-        private Node<D> rotateRightNew(Node<D> newRoot) {
-
-            // Perform rotation
-            Node<D> newThis = new Node<>(this.data, newRoot.right, this.right);
-
-            if(newRoot == this.left){
-                // newRoot is not new ==> make it new
-                return new Node<>(newRoot.data, newRoot.left, newThis);
-            }
-            else{
-                // newRoot is new ==> we can change it
-                newRoot.right = newThis;
-                // Update heights
-                newRoot.updateHeight();
-                return newRoot;
-            }
-
-        }
-
-        private synchronized Node<D> rotateRight(Node<D> newRoot){
-            return newRoot.rootRotateRightUpdateHeight(this);
-        }
-
-        private synchronized Node<D> rootRotateRightUpdateHeight(Node<D> newRight){
-            return this.rootRotateRight(newRight).updateHeight();
-        }
-
-        private Node<D> rootRotateRight(Node<D> newRight) {
-            //synchronized (this.monitorRight) {
-                Node<D> newRightLeft = this.right;
-
-                // Perform rotation
-                this.right = newRight;
-                newRight.left = newRightLeft;
-
-                // Update heights
-                newRight.updateHeight();
-
-                // Return newRight.left
-                return this;
-            //}
-        }
-
-
-        // RR
-        private Node<D> rotateLeftNew(Node<D> newRoot) {
-
-            // Perform rotation
-            Node<D> newThis = new Node<>(this.data, this.left, newRoot.left);
-
-            if(newRoot == this.right){
-                // newRoot is not new ==> make it new
-                return new Node<>(newRoot.data, newThis, newRoot.right);
-            }
-            else{
-                // newRoot is new ==> we can change it
-                newRoot.left = newThis;
-                newRoot.updateHeight();
-                return newRoot;
+            if (cmp < 0) {
+                // go left
+                Node<K, V> oldLeft, oldRight;
+                while(true) {
+                    synchronized (this) {
+                        if (this.left == null) {
+                            return this;
+                        }
+                        oldLeft = this.left;
+                        oldRight = this.right;
+                    }
+                    Node<K, V> newLeft = oldLeft.delete(valueToRemove);
+                    synchronized (this) {
+                        if (this.left == oldLeft) {
+                            this.left = newLeft;
+                            if (this.right != null && this.right.height > ((newLeft == null) ? 0 : newLeft.height) + 1) {
+                                // right heavy
+                                if (this.right.left == null || (this.right.right != null && this.right.left.height <= this.right.right.height)) {
+                                    // RR
+                                    return rotateLeftNew(this.right, oldRight);
+                                } else {
+                                    // RL
+                                    return rotateRightLeftNew(this.right, oldRight);
+                                }
+                            }
+                            this.updateHeight();
+                            return this;
+                        }
+                    }
+                }
             }
 
-        }
-
-        private synchronized Node<D> rotateLeft(Node<D> newRoot){
-            return newRoot.rootRotateLeftUpdateHeight(this);
-        }
-
-        private synchronized Node<D> rootRotateLeftUpdateHeight(Node<D> newLeft) {
-            return this.rootRotateLeft(newLeft).updateHeight();
-        }
-
-        private Node<D> rootRotateLeft(Node<D> newLeft) {
-            //synchronized (this.monitorLeft) {
-                Node<D> newLeftRight = this.left;
-
-                // Perform rotation
-                this.left = newLeft;
-                newLeft.right = newLeftRight;
-
-                // Update heights
-                newLeft.updateHeight();
-
-                // Return newLeft.right
-                return this;
-            //}
-        }
-
-
-        // LR
-        private Node<D> rotateLeftRightNew(Node<D> newLeft) {
-            if(newLeft == this.left){
-                // newLeft is not new ==> make it new
-                return new Node<>(
-                        newLeft.right.data,
-                        new Node<>(newLeft.data, newLeft.left, newLeft.right.left),
-                        new Node<>(this.data, newLeft.right.right, this.right)
-                );
+            if (cmp == 0) {
+                // found node
+                synchronized (this) {
+                    if (this.left == null && this.right == null) {
+                        // delete this node - successor not needed
+                        return null;
+                    }
+                    if (this.left == null) {
+                        // delete this node - successor is right
+                        return this.right;
+                    }
+                    if (this.right == null) {
+                        // delete this node - successor is left
+                        return this.left;
+                    }
+                    // delete this node - new value is smallest (left) at right
+                    Node<K, V> newValueNode = this.right;
+                    while (newValueNode.left != null) {
+                        newValueNode = newValueNode.left;
+                    }
+                    // copy data from successor to this
+                    this.key = newValueNode.key;
+                    // remove successor
+                    valueToRemove = newValueNode.key;
+                }
             }
-            else{
-                // newLeft is new ==> update it
-                D dataR = newLeft.right.data; // but remember data before update
-                newLeft.right = newLeft.right.left;
-                newLeft.updateHeight();
-                return new Node<>(
-                        dataR,
-                        newLeft,
-                        new Node<>(this.data, newLeft.right.right, this.right)
-                );
+
+            // go right
+            Node<K, V> oldLeft, oldRight;
+            while(true) {
+                synchronized (this) {
+                    if (this.right == null) {
+                        return this;
+                    }
+                    oldLeft = this.left;
+                    oldRight = this.right;
+                }
+                Node<K, V> newRight = oldRight.delete(valueToRemove);
+                synchronized (this) {
+                    if (this.right == oldRight) {
+                        this.right = newRight;
+                        if ( this.left != null && this.left.height > ((newRight == null) ? 0 : newRight.height) + 1) {
+                            // left heavy
+                            if ( this.left.right == null || (this.left.left != null && this.left.left.height >= this.left.right.height) ) {
+                                // LL
+                                return this.rotateRightNew(this.left, oldLeft);
+                            } else {
+                                // LR
+                                return rotateLeftRightNew(this.left, oldLeft);
+                            }
+                        }
+                        this.updateHeight();
+                        return this;
+                    }
+                }
             }
+
+
         }
 
-        private synchronized Node<D> rotateLeftRight(Node<D> newLeft) {
-            return newLeft.rightRotateLeftRight(this);
-        }
-
-        private synchronized Node<D> rightRotateLeftRight(Node<D> newRight) {
-            return this.right.rootRotateLeftRight(this, newRight);
-        }
-
-        private synchronized Node<D> rootRotateLeftRight(Node<D> newLeft, Node<D> newRight) {
-            return this.rootRotateLeft(newLeft).rootRotateRight(newRight).updateHeight();
-        }
-
-        
-        // RL
-        private Node<D> rotateRightLeftNew(Node<D> newRight) {
-            if(newRight == this.right){
-                // newRight is not new ==> make it new
-                return new Node<D>(
-                        newRight.left.data,
-                        new Node<D>(this.data, this.left, newRight.left.left),
-                        new Node<D>(newRight.data, newRight.left.right, newRight.right)
-                );
-            }
-            else{
-                // newRight is new ==> update it
-                D dataL = newRight.left.data; // but remember data before update
-                newRight.left = newRight.left.right;
-                newRight.updateHeight();
-                return new Node<D>(
-                        dataL,
-                        new Node<D>(this.data, this.left, newRight.left.left),
-                        newRight
-                );
-            }
-        }
-
-        private synchronized Node<D> rotateRightLeft(Node<D> newRight) {
-            return newRight.leftRotateRightLeft(this);
-        }
-
-        private synchronized Node<D> leftRotateRightLeft(Node<D> newLeft) {
-            return this.left.rootRotateRightLeft(this, newLeft);
-        }
-
-        private synchronized Node<D> rootRotateRightLeft(Node<D> newRight, Node<D> newLeft) {
-            return this.rootRotateRight(newRight).rootRotateLeft( newLeft ).updateHeight();
-        }
-
-
-        // rebalancing not needed
-        private synchronized Node<D> setRightUpdateHeight(Node<D> newRight) {
-            //synchronized (this.monitorRight){
-                this.right = newRight;
-                this.updateHeight();
-                return this;
-            //}
-        }
-
-        private synchronized Node<D> setLeftUpdateHeight(Node<D> newLeft) {
-            //synchronized (this.monitorLeft){
-                this.left = newLeft;
-                this.updateHeight();
-                return this;
-            //}
-        }
-
-
-
-
-
-        private void setData(D newData) {
-            this.data = newData;
-        }
-
-
-
-        private Node<D> find(D valueToFind) {
-            int cmp = valueToFind.compareTo(this.data);
+        private Node<K, V> find(K valueToFind) {
+            int cmp = valueToFind.compareTo(this.key);
             if (cmp < 0) {
                 // go left
                 if (this.left == null) {
@@ -345,109 +555,12 @@ public class AVLTree<T extends Comparable<T>> {
             return this;
         }
 
-        private Node<D> delete(D valueToRemove) {
-            int cmp = valueToRemove.compareTo(this.data);
-
-            if (cmp < 0) {
-                // go left
-                if (this.left != null) {
-                    this.left = this.left.delete(valueToRemove);
-                }
-            } else if (cmp > 0) {
-                // go right
-                if (this.right != null) {
-                    this.right = this.right.delete(valueToRemove);
-                }
-            } else {
-                // found node
-                if (this.left == null && this.right == null) {
-                    // delete this node - successor not needed
-                    return null;
-                } else if (this.left == null) {
-                    // delete this node - successor is right
-                    return this.right;
-                } else if (this.right == null) {
-                    // delete this node - successor is left
-                    return this.left;
-                } else {
-                    // delete this node - new value is smallest (left) at right
-                    Node<D> newValueNode = this.right;
-                    while (newValueNode.left != null) {
-                        newValueNode = newValueNode.left;
-                    }
-                    // copy data from successor to this
-                    this.data = newValueNode.data;
-                    // remove successor
-                    this.right = this.right.delete(newValueNode.data);
-                }
-            }
-
-            // Balance
-            int leftHeight = (this.left == null) ? 0 : this.left.height;
-            int rightHeight = (this.right == null) ? 0 : this.right.height;
-
-            if (leftHeight > rightHeight + 1) {
-                // left heavy
-                Node<D> newLeft = this.left;
-                if ( newLeft.right == null || (newLeft.left != null && newLeft.left.height >= newLeft.right.height) ) {
-                    // LL
-                    return newLeft.rootRotateRightUpdateHeight(this);
-                } else {
-                    // LR
-                    return newLeft.right.rootRotateLeftUpdateHeight(newLeft).rootRotateRightUpdateHeight(this);
-                }
-            }
-            if (rightHeight > leftHeight + 1) {
-                // right heavy
-                Node<D> newRight = this.right;
-                if ( newRight.left == null || (newRight.right != null && newRight.left.height <= newRight.right.height) ) {
-                    // RR
-                    return newRight.rootRotateLeftUpdateHeight(this);
-                } else {
-                    // RL
-                    return newRight.left.rootRotateRightUpdateHeight(newRight).rootRotateLeftUpdateHeight(this);
-                }
-            }
-            this.updateHeight();
-            return this;
-        }
-
-
-
-
-        @Override
-        public D data() {
-            return this.data;
-        }
     }
 
-    // Utility functions for traversal
-    void preOrder(Node<?> node) {
-        if (node != null) {
-            System.out.print(node.data + " ");
-            preOrder(node.left);
-            preOrder(node.right);
-        }
-    }
 
-    void inOrder(Node<?> node) {
-        if (node != null) {
-            inOrder(node.left);
-            System.out.print(node.data + " ");
-            inOrder(node.right);
-        }
-    }
-
-    void postOrder(Node<?> node) {
-        if (node != null) {
-            postOrder(node.left);
-            postOrder(node.right);
-            System.out.print(node.data + " ");
-        }
-    }
 
     public static void main(String[] args) {
-        AVLTree<Integer> tree = new AVLTree<>();
+        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
 
         tree.insertIntoTree(3);
         tree.insertIntoTree(2);
@@ -498,6 +611,11 @@ public class AVLTree<T extends Comparable<T>> {
         tree.postOrder(tree.root);
         System.out.println();
 
+    }
+
+    public static interface Entry<K extends Comparable<K>, V>{
+        public K key();
+        public V value();
     }
 
 }
