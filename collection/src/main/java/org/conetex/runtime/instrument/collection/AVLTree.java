@@ -2,6 +2,320 @@ package org.conetex.runtime.instrument.collection;
 
 public class AVLTree<T extends Comparable<T>> {
 
+    private static class Leaf<K extends Comparable<K>> {
+        private K key;
+        protected int height;
+
+        public Leaf(K valueToInsert) {
+            this.key = valueToInsert;
+            this.height = 1;
+        }
+
+        protected NodeN<K> copyCreateLeftIsRightAnsRightIsNew(Leaf<K> right) {
+            return new NodeN<>(this.key, null, right);
+        }
+        protected NodeN<K> copyCreateRightIsLeftAndLeftIsNew(Leaf<K> left) {
+            return new NodeN<>(this.key, left, null);
+        }
+        protected NewNode<K> copyNewCreateOrUpdateRightIsNew(Leaf<K> right) {
+            return new NewNode<>(this.key, null, right);
+        }
+        protected NewNode<K> copyNewCreateOrUpdateLeftIsNew(NodeN<K> left) {
+            return new NewNode<>(this.key, left, null);
+        }
+        protected NodeN<K> createFinalLeftIsNew(Leaf<K> left) {
+            return new NodeN<>(this.key, left, null);
+        }
+        protected NodeN<K> createFinalRightIsNew(Leaf<K> right) {
+            return new NodeN<>(this.key, null, right);
+        }
+
+        protected NewNode<K> copyNewCreateOrUpdateRightIsNew(Leaf<K> left, Leaf<K> right) {
+            return new NewNode<>(this.key, left, right);
+        }
+        protected NodeN<K> createFinal(Leaf<K> left, Leaf<K> right) {
+            return new NodeN<>(this.key, left, right);
+        }
+        protected NewNode<K> copyNewCreateOrUpdate(Leaf<K> left, Leaf<K> right) {
+            return new NewNode<>(this.key, left, right);
+        }
+
+        public Leaf<K> insert(Leaf<K> valueToInsert) {
+        }
+    }
+
+    private static class NewNode<K extends Comparable<K>> extends Leaf<K> {
+        private Leaf<K> left;
+        private Leaf<K> right;
+
+        private NewNode(K value, Leaf<K> left, Leaf<K> right) {
+            super(value);
+            this.left = left;
+            this.right = right;
+            this.updateHeight();
+        }
+
+        @Override
+        protected NodeN<K> copyCreateLeftIsRightAnsRightIsNew(Leaf<K> right) {
+            return new NodeN<>(super.key, this.right, right);
+        }
+
+        @Override
+        protected NodeN<K> copyCreateRightIsLeftAndLeftIsNew(Leaf<K> left) {
+            return new NodeN<>(super.key, left, this.left);
+        }
+
+        @Override
+        protected NewNode<K> copyNewCreateOrUpdateRightIsNew(Leaf<K> right) {
+            this.right = right;
+            this.updateHeight();
+            return this;
+        }
+
+        @Override
+        protected NewNode<K> copyNewCreateOrUpdateLeftIsNew(NodeN<K> left) {
+            this.left = left;
+            this.updateHeight();
+            return this;
+        }
+
+        @Override
+        protected NodeN<K> createFinalLeftIsNew(Leaf<K> left) {
+            return new NodeN<>(super.key, left, this.right);
+        }
+
+        @Override
+        protected NodeN<K> createFinalRightIsNew(Leaf<K> right) {
+            return new NodeN<>(super.key, this.left, right);
+        }
+
+        private void updateHeight() {
+            if(this.left == null){
+                if(this.right == null){
+                    this.height = 1;
+                }
+                else{
+                    this.height = 1 + this.right.height;
+                }
+            }
+            else{
+                if(this.right == null){
+                    this.height = 1 + this.left.height;
+                }
+                else{
+                    this.height = 1 + ((this.left.height > this.right.height) ? this.left.height : this.right.height);
+                }
+            }
+        }
+
+    }
+
+    private static class NodeN<K extends Comparable<K>> extends Leaf<K> {
+        private final Leaf<K> left;
+        private final Leaf<K> right;
+
+        private NodeN(K valueToInsert, Leaf<K> left, Leaf<K> right) {
+            super(valueToInsert);
+            this.left = left;
+            this.right = right;
+        }
+
+        @Override
+        protected NodeN<K> copyCreateLeftIsRightAnsRightIsNew(Leaf<K> right) {
+            return new NodeN<>(super.key, this.right, right);
+        }
+
+        @Override
+        protected NewNode<K> copyNewCreateOrUpdateRightIsNew(Leaf<K> right) {
+            return new NewNode<>(super.key, this.left, right);
+        }
+
+
+
+        @Override
+        protected NodeN<K> createFinalLeftIsNew(Leaf<K> left) {
+            return new NodeN<>(super.key, left, this.right);
+        }
+
+        @Override
+        protected NodeN<K> createFinalRightIsNew(Leaf<K> right) {
+            return new NodeN<>(super.key, this.left, right);
+        }
+
+        // LL
+        private NewNode<K> rotateRightNew(Leaf<K> newRoot, NodeN<K> oldLeft) {
+
+            // Perform rotation
+            //NodeN<K> newThis = this.create(newRoot.right, this.right);
+            NodeN<K> newThis = newRoot.copyCreateLeftIsRightAnsRightIsNew(this.right);
+            return newRoot.copyNewCreateOrUpdateRightIsNew(newThis);
+
+        }
+
+        // RR
+        private NewNode<K> rotateLeftNew(Leaf<K> newRoot, Leaf<K> oldRight) {
+
+            // Perform rotation
+            //Node<K, V> newThis = this.create(this.left, newRoot.left);
+            NodeN<K> newThis = newRoot.copyCreateRightIsLeftAndLeftIsNew(this.left);
+            return newRoot.copyNewCreateOrUpdateLeftIsNew(newThis);
+
+        }
+
+
+
+    }
+
+    public static class SetN<T extends Comparable<T>> {
+
+        private Leaf<T> root;
+
+        public void insertIntoTree(T valueToInsert) {
+            if(valueToInsert == null){
+                throw new NullPointerException("can not insert null");
+            }
+
+            Leaf<T> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    this.root = new Leaf<>(valueToInsert);
+                    return;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,T> newRoot = theRoot.insert(new Key<>(valueToInsert));
+            synchronized(this) {
+                this.root = newRoot;
+            }
+        }
+
+        public void deleteFromTree(T keyToDelete) {
+            if(keyToDelete == null){
+                throw new NullPointerException("can not delete null");
+            }
+
+            Node<T,T> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    return;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,T> newRoot = theRoot.delete(keyToDelete);
+            synchronized(this) {
+                this.root = newRoot;
+            }
+        }
+
+        public T findInTree(T keyToFind) {
+            if(keyToFind == null){
+                throw new NullPointerException("can not find null");
+            }
+
+            Node<T,T> theRoot;
+            synchronized(this) {
+                if(this.root == null){
+                    return null;
+                }
+                theRoot = this.root;
+            }
+
+            Node<T,T> result = theRoot.find(keyToFind);
+            if(result == null){
+                return null;
+            }
+            return result.value();
+        }
+
+        // Utility functions for traversal
+        void preOrder(Node<?,?> node) {
+            if (node != null) {
+                System.out.print(node.key + " ");
+                preOrder(node.left);
+                preOrder(node.right);
+            }
+        }
+
+        void inOrder(Node<?,?> node) {
+            if (node != null) {
+                inOrder(node.left);
+                System.out.print(node.key + " ");
+                inOrder(node.right);
+            }
+        }
+
+        void postOrder(Node<?,?> node) {
+            if (node != null) {
+                postOrder(node.left);
+                postOrder(node.right);
+                System.out.print(node.key + " ");
+            }
+        }
+
+        private static class Key<K extends Comparable<K>> extends Node<K, K> implements Entry<K, K>{
+
+            private Key(K newKey, Node<K, K> left, Node<K, K> right) {
+                super(newKey, left, right);
+            }
+
+            @Override
+            Node<K, K> create(Node<K, K> left, Node<K, K> right) {
+                return new Key<>(super.key, left, right);
+            }
+
+            private Key(K newKey) {
+                super(newKey);
+            }
+
+            @Override
+            void takeOverKeyValue(Node<K, K> other) {
+                super.key = other.key;
+            }
+
+            @Override
+            public K key() {
+                return super.key;
+            }
+
+            @Override
+            public K value() {
+                return super.key;
+            }
+
+        }
+    }
+
+
+
+    private static class ValueLeaf<K extends Comparable<K>, V> extends Leaf<K> {
+        private V value;
+
+        public ValueLeaf(K valueToInsert) {
+            super(valueToInsert);
+        }
+    }
+
+    private static class NewValueNode<K extends Comparable<K>, V> extends NewNode<K> {
+        private V value;
+
+        private NewValueNode(K valueToInsert, Leaf<K> left, Leaf<K> right) {
+            super(valueToInsert, left, right);
+        }
+    }
+
+    private static class ValueNode<K extends Comparable<K>, V> extends NodeN<K> {
+        private V value;
+
+        private ValueNode(K valueToInsert, Leaf<K> left, Leaf<K> right) {
+            super(valueToInsert, left, right);
+        }
+    }
+
+
+
+
     public static class Set<T extends Comparable<T>> {
 
         private Node<T,T> root;
@@ -558,7 +872,7 @@ public class AVLTree<T extends Comparable<T>> {
 
 
     public static void main(String[] args) {
-        AVLTree.Set<Integer> tree = new AVLTree.Set<>();
+        Set<Integer> tree = new Set<>();
 
         tree.insertIntoTree(3);
         tree.insertIntoTree(2);
