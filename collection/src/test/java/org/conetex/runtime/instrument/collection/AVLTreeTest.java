@@ -14,59 +14,47 @@ class AVLTreeTest {
 
     // Hilfsmethode: liest das private Feld 'root' via Reflection
     private Object getRootObject(AVLTree.Set<?> tree) throws Exception {
-        Field rootField = AVLTree.class.getDeclaredField("root");
+        Field rootField = AVLTree.Set.class.getDeclaredField("root");
         rootField.setAccessible(true);
         return rootField.get(tree);
     }
 
     // Hilfsmethode: rekursive Inorder-Sammlung via Reflection (unabhängig von den package-methoden)
     private <D extends Comparable<D>> List<D> collectInOrderReflectively(AVLTree.Set<D> tree) throws Exception {
-        Object root = getRootObject(tree);
+        AVLTree.Leaf<D,D> root = tree.getRoot();
         List<D> out = new ArrayList<>();
         if (root == null) return out;
 
-        Class<?> nodeClass = Class.forName("org.conetex.runtime.instrument.collection.AVLTree$Node");
-        collectInOrderNode(root, nodeClass, out);
+        collectInOrderNode(root, out);
         return out;
     }
 
     @SuppressWarnings("unchecked")
-    private <D extends Comparable<D>> void collectInOrderNode(Object nodeObj, Class<?> nodeClass, List<D> out) throws Exception {
+    private <D extends Comparable<D>> void collectInOrderNode(AVLTree.Leaf<D,D> nodeObj, List<D> out) throws Exception {
         if (nodeObj == null) return;
-        Field leftF = nodeClass.getDeclaredField("left");
-        Field rightF = nodeClass.getDeclaredField("right");
-        Field dataF = nodeClass.getDeclaredField("data");
-        leftF.setAccessible(true);
-        rightF.setAccessible(true);
-        dataF.setAccessible(true);
+        AVLTree.Leaf<D,D> left = nodeObj.left();
+        AVLTree.Leaf<D,D> right = nodeObj.right();
+        D data = nodeObj.key();
 
-        Object left = leftF.get(nodeObj);
-        if (left != null) collectInOrderNode(left, nodeClass, out);
 
-        D data = (D) dataF.get(nodeObj);
+        if (left != null) collectInOrderNode(left, out);
+
         out.add(data);
 
-        Object right = rightF.get(nodeObj);
-        if (right != null) collectInOrderNode(right, nodeClass, out);
+        if (right != null) collectInOrderNode(right, out);
     }
 
     // Hilfsmethode: ruft die package-private Traversal-Methoden via Reflection auf (um deren Code zu decken)
-    private void invokeTraversals(AVLTree.Set<?> tree) throws Exception {
-        Object root = getRootObject(tree);
-        Class<?> nodeClass = Class.forName("org.conetex.runtime.instrument.collection.AVLTree$Node");
-
-        Method pre = AVLTree.class.getDeclaredMethod("preOrder", nodeClass);
-        Method in = AVLTree.class.getDeclaredMethod("inOrder", nodeClass);
-        Method post = AVLTree.class.getDeclaredMethod("postOrder", nodeClass);
-
-        pre.setAccessible(true);
-        in.setAccessible(true);
-        post.setAccessible(true);
-
+    private <X extends Comparable<X>> void invokeTraversals(AVLTree.Set<X> tree) throws Exception {
         // Aufruf (gibt Ausgaben auf stdout, wir rufen nur auf, um die Codezeilen zu decken)
-        pre.invoke(tree, root);
-        in.invoke(tree, root);
-        post.invoke(tree, root);
+        tree.preOrder(tree.getRoot());
+        System.out.println(" - preOrder");
+        tree.inOrder(tree.getRoot());
+        System.out.println(" - inOrder");
+        tree.reverseOrder(tree.getRoot());
+        System.out.println(" - reverseOrder");
+        tree.postOrder(tree.getRoot());
+        System.out.println(" - postOrder");
     }
 
     @Test
@@ -169,10 +157,21 @@ class AVLTreeTest {
 
     @Test
     void testDeleteTriggersRRRotation() throws Exception {
+        /*AVLTree.SetO<Integer> tree1 = new AVLTree.SetO<>();
+        // Aufbau so, dass nach dem Löschen eines linken Knotens ein right-heavy Fall entsteht (RR)
+        int[] inserts1 = {10, 20, 5, 30, 25, 40, 35, 45};
+        for (int v : inserts1) {
+            System.out.println("insert " + v);
+            tree1.insertIntoTree(v);
+        }*/
+
         AVLTree.Set<Integer> tree = new AVLTree.Set<>();
         // Aufbau so, dass nach dem Löschen eines linken Knotens ein right-heavy Fall entsteht (RR)
         int[] inserts = {10, 20, 5, 30, 25, 40, 35, 45};
-        for (int v : inserts) tree.insertIntoTree(v);
+        for (int v : inserts) {
+            System.out.println("insert " + v);
+            tree.insertIntoTree(v);
+        }
 
         // Lösche einen Knoten im linken Teil, der die Balance auf der rechten Seite erzwingen sollte
         tree.deleteFromTree(5);
@@ -258,11 +257,13 @@ class AVLTreeTest {
         assertEquals(expectedAfter3, collectInOrderReflectively(tree));
 
         // delete null -> no-op
-        tree.deleteFromTree(null);
+        assertThrows(Exception.class, () -> tree.deleteFromTree(null));
         assertEquals(expectedAfter3, collectInOrderReflectively(tree));
 
         // Traversals to cover those methods
         invokeTraversals(tree);
+
+
     }
 
     @Test
