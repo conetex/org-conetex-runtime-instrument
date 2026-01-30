@@ -3,7 +3,6 @@ package org.conetex.runtime.instrument.collection;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +20,7 @@ class AVLTreeTest {
 
     // Hilfsmethode: rekursive Inorder-Sammlung via Reflection (unabhängig von den package-methoden)
     private <D extends Comparable<D>> List<D> collectInOrderReflectively(AVLTree.Set<D> tree) throws Exception {
-        AVLTree.Leaf<D,D> root = tree.getRoot();
+        AVLTree.AbstractNode<D,D> root = tree.getRoot();
         List<D> out = new ArrayList<>();
         if (root == null) return out;
 
@@ -30,10 +29,10 @@ class AVLTreeTest {
     }
 
     @SuppressWarnings("unchecked")
-    private <D extends Comparable<D>> void collectInOrderNode(AVLTree.Leaf<D,D> nodeObj, List<D> out) throws Exception {
+    private <D extends Comparable<D>> void collectInOrderNode(AVLTree.AbstractNode<D,D> nodeObj, List<D> out) throws Exception {
         if (nodeObj == null) return;
-        AVLTree.Leaf<D,D> left = nodeObj.left();
-        AVLTree.Leaf<D,D> right = nodeObj.right();
+        AVLTree.AbstractNode<D,D> left = nodeObj.left();
+        AVLTree.AbstractNode<D,D> right = nodeObj.right();
         D data = nodeObj.key();
 
 
