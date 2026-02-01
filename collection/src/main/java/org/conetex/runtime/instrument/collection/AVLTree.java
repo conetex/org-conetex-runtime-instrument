@@ -2,32 +2,27 @@ package org.conetex.runtime.instrument.collection;
 
 public class AVLTree<T extends Comparable<T>> {
 
-    public static abstract class AbstractNode<K extends Comparable<K>, V> {
+    static abstract class AbstractNode<K extends Comparable<K>, V> {
 
-        public abstract K key();
+        abstract K key();
 
-        protected abstract V value();
+        abstract V value();
 
-        protected abstract  int height();
+        abstract  int height();
 
-        protected abstract AbstractNode<K, V> left();
+        abstract AbstractNode<K, V> left();
 
-        protected abstract AbstractNode<K, V> right();
+        abstract AbstractNode<K, V> right();
 
-        protected abstract AbstractNode<K,V> insert(SetLeafNode<K> nodeToInsert);
+        abstract SetNodeFactory<K, V> insert(SetLeafNode<K, V> nodeToInsert);
 
-        protected abstract AbstractNode<K, V> find(K keyToFind);
+        abstract AbstractNode<K, V> find(K keyToFind);
 
-        protected abstract AbstractNode<K,V> delete(K keyToDelete);
+        abstract SetNodeFactory<K, V> delete(K keyToDelete);
 
-        final SetNodeFactory<K> createNew(AbstractNode<K,K> left, AbstractNode<K,K> right) {
-            return new SetNodeFactory<K>(this.key(), left, right);
-        }
+        abstract SetNodeFactory<K, V> createNew(AbstractNode<K, V> left, AbstractNode<K, V> right);
 
-        final SetNode<K> createFinal(AbstractNode<K,K> left, AbstractNode<K,K> right) {
-            return new SetNode<K>(this.key(), left, right);
-        }
-
+        abstract SetNode<K, V> createFinal(AbstractNode<K, V> left, AbstractNode<K, V> right);
 
     }
 
@@ -59,33 +54,187 @@ public class AVLTree<T extends Comparable<T>> {
             }
         }
 
-        // LL
-        protected abstract SetNodeFactory<K> callRotateRight(SetNodeFactory<K> thiz);
+    }
+
+    private abstract static class SetNodeFactory<K extends Comparable<K>, V> {
+
+        private AbstractNode<K,V> left;
+
+        private AbstractNode<K,V> right;
+
+        protected K key;
+
+        protected SetNodeFactory(AbstractNode<K,V> left, K key, AbstractNode<K,V> right) {
+            this.left = left;
+            this.right = right;
+            this.key = key;
+            this.updateHeight();
+        }
+
+        protected int height;
+
+        protected final int height() {
+            return this.height;
+        }
+
+        void updateHeight() {
+            if(this.left == null){
+                if(this.right == null){
+                    this.height = 1;
+                }
+                else{
+                    this.height = 1 + this.right.height();
+                }
+            }
+            else{
+                if(this.right == null){
+                    this.height = 1 + this.left.height();
+                }
+                else{
+                    this.height = 1 + ((this.left.height() > this.right.height()) ? this.left.height() : this.right.height());
+                }
+            }
+        }
+
+        public abstract AbstractNode<K,V> createFinal();
+
+        public abstract AbstractNode<K,V> createFinal(AbstractNode<K,V> left, AbstractNode<K,V> right);
 
         // LL
-        protected abstract SetNodeFactory<K> callRotateRight(SetNode<K> thiz);
+        private SetNodeFactory<K, V> unusedMrotateRightNew(SetNodeFactory<K, V> newRoot) {
+            // Perform rotation
+            // newRoot is new ==> we can change it
+            newRoot.right = this.createFinal(newRoot.right, this.right);
+            // Update heights
+            newRoot.updateHeight();
+            return newRoot;
+        }
+
+        // LL
+        private SetNodeFactory<K, V> unusedMrotateRightNew(SetNode<K, V> newRoot) {
+            // Perform rotation
+            AbstractNode<K, V> newThis = this.createFinal(newRoot.right, this.right);
+            // newRoot is not new ==> make it new
+            return newRoot.createNew(newRoot.left, newThis);
+        }
 
         // RR
-        protected abstract SetNodeFactory<K> callRotateLeft(SetNodeFactory<K> thiz);
+        private SetNodeFactory<K, V> unusedMrotateLeftNew(SetNodeFactory<K, V> newRoot) {
+            // newRoot is new ==> we can change it
+            // Perform rotation
+            newRoot.left = this.createFinal(this.left, newRoot.left);
+            newRoot.updateHeight();
+            return newRoot;
+        }
 
         // RR
-        protected abstract SetNodeFactory<K> callRotateLeft(SetNode<K> thiz);
+        private SetNodeFactory<K, V> unusedMrotateLeftNew(SetNode<K, V> newRoot) {
+            // Perform rotation
+            AbstractNode<K,V> newThis = this.createFinal(this.left, newRoot.left);
+            // newRoot is not new ==> make it new
+            return newRoot.createNew(newThis, newRoot.right);
+        }
 
         // LR
-        protected abstract SetNodeFactory<K> callRotateLeftRight(SetNodeFactory<K> thiz);
+        private SetNodeFactory<K, V> unusedMrotateLeftRightNew(SetNodeFactory<K, V> newLeft) {
+            // newLeft is new ==> update it
+            AbstractNode<K,V> newLeftRight = newLeft.right; // but remember data before update
+            newLeft.right = newLeft.right.left();
+            newLeft.updateHeight();
+            return newLeftRight.createNew(
+                    newLeft.createFinal(),
+                    this.createFinal(newLeftRight.right(), this.right)
+            );
+        }
 
         // LR
-        protected abstract SetNodeFactory<K> callRotateLeftRight(SetNode<K> thiz);
+        private SetNodeFactory<K, V> unusedMrotateLeftRightNew(SetNode<K, V> newLeft) {
+            // newLeft is not new ==> make it new
+            return newLeft.right.createNew(
+                    newLeft.createFinal(newLeft.left, newLeft.right.left()),
+                    this.createFinal(newLeft.right.right(), this.right)
+            );
+        }
 
         // RL
-        protected abstract AbstractNode<K, V> callRotateRightLeft(SetNodeFactory<K> thiz);
+        private SetNodeFactory<K, V> unusedMrotateRightLeftNew(SetNodeFactory<K, V> newRight) {
+            // newRight is new ==> update it
+            AbstractNode<K,V> newRightLeft = newRight.left; // but remember data before update
+            newRight.left = newRight.left.right();
+            newRight.updateHeight();
+            return newRightLeft.createNew(
+                    this.createFinal(this.left, newRightLeft.left()),
+                    newRight.createFinal()
+            );
+        }
 
         // RL
-        protected abstract AbstractNode<K, V> callRotateRightLeft(SetNode<K> thiz);
+        private SetNodeFactory<K, V> unusedMrotateRightLeftNew(SetNode<K, V> newRight) {
+            // newRight is not new ==> make it new
+            return newRight.left.createNew(
+                    this.createFinal(this.left, newRight.left.left()),
+                    newRight.createFinal(newRight.left.right(), newRight.right)
+            );
+        }
 
     }
 
-    private static class SetNodeFactory<K extends Comparable<K>> extends AbstractBalancedNode<K,K> {
+    private static class SetNodeFactoryCreated<K extends Comparable<K>,V> extends SetNodeFactory<K,V>{
+
+        private AbstractNode<K,V> alreadyCreatedNode;
+
+        protected SetNodeFactoryCreated(AbstractNode<K,V> alreadyCreatedNode) {
+            super(null, null, null);
+            this.alreadyCreatedNode = alreadyCreatedNode;
+        }
+
+        @Override
+        public AbstractNode<K, V> createFinal() {
+            return this.alreadyCreatedNode;
+        }
+
+        @Override
+        public AbstractNode<K, V> createFinal(AbstractNode<K, V> left, AbstractNode<K, V> right) {
+            return this.alreadyCreatedNode.createFinal(left, right);
+        }
+    }
+
+    private static class SetNodeFactoryNull<K extends Comparable<K>,V> extends SetNodeFactory<K,V> {
+
+        protected SetNodeFactoryNull() {
+            super(null, null, null);
+        }
+
+        @Override
+        public AbstractNode<K, V> createFinal() {
+            return null;
+        }
+
+        @Override
+        public AbstractNode<K, V> createFinal(AbstractNode<K, V> left, AbstractNode<K, V> right) {
+            return null;
+        }
+    }
+
+    private static class SetNodeFactoryCopy<K extends Comparable<K>> extends SetNodeFactory<K,K> {
+
+        public SetNodeFactoryCopy(AbstractNode<K, K> left, K key, AbstractNode<K, K> right) {
+            super(left, key, right);
+        }
+
+        public AbstractNode<K,K> createFinal() {
+            return new SetNodeN<K>(this.key, super.left, super.right);
+        }
+
+        public AbstractNode<K,K> createFinal(AbstractNode<K,K> left, AbstractNode<K,K> right) {
+            return new SetNodeN<K>(this.key, left, right);
+        }
+
+    }
+
+/*
+    private static class SetNodeFactoryX<K extends Comparable<K>>  extends AbstractBalancedNode<K,K>
+    {
 
         private AbstractNode<K,K> left;
 
@@ -93,7 +242,7 @@ public class AVLTree<T extends Comparable<T>> {
 
         protected K key;
 
-        private SetNodeFactory(K key, AbstractNode<K,K> left, AbstractNode<K,K> right) {
+        private SetNodeFactoryX(K key, AbstractNode<K,K> left, AbstractNode<K,K> right) {
             this.left = left;
             this.right = right;
             this.key = key;
@@ -144,100 +293,6 @@ public class AVLTree<T extends Comparable<T>> {
             return this;
         }
 
-        protected AbstractNode<K,K> delete(K valueToRemove) {
-            int cmp = valueToRemove.compareTo(this.key);
-
-            if (cmp < 0) {
-                // go left
-                AbstractNode<K,K> oldLeft, oldRight;
-                while(true) {
-                    synchronized (this) {
-                        if (this.left == null) {
-                            return this;
-                        }
-                        oldLeft = this.left;
-                        oldRight = this.right;
-                    }
-                    AbstractNode<K,K> newLeft = oldLeft.delete(valueToRemove);
-                    synchronized (this) {
-                        if (this.left == oldLeft) {
-                            this.left = newLeft;
-                            if (this.right != null && this.right instanceof AVLTree.AbstractBalancedNode<K,K> rightA && rightA.height > ((newLeft == null) ? 0 : newLeft.height()) + 1) {
-                                // right heavy
-                                if (this.right.left() == null || (this.right.right() != null && this.right.left().height() <= this.right.right().height())) {
-                                    // RR
-                                    return rightA.callRotateLeft(this);
-                                } else {
-                                    // RL
-                                    return rightA.callRotateRightLeft(this);
-                                }
-                            }
-                            this.updateHeight();
-                            return this;
-                        }
-                    }
-                }
-            }
-
-            if (cmp == 0) {
-                // found node
-                synchronized (this) {
-                    if (this.left == null && this.right == null) {
-                        // delete this node - successor not needed
-                        return null;
-                    }
-                    if (this.left == null) {
-                        // delete this node - successor is right
-                        return this.right;
-                    }
-                    if (this.right == null) {
-                        // delete this node - successor is left
-                        return this.left;
-                    }
-                    // delete this node - new value is smallest (left) at right
-                    AbstractNode<K,K> newValueNode = this.right;
-                    while (newValueNode.left() != null) {
-                        newValueNode = newValueNode.left();
-                    }
-                    // copy data from successor to this
-                    //this.takeOverKeyValue(newValueNode);
-                    this.key = newValueNode.key();
-                    // remove successor
-                    valueToRemove = newValueNode.key();
-                }
-            }
-
-            // go right
-            AbstractNode<K,K> oldLeft, oldRight;
-            while(true) {
-                synchronized (this) {
-                    if (this.right == null) {
-                        return this;
-                    }
-                    oldLeft = this.left;
-                    oldRight = this.right;
-                }
-                AbstractNode<K,K> newRight = oldRight.delete(valueToRemove);
-                synchronized (this) {
-                    if (this.right == oldRight) {
-                        this.right = newRight;
-                        if ( this.left != null && this.left instanceof AVLTree.AbstractBalancedNode<K,K> leftA && leftA.height > ((newRight == null) ? 0 : newRight.height()) + 1) {
-                            // left heavy
-                            if ( leftA.right() == null || (leftA.left() != null && leftA.left().height() >= leftA.right().height()) ) {
-                                // LL
-                                return leftA.callRotateRight(this);
-                            } else {
-                                // LR
-                                return leftA.callRotateLeftRight(this);
-                            }
-                        }
-                        this.updateHeight();
-                        return this;
-                    }
-                }
-            }
-
-        }
 
         // Insert a key into the AVL tree and return the new root of the subtree
         @Override
@@ -310,145 +365,42 @@ public class AVLTree<T extends Comparable<T>> {
 
         }
 
-        // LL
-        @Override
-        protected SetNodeFactory<K> callRotateRight(SetNodeFactory<K> newRoot) {
-            return newRoot.rotateRightNew(this);
-        }
 
-        // LL
-        @Override
-        protected SetNodeFactory<K> callRotateRight(SetNode<K> newRoot) {
-            return newRoot.rotateRightNew(this);
-        }
 
-        // RR
-        @Override
-        protected SetNodeFactory<K> callRotateLeft(SetNodeFactory<K> newRoot) {
-            return newRoot.rotateLeftNew(this);
-        }
 
-        // RR
-        @Override
-        protected SetNodeFactory<K> callRotateLeft(SetNode<K> newRoot) {
-            return newRoot.rotateLeftNew(this);
-        }
-
-        // LR
-        @Override
-        protected SetNodeFactory<K> callRotateLeftRight(SetNodeFactory<K> newLeft) {
-            return newLeft.rotateLeftRightNew(this);
-        }
-
-        // LR
-        @Override
-        protected SetNodeFactory<K> callRotateLeftRight(SetNode<K> newLeft) {
-            return newLeft.rotateLeftRightNew(this);
-        }
-
-        // RL
-        @Override
-        protected AbstractNode<K,K> callRotateRightLeft(SetNodeFactory<K> newRight) {
-            return newRight.rotateRightLeftNew(this);
-        }
-
-        // RL
-        @Override
-        protected AbstractNode<K,K> callRotateRightLeft(SetNode<K> newRight) {
-            return newRight.rotateRightLeftNew(this);
-        }
-
-        // LL
-        private SetNodeFactory<K> rotateRightNew(SetNodeFactory<K> newRoot) {
-            // Perform rotation
-            // newRoot is new ==> we can change it
-            newRoot.right = this.createFinal(newRoot.right, this.right);
-            // Update heights
-            newRoot.updateHeight();
-            return newRoot;
-        }
-
-        // LL
-        private SetNodeFactory<K> rotateRightNew(SetNode<K> newRoot) {
-            // Perform rotation
-            SetNode<K> newThis = this.createFinal(newRoot.right, this.right);
-            // newRoot is not new ==> make it new
-            return newRoot.createNew(newRoot.left, newThis);
-        }
-
-        // RR
-        private SetNodeFactory<K> rotateLeftNew(SetNodeFactory<K> newRoot) {
-            // newRoot is new ==> we can change it
-            // Perform rotation
-            newRoot.left = this.createFinal(this.left, newRoot.left);
-            newRoot.updateHeight();
-            return newRoot;
-        }
-
-        // RR
-        private SetNodeFactory<K> rotateLeftNew(SetNode<K> newRoot) {
-            // Perform rotation
-            SetNode<K> newThis = this.createFinal(this.left, newRoot.left);
-            // newRoot is not new ==> make it new
-            return newRoot.createNew(newThis, newRoot.right);
-        }
-
-        // LR
-        private SetNodeFactory<K> rotateLeftRightNew(SetNodeFactory<K> newLeft) {
-            // newLeft is new ==> update it
-            AbstractNode<K,K> newLeftRight = newLeft.right; // but remember data before update
-            newLeft.right = newLeft.right.left();
-            newLeft.updateHeight();
-            return newLeftRight.createNew(
-                    newLeft.createFinal(),
-                    this.createFinal(newLeftRight.right(), this.right)
-            );
-        }
-
-        // LR
-        private SetNodeFactory<K> rotateLeftRightNew(SetNode<K> newLeft) {
-            // newLeft is not new ==> make it new
-            return newLeft.right.createNew(
-                    newLeft.createFinal(newLeft.left, newLeft.right.left()),
-                    this.createFinal(newLeft.right.right(), this.right)
-            );
-        }
-
-        // RL
-        private SetNodeFactory<K> rotateRightLeftNew(SetNodeFactory<K> newRight) {
-            // newRight is new ==> update it
-            AbstractNode<K,K> newRightLeft = newRight.left(); // but remember data before update
-            newRight.left = newRight.left.right();
-            newRight.updateHeight();
-            return newRightLeft.createNew(
-                    this.createFinal(this.left, newRightLeft.left()),
-                    newRight.createFinal()
-            );
-        }
-
-        // RL
-        private SetNodeFactory<K> rotateRightLeftNew(SetNode<K> newRight) {
-            // newRight is not new ==> make it new
-            return newRight.left.createNew(
-                    this.createFinal(this.left, newRight.left.left()),
-                    newRight.createFinal(newRight.left.right(), newRight.right)
-            );
-        }
-
-        private AbstractNode<K,K> createFinal() {
-            return new SetNode<K>(this.key(), this.left, this.right);
-        }
 
 
 
     }
+*/
+    private static class SetNodeN<K extends Comparable<K>> extends SetNode<K,K> {
 
-    private static class SetNode<K extends Comparable<K>> extends AbstractBalancedNode<K,K> {
-        private final AbstractNode<K,K> left;
-        private final AbstractNode<K,K> right;
+        private SetNodeN(K keyToInsert, AbstractNode<K,K> left, AbstractNode<K,K> right) {
+            super(keyToInsert, left, right);
+        }
+
+        final SetNodeFactory<K, K> createNew(AbstractNode<K, K> left, AbstractNode<K, K> right) {
+            return new SetNodeFactoryCopy<K>(left, super.key, right);
+        }
+
+        @Override
+        SetNode<K, K> createFinal(AbstractNode<K, K> left, AbstractNode<K, K> right) {
+            return new SetNodeN<K>(this.key(), left, right);
+        }
+
+        @Override
+        protected K value() {
+            return super.key;
+        }
+
+    }
+
+    private abstract static class SetNode<K extends Comparable<K>, V> extends AbstractBalancedNode<K,V> {
+        private final AbstractNode<K,V> left;
+        private final AbstractNode<K,V> right;
         protected final K key;
 
-        private SetNode(K keyToInsert, AbstractNode<K,K> left, AbstractNode<K,K> right) {
+        private SetNode(K keyToInsert, AbstractNode<K,V> left, AbstractNode<K,V> right) {
             this.left = left;
             this.right = right;
             this.key = keyToInsert;
@@ -461,22 +413,17 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        protected K value() {
-            return this.key;
-        }
-
-        @Override
-        protected AbstractNode<K,K> left() {
+        protected AbstractNode<K,V> left() {
             return this.left;
         }
 
         @Override
-        protected AbstractNode<K,K> right() {
+        protected AbstractNode<K,V> right() {
             return this.right;
         }
 
         @Override
-        public AbstractNode<K,K> find(K keyToFind) {
+        AbstractNode<K,V> find(K keyToFind) {
             int cmp = keyToFind.compareTo(this.key);
             if (cmp < 0) {
                 // go left
@@ -500,184 +447,261 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        protected AbstractNode<K, K> delete(K keyToDelete) {
-            return null;
-        }
+        SetNodeFactory<K,V> delete(K valueToRemove) {
+            int cmp = valueToRemove.compareTo(this.key);
 
-
-
-        // Insert a key into the AVL tree and return the new root of the subtree
-        @Override
-        protected AbstractNode<K,K> insert(SetLeafNode<K> nodeToInsert) {
-            int cmp = nodeToInsert.key.compareTo(this.key);
-            if (cmp < 0){
-                AbstractNode<K,K> oldLeft;
+            if (cmp < 0) {
+                // go left
+                AbstractNode<K,V> oldLeft, oldRight;
                 while(true) {
                     synchronized (this) {
                         if (this.left == null) {
-                            return new SetNodeFactory<>(this.key, nodeToInsert, this.right);
+                            return null;
+                        }
+                        oldLeft = this.left;
+                        oldRight = this.right;
+                    }
+                    SetNodeFactory<K,V> newLeft = oldLeft.delete(valueToRemove);
+                    synchronized (this) {
+                        if (this.left == oldLeft) {
+                            if(newLeft == null){
+                                return null;
+                            }
+                            this.left = newLeft.createFinal();
+                            if (this.right != null && this.right instanceof AVLTree.SetNode<K,V> rightA && rightA.height > ((newLeft == null) ? 0 : newLeft.height()) + 1) {
+                                // right heavy
+                                if (this.right.left() == null || (this.right.right() != null && this.right.left().height() <= this.right.right().height())) {
+                                    // RR
+                                    //return rightA.callRotateLeft(this);
+                                    return this.rotateLeftNew(rightA);
+                                } else {
+                                    // RL
+                                    //return rightA.callRotateRightLeft(this);
+                                    return this.rotateRightLeftNew(rightA);
+                                }
+                            }
+                            this.updateHeight();
+                            return null;
+                        }
+                    }
+                }
+            }
+
+            if (cmp == 0) {
+                // found node
+                synchronized (this) {
+                    if (this.left == null && this.right == null) {
+                        // delete this node - successor not needed
+                        return new SetNodeFactoryNull<>();
+                    }
+                    if (this.left == null) {
+                        // delete this node - successor is right
+                        return new SetNodeFactory<>(null, null, null){
+                            @Override
+                            public AbstractNode<K, V> createFinal() {
+                                return SetNode.this.right;
+                            }
+
+                            @Override
+                            public AbstractNode<K, V> createFinal(AbstractNode<K, V> left, AbstractNode<K, V> right) {
+                                return SetNode.this.right;
+                            }
+                        };
+                    }
+                    if (this.right == null) {
+                        // delete this node - successor is left
+                        return new SetNodeFactoryCreated<>(this.left);
+                    }
+                    // delete this node - new value is smallest (left) at right
+                    AbstractNode<K,V> newValueNode = this.right;
+                    while (newValueNode.left() != null) {
+                        newValueNode = newValueNode.left();
+                    }
+                    // copy data from successor to this
+                    //this.takeOverKeyValue(newValueNode);
+                    this.key = newValueNode.key();
+                    // remove successor
+                    valueToRemove = newValueNode.key();
+                }
+            }
+
+            // go right
+            AbstractNode<K,V> oldLeft, oldRight;
+            while(true) {
+                synchronized (this) {
+                    if (this.right == null) {
+                        return null;
+                    }
+                    oldLeft = this.left;
+                    oldRight = this.right;
+                }
+                SetNodeFactory<K,V> newRight = oldRight.delete(valueToRemove);
+                synchronized (this) {
+                    if (this.right == oldRight) {
+                        if(oldRight == null){
+                            return null;
+                        }
+                        this.right = newRight.createFinal();
+                        if ( this.left != null && this.left instanceof AVLTree.SetNode<K,V> leftA && leftA.height > ((newRight == null) ? 0 : newRight.height()) + 1) {
+                            // left heavy
+                            if ( leftA.right() == null || (leftA.left() != null && leftA.left().height() >= leftA.right().height()) ) {
+                                // LL
+                                //return leftA.callRotateRight(this);
+                                return this.rotateRightNew(leftA);
+                            } else {
+                                // LR
+                                //return leftA.callRotateLeftRight(this);
+                                return this.rotateLeftRightNew(leftA);
+                            }
+                        }
+                        this.updateHeight();
+                        return null;
+                    }
+                }
+            }
+
+        }
+
+        @Override
+        abstract SetNodeFactory<K, V> createNew(AbstractNode<K, V> left, AbstractNode<K, V> right);
+
+        // Insert a key into the AVL tree and return the new root of the subtree
+        @Override
+        protected SetNodeFactory<K,V> insert(SetLeafNode<K,V> nodeToInsert) {
+            int cmp = nodeToInsert.key.compareTo(this.key);
+            if (cmp < 0){
+                AbstractNode<K,V> oldLeft;
+                while(true) {
+                    synchronized (this) {
+                        if (this.left == null) {
+                            //return new SetNodeFactoryN<>(nodeToInsert, this.key, this.right);
+                            return this.createNew(nodeToInsert, this.right);
                         }
                         oldLeft = this.left;
                     }
-                    AbstractNode<K,K> newLeft = oldLeft.insert(nodeToInsert);
+                    SetNodeFactory<K,V> newLeft = oldLeft.insert(nodeToInsert);
                     synchronized (this) {
                         if (this.left != oldLeft) {
                             // another thread changed this.left ==> retry
                             continue;
                         }
                         // no other thread changed this.left in between
-                        if (newLeft instanceof AVLTree.AbstractBalancedNode<K,K> newLeftA && newLeftA.height - 1 > (this.right == null ? 0 : this.right.height())) {
+                        if(newLeft == null){
+                            return null;
+                        }
+                        if ( //newLeft instanceof AVLTree.AbstractBalancedNode<K,K> newLeftA &&
+                                newLeft.height - 1 > (this.right == null ? 0 : this.right.height())) {
                             // left heavy
-                            if (newLeft.right() == null || (newLeft.left() != null && newLeft.left().height() >= newLeft.right().height())) {
+                            if (newLeft.right == null || (newLeft.left != null && newLeft.left.height() >= newLeft.right.height())) {
                                 // LL
                                 //return this.rotateRightNew(newLeft, oldLeft);
-                                return newLeftA.callRotateRight(this);
+                                //return newLeft.callRotateRight(this);
+                                return this.rotateRightNew(newLeft);
                             }
                             // left.right HIGHER ==> LR
                             //return this.rotateLeftRightNew(newLeft, oldLeft);
-                            return newLeftA.callRotateLeftRight(this);
+                            //return newLeft.callRotateLeftRight(this);
+                            return this.rotateLeftRightNew(newLeft);
                         }
-                        return new SetNodeFactory<>(this.key, newLeft, this.right);
+                        this.left = newLeft.createFinal();
+                        return null;
+                        //return new SetNodeFactoryN<>(newLeft, this.key, this.right);
                     }
                 }
             }
             if (cmp > 0){
-                AbstractNode<K,K> oldRight;
+                AbstractNode<K,V> oldRight;
                 while(true) {
                     synchronized (this) {
                         if (this.right == null) {
-                            return new SetNodeFactory<>(this.key, this.left, nodeToInsert);
+                            return this.createNew(this.left, nodeToInsert);
                         }
                         oldRight = this.right;
                     }
-                    AbstractNode<K,K> newRight = oldRight.insert(nodeToInsert);
+                    SetNodeFactory<K,V> newRight = oldRight.insert(nodeToInsert);
                     synchronized (this) {
                         if (this.right == oldRight) {
                             // no other thread changed this.right in between
-                            if (newRight instanceof AVLTree.AbstractBalancedNode<K,K> newRightA && newRightA.height - 1 > (this.left == null ? 0 : this.left.height())){
+                            if(newRight == null){
+                                return null;
+                            }
+                            if (//newRight instanceof AVLTree.AbstractBalancedNode<K,K> newRightA &&
+                                    newRight.height - 1 > (this.left == null ? 0 : this.left.height())){
                                 // right heavy
-                                if (newRight.left() == null || (newRight.right() != null && newRight.left().height() <= newRight.right().height())) {
+                                if (newRight.left == null || (newRight.right != null && newRight.left.height() <= newRight.right.height())) {
                                     // RR
                                     //return this.rotateLeftNew(newRight, oldRight);
-                                    return newRightA.callRotateLeft(this);
+                                    //return newRight.callRotateLeft(this);
+                                    return this.rotateLeftNew(newRight);
                                 }
                                 // right.left HIGHER ==> RL
                                 //return this.rotateRightLeftNew(newRight, oldRight);
-                                return newRightA.callRotateRightLeft(this);
+                                //return newRight.callRotateRightLeft(this);
+                                return this.rotateRightLeftNew(newRight);
                             }
-                            return new SetNodeFactory<>(this.key, this.left, newRight);
+                            this.right = newRight.createFinal();
+                            return null;
+                            //return new SetNodeFactoryN<>(this.left, this.key, newRight);
                         }   // else: another thread changed this.left ==> retry
                     }
                 }
             }
-            // replace data
+            // replace data todo
             synchronized (this) {
-                return new SetNodeFactory<>(this.key, this.left, this.right);
+                return null;//new SetNodeFactory<>(this.left, this.key, this.right);
             }
 
         }
 
-
-
-
-
         // LL
-        @Override
-        protected SetNodeFactory<K> callRotateRight(SetNodeFactory<K> newRoot) {
-            return newRoot.rotateRightNew(this);
-        }
-
-        // LL
-        @Override
-        protected SetNodeFactory<K> callRotateRight(SetNode<K> newRoot) {
-            return newRoot.rotateRightNew(this);
-        }
-
-        // RR
-        @Override
-        protected SetNodeFactory<K> callRotateLeft(SetNodeFactory<K> newRoot) {
-            return newRoot.rotateLeftNew(this);
-        }
-
-        // RR
-        @Override
-        protected SetNodeFactory<K> callRotateLeft(SetNode<K> newRoot) {
-            return newRoot.rotateLeftNew(this);
-        }
-
-        // LR
-        @Override
-        protected SetNodeFactory<K> callRotateLeftRight(SetNodeFactory<K> newLeft) {
-            return newLeft.rotateLeftRightNew(this);
-        }
-
-        // LR
-        @Override
-        protected SetNodeFactory<K> callRotateLeftRight(SetNode<K> newLeft) {
-            return newLeft.rotateLeftRightNew(this);
-        }
-
-        // RL
-        @Override
-        protected AbstractNode<K,K> callRotateRightLeft(SetNodeFactory<K> newRight) {
-            return newRight.rotateRightLeftNew(this);
-        }
-
-        // RL
-        @Override
-        protected AbstractNode<K,K> callRotateRightLeft(SetNode<K> newRight) {
-            return newRight.rotateRightLeftNew(this);
-        }
-
-        // LL
-        private SetNodeFactory<K> rotateRightNew(SetNodeFactory<K> newRoot) {
+        private SetNodeFactory<K,V> rotateRightNew(SetNodeFactory<K,V> newRoot) {
             // Perform rotation
             // newRoot is new ==> we can change it
-            newRoot.right = this.createNew(newRoot.right, this.right);
+            newRoot.right = this.createFinal(newRoot.right, this.right);
             // Update heights
             newRoot.updateHeight();
             return newRoot;
         }
 
         // LL
-        private SetNodeFactory<K> rotateRightNew(SetNode<K> newRoot) {
+        private SetNodeFactory<K,V> rotateRightNew(SetNode<K, V> newRoot) {
             // Perform rotation
-            SetNodeFactory<K> newThis = this.createNew(newRoot.right, this.right);
+            SetNode<K,V> newThis = this.createFinal(newRoot.right, this.right);
             // newRoot is not new ==> make it new
             return newRoot.createNew(newRoot.left, newThis);
        }
 
         // RR
-        private SetNodeFactory<K> rotateLeftNew(SetNodeFactory<K> newRoot) {
+        private SetNodeFactory<K,V> rotateLeftNew(SetNodeFactory<K,V> newRoot) {
             // newRoot is new ==> we can change it
             // Perform rotation
-            newRoot.left = this.createNew(this.left, newRoot.left);
+            newRoot.left = this.createFinal(this.left, newRoot.left);
             newRoot.updateHeight();
             return newRoot;
         }
 
         // RR
-        private SetNodeFactory<K> rotateLeftNew(SetNode<K> newRoot) {
+        private SetNodeFactory<K,V> rotateLeftNew(SetNode<K, V> newRoot) {
             // Perform rotation
-            SetNodeFactory<K> newThis = this.createNew(this.left, newRoot.left);
+            SetNode<K,V> newThis = this.createFinal(this.left, newRoot.left);
             // newRoot is not new ==> make it new
             return newRoot.createNew(newThis, newRoot.right);
         }
 
         // LR
-        private SetNodeFactory<K> rotateLeftRightNew(SetNodeFactory<K> newLeft) {
+        private SetNodeFactory<K,V> rotateLeftRightNew(SetNodeFactory<K,V> newLeft) {
             // newLeft is new ==> update it
-            AbstractNode<K,K> newLeftRight = newLeft.right; // but remember data before update
+            AbstractNode<K,V> newLeftRight = newLeft.right; // but remember data before update
             newLeft.right = newLeft.right.left();
             newLeft.updateHeight();
             return newLeftRight.createNew(
-                newLeft,
+                newLeft.createFinal(),
                 this.createFinal(newLeftRight.right(), this.right)
             );
         }
 
         // LR
-        private SetNodeFactory<K> rotateLeftRightNew(SetNode<K> newLeft) {
+        private SetNodeFactory<K,V> rotateLeftRightNew(SetNode<K, V> newLeft) {
             // newLeft is not new ==> make it new
             return newLeft.right.createNew(
                 newLeft.createFinal(newLeft.left, newLeft.right.left()),
@@ -686,19 +710,19 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         // RL
-        private AbstractNode<K,K> rotateRightLeftNew(SetNodeFactory<K> newRight) {
+        private SetNodeFactory<K,V> rotateRightLeftNew(SetNodeFactory<K,V> newRight) {
             // newRight is new ==> update it
-            AbstractNode<K,K> newRightLeft = newRight.left(); // but remember data before update
+            AbstractNode<K,V> newRightLeft = newRight.left; // but remember data before update
             newRight.left = newRight.left.right();
             newRight.updateHeight();
             return newRightLeft.createNew(
                 this.createFinal(this.left, newRightLeft.left()),
-                newRight
+                newRight.createFinal()
             );
         }
 
         // RL
-        private AbstractNode<K,K> rotateRightLeftNew(SetNode<K> newRight) {
+        private SetNodeFactory<K,V> rotateRightLeftNew(SetNode<K, V> newRight) {
             // newRight is not new ==> make it new
             return newRight.left.createNew(
                 this.createFinal(this.left, newRight.left.left()),
@@ -708,7 +732,28 @@ public class AVLTree<T extends Comparable<T>> {
 
     }
 
-    public static class SetLeafNode<K extends Comparable<K>> extends AbstractNode<K, K> {
+    public static class SetLeafNodeN<K extends Comparable<K>> extends SetLeafNode<K, K>{
+
+        public SetLeafNodeN(K valueToInsert) {
+            super(valueToInsert);
+        }
+
+        protected K value() {
+            return this.key;
+        }
+
+        @Override
+        SetNodeFactory<K, K> createNew(AbstractNode<K, K> left, AbstractNode<K, K> right) {
+            return new SetNodeFactoryCopy<K>(left, super.key, right);
+        }
+
+        @Override
+        SetNode<K, K> createFinal(AbstractNode<K, K> left, AbstractNode<K, K> right) {
+            return new SetNodeN<K>(super.key, left, right);
+        }
+    }
+
+    public static abstract class SetLeafNode<K extends Comparable<K>, V> extends AbstractNode<K, V> {
         protected K key;
         //protected int height;
 
@@ -717,48 +762,46 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         // Insert a key into the AVL tree and return the new root of the subtree
-        protected AbstractNode<K,K> insert(SetLeafNode<K> nodeToInsert) {
+        SetNodeFactory<K, V> insert(SetLeafNode<K, V> nodeToInsert) {
             synchronized (this) {
                 int cmp = nodeToInsert.key.compareTo(this.key);
                 if (cmp < 0){
-                    return new SetNodeFactory<>(this.key, nodeToInsert, null);
+                    return this.createNew(nodeToInsert, null);
                 }
                 if (cmp > 0){
-                    return new SetNodeFactory<>(this.key, null, nodeToInsert);
+                    return this.createNew(null, nodeToInsert);
                 }
-                // replace data
+                // replace data todo
                 this.key = nodeToInsert.key;
-                return this;
+                return null;
             }
         }
 
-        protected K value() {
-            return this.key;
-        }
+        protected abstract V value();
 
-        protected AbstractNode<K,K> find(K keyToFind) {
+        AbstractNode<K, V> find(K keyToFind) {
             if (keyToFind.compareTo(this.key) == 0) {
                 return this;
             }
             return null;
         }
 
-        protected AbstractNode<K,K> delete(K keyToDelete) {
+        SetNodeFactory<K, V> delete(K keyToDelete) {
             if (keyToDelete.compareTo(this.key) == 0) {
-                return null;
+                // delete this
+                return new SetNodeFactoryNull<>();
             }
-            return this;
-        }
-
-        protected AbstractNode<K,K> left() {
+            // nothing to do because keyToDelete was not found
             return null;
         }
 
-        protected AbstractNode<K,K> right() {
+        AbstractNode<K, V> left() {
             return null;
         }
 
-
+        AbstractNode<K, V> right() {
+            return null;
+        }
 
         protected int height() {
             return 1;
@@ -768,6 +811,7 @@ public class AVLTree<T extends Comparable<T>> {
         public K key() {
             return this.key;
         }
+
     }
 
     public static class Set<T extends Comparable<T>> {
@@ -786,15 +830,18 @@ public class AVLTree<T extends Comparable<T>> {
             AbstractNode<T,T> theRoot;
             synchronized(this) {
                 if(this.root == null){
-                    this.root = new SetLeafNode<>(valueToInsert);
+                    this.root = new SetLeafNodeN<>(valueToInsert);
                     return;
                 }
                 theRoot = this.root;
             }
 
-            AbstractNode<T,T> newRoot = theRoot.insert(new SetLeafNode<>(valueToInsert));
-            synchronized(this) {
-                this.root = newRoot;
+            SetNodeFactory<T,T> newRoot = theRoot.insert(new SetLeafNodeN<>(valueToInsert));
+            // todo check root changed
+            if(newRoot != null) {
+                synchronized (this) {
+                    this.root = newRoot.createFinal();
+                }
             }
         }
 
@@ -811,9 +858,12 @@ public class AVLTree<T extends Comparable<T>> {
                 theRoot = this.root;
             }
 
-            AbstractNode<T,T> newRoot = theRoot.delete(keyToDelete);
-            synchronized(this) {
-                this.root = newRoot;
+            SetNodeFactory<T,T> newRoot = theRoot.delete(keyToDelete);
+            // todo check root changed
+            if(newRoot != null){
+                synchronized(this) {
+                    this.root = newRoot.createFinal();;
+                }
             }
         }
 
@@ -871,11 +921,6 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
     }
-
-
-
-
-
 
     private static class Old {
 
