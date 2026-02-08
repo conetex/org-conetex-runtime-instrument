@@ -65,18 +65,4 @@ public class Counter implements Incrementable {
         }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
-

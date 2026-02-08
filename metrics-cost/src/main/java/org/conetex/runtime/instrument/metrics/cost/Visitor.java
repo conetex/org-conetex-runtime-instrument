@@ -1,9 +1,6 @@
 package org.conetex.runtime.instrument.metrics.cost;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.Label;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 
 public class Visitor extends ClassVisitor {
@@ -19,14 +16,65 @@ public class Visitor extends ClassVisitor {
 
         return new AdviceAdapter(Opcodes.ASM9, mv, access, name, desc) {
 
+            // todo dynamic mode does not work since we are running into loops
+            private void visitMvDynamic(String incrementMethodEntry) {
+                // Register an INVOKEDYNAMIC instruction here
+                mv.visitInvokeDynamicInsn(
+                        incrementMethodEntry,                                                      // Name of the method (dynamic name)
+                        "()V",                                                                     // Method descriptor
+                        new Handle(
+                                Opcodes.H_INVOKESTATIC,                                            // Bootstrap method type (static method)
+                                "org/conetex/runtime/instrument/metrics/cost/unnamed/Bootstrap",      // Owner class
+                                "callSite",                                                       // Bootstrap method name (defined in Owner class)
+                                "(" +
+                                        "Ljava/lang/invoke/MethodHandles$Lookup;" +
+                                        "Ljava/lang/String;" +
+                                        "Ljava/lang/invoke/MethodType;" +
+                                        //"Ljava/lang/Class;" +                                    // argument Real-Owner class
+                                        ")" +
+                                        "Ljava/lang/invoke/CallSite;",                             // Method descriptor
+                                false                                                              // Whether this is an interface method
+                        )
+                        //, Type.getType("Lorg/conetex/runtime/instrument/metrics/cost/Counters;") // Pass the Real-Owner class as an argument
+                );
+            }
+
+            private void visitMv(String incrementMethodEntry, int opcode){
+                visitMvStatic(incrementMethodEntry);
+            }
+
+            private void visitMvStatic(String incrementMethodEntry) {
+                mv.visitMethodInsn(INVOKESTATIC,
+                        // for module- and cp-mode - call to the generic targets in bootstrap (generated from Counters):
+                        "org/conetex/runtime/instrument/metrics/cost/unnamed/CounterMethods",
+                        // for cp-mode only - call to the increment methods in Counters:
+                        //"org/conetex/runtime/instrument/metrics/cost/Counters",
+                        incrementMethodEntry,
+                        "()V",
+                        false);
+            }
+
+            private void visitMvStaticCountOpcodes(String incrementMethodEntry, int opcode) {
+                // Push the string argument onto the stack
+                mv.visitLdcInsn(incrementMethodEntry);
+                // Push the opcode onto the stack
+                mv.visitIntInsn(Opcodes.BIPUSH, opcode);
+
+                // Pass the current opcode to the method being invoked
+                mv.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        "org/conetex/runtime/instrument/metrics/cost/CountOpcodes",    // Owner class for method
+                        "consume",                                                           // Target method name
+                        "(Ljava/lang/String;I)V",                                                              // Method descriptor: accepts an int parameter
+                        false                                                                // Is not for an interface
+                );
+
+            }
+
             @Override
             protected void onMethodEnter() {
                 // count method entry
-                mv.visitMethodInsn(INVOKESTATIC,
-                        "org/conetex/runtime/instrument/metrics/cost/Counters",
-                        "incrementMethodEntry",
-                        "()V",
-                        false);
+                visitMv("incrementMethodEntry", -256);
                 // super.onMethodEnter() is a empty hook. we do not need to call it
             }
 
@@ -34,11 +82,7 @@ public class Visitor extends ClassVisitor {
             public void visitMethodInsn(int opcode, String owner, String name,
                                         String descriptor, boolean isInterface) {
                 // count method call
-                mv.visitMethodInsn(INVOKESTATIC,
-                        "org/conetex/runtime/instrument/metrics/cost/Counters",
-                        "incrementMethodCall",
-                        "()V",
-                        false);
+                visitMv("incrementMethodCall", opcode);
                 super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
             }
 
@@ -51,30 +95,18 @@ public class Visitor extends ClassVisitor {
                     case IFGT: case IFLE:
                     case IF_ICMPEQ: case IF_ICMPNE: case IF_ICMPLT: // (compare jumps)
                     case IF_ICMPGE: case IF_ICMPGT: case IF_ICMPLE:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementCompareInt",
-                                "()V",
-                                false);
+                        visitMv("incrementCompareInt", opcode);
                         break;
 
                     // count compare for Object
                     case IFNULL: case IFNONNULL: // (object compare jumps)
                     case IF_ACMPEQ: case IF_ACMPNE:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementCompareObject",
-                                "()V",
-                                false);
+                        visitMv("incrementCompareObject", opcode);
                         break;
 
                     // count every other jump [if/else, switch, break, continue, for, while, do] / unconditional jumps [goto, jsr (Jump to SubRoutine)]
                     default:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementJump",
-                                "()V",
-                                false);
+                        visitMv("incrementJump", opcode);
                         break;
                 }
                 super.visitJumpInsn(opcode, label);
@@ -85,20 +117,12 @@ public class Visitor extends ClassVisitor {
                 switch (opcode) {
                     // count Read vars (Load)
                     case ILOAD: case LLOAD: case FLOAD: case DLOAD: case ALOAD:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementVariableLoad",
-                                "()V",
-                                false);
+                        visitMv("incrementVariableLoad", opcode);
                         break;
 
                     // count write vars (Store)
                     case ISTORE: case LSTORE: case FSTORE: case DSTORE: case ASTORE:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementVariableStore",
-                                "()V",
-                                false);
+                        visitMv("incrementVariableStore", opcode);
                         break;
                 }
                 super.visitVarInsn(opcode, var);
@@ -111,11 +135,7 @@ public class Visitor extends ClassVisitor {
                     case LCMP:
                     case FCMPG: case FCMPL:
                     case DCMPG: case DCMPL:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementCompareLong",
-                                "()V",
-                                false);
+                        visitMv("incrementCompareLong", opcode);
                         break;
 
                     // count addition substraction negation
@@ -123,58 +143,40 @@ public class Visitor extends ClassVisitor {
                                case ISUB: case LADD: case LSUB:
                     case FADD: case FSUB: case DADD: case DSUB:
                     case INEG: case LNEG: case FNEG: case DNEG:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementArithmeticAddSubNeg", "()V", false);
+                        visitMv("incrementArithmeticAddSubNeg", opcode);
                         break;
 
                     // count multiplication
                     case IMUL: case LMUL: case FMUL: case DMUL:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementArithmeticMul", "()V", false);
+                        visitMv("incrementArithmeticMul", opcode);
                         break;
 
                     // count division / modulo
                     case IDIV: case IREM: case LDIV: case LREM:
                     case FDIV: case DDIV: case FREM: case DREM:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementArithmeticDivRem", "()V", false);
+                        visitMv("incrementArithmeticDivRem", opcode);
                         break;
 
                     // count read array
                     case IALOAD: case LALOAD: case FALOAD: case DALOAD:
                     case AALOAD: case BALOAD: case CALOAD: case SALOAD:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementArrayLoad",
-                                "()V",
-                                false);
+                        visitMv("incrementArrayLoad", opcode);
                         break;
 
                     // count write array
                     case IASTORE: case LASTORE: case FASTORE: case DASTORE:
                     case AASTORE: case BASTORE: case CASTORE: case SASTORE:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementArrayStore",
-                                "()V",
-                                false);
+                        visitMv("incrementArrayStore", opcode);
                         break;
 
                     // count monitor enter/exit
                     case MONITORENTER: case MONITOREXIT:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementMonitor", "()V", false);
+                        visitMv("incrementMonitor", opcode);
                         break;
 
                     // count exception throw
                     case ATHROW:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementExceptionThrow", "()V", false);
+                        visitMv("incrementExceptionThrow", opcode);
                         break;
 
                 }
@@ -185,14 +187,10 @@ public class Visitor extends ClassVisitor {
             public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
                 switch (opcode) {
                     case GETFIELD: case GETSTATIC:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementFieldLoad", "()V", false);
+                        visitMv("incrementFieldLoad", opcode);
                         break;
                     case PUTFIELD: case PUTSTATIC:
-                        mv.visitMethodInsn(INVOKESTATIC,
-                                "org/conetex/runtime/instrument/metrics/cost/Counters",
-                                "incrementFieldStore", "()V", false);
+                        visitMv("incrementFieldStore", opcode);
                         break;
                 }
                 super.visitFieldInsn(opcode, owner, name, descriptor);
@@ -201,16 +199,10 @@ public class Visitor extends ClassVisitor {
             @Override
             public void visitTypeInsn(int opcode, String type) {
                 if (opcode == ANEWARRAY) {
-                    mv.visitMethodInsn(INVOKESTATIC,
-                            "org/conetex/runtime/instrument/metrics/cost/Counters",
-                            "incrementArrayNew",
-                            "()V",
-                            false);
+                    visitMv("incrementArrayNew", opcode);
                 }
                 else if (opcode == CHECKCAST || opcode == INSTANCEOF) {
-                    mv.visitMethodInsn(INVOKESTATIC,
-                            "org/conetex/runtime/instrument/metrics/cost/Counters",
-                            "incrementTypeCheck", "()V", false);
+                    visitMv("incrementTypeCheck", opcode);
                 }
                 super.visitTypeInsn(opcode, type);
             }
@@ -218,22 +210,14 @@ public class Visitor extends ClassVisitor {
             @Override
             public void visitIntInsn(int opcode, int operand) {
                 if (opcode == NEWARRAY) {
-                    mv.visitMethodInsn(INVOKESTATIC,
-                            "org/conetex/runtime/instrument/metrics/cost/Counters",
-                            "incrementArrayNew",
-                            "()V",
-                            false);
+                    visitMv("incrementArrayNew", opcode);
                 }
                 super.visitIntInsn(opcode, operand);
             }
 
             @Override
             public void visitMultiANewArrayInsn(String desc, int dims) {
-                mv.visitMethodInsn(INVOKESTATIC,
-                        "org/conetex/runtime/instrument/metrics/cost/Counters",
-                        "incrementArrayNew",
-                        "()V",
-                        false);
+                visitMv("incrementArrayNew", -255);
                 super.visitMultiANewArrayInsn(desc, dims);
             }
 

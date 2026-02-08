@@ -6,6 +6,10 @@ import org.conetex.runtime.instrument.counter.Counter;
 
 public final class Counters {
 
+    static {
+        System.err.println("Counters loaded: " + Counters.class + " (class) - " + Counters.class.getModule() + " (module) - " + Counter.class.getClassLoader() + " (loader)");
+    }
+
     public final static LongLimits CONFIG_MIN_MAX = new LongLimits(0L, Long.MAX_VALUE);
 
     public static final Counter ARITHMETIC_ADD_SUB_NEG = new Counter(CONFIG_MIN_MAX, true);
@@ -87,6 +91,7 @@ public final class Counters {
             c.blockIncrement(incrementationBlocked);
         }
     }
+
 
     @SuppressWarnings("unused")
     public static void incrementArithmeticAddSubNeg() {

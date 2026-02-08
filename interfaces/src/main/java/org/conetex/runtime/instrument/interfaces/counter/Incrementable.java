@@ -9,4 +9,5 @@ public interface Incrementable {
     void reset();
 
     void increment();
+
 }

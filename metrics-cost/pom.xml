@@ -3,6 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.conetex.runtime.instrument</groupId>
         <artifactId>parent</artifactId>
@@ -13,6 +14,7 @@
     <artifactId>metrics-cost</artifactId>
 
     <dependencies>
+
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
@@ -26,43 +28,98 @@
 
         <dependency>
             <groupId>org.conetex.runtime.instrument</groupId>
+            <artifactId>interfaces</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.conetex.runtime.instrument</groupId>
             <artifactId>counter</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
 
+    <properties>
+        <transformer.class>org.conetex.runtime.instrument.metrics.cost.Transformer</transformer.class>
+    </properties>
+
     <build>
         <plugins>
-            <!-- create the JAR with dependencies -->
+
+            <!-- keep dependencies to use them in test -->
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.6.0</version>
-                <configuration>
-                    <finalName>${project.artifactId}-${project.version}-fat</finalName>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <!-- do not create the normal JAR without dependencies -->
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <archive>
-                        <manifest>
-                            <!-- JAR has no main -->
-                        </manifest>
-                        <manifestEntries>
-                            <Transformer-Class>org.conetex.runtime.instrument.metrics.cost.Transformer</Transformer-Class>
-                            <appendToBootstrapClassLoaderSearch>true</appendToBootstrapClassLoaderSearch>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.9.0</version>
                 <executions>
                     <execution>
-                        <id>make-transformer-jar</id>
+                        <id>copy-dependencies</id>
                         <phase>package</phase>
-                        <goals><goal>single</goal></goals>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Maven Jar Plugin for normal JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <!-- JAR has no main -->
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <coreClass>${transformer.class}</coreClass>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Shade Plugin for Fat JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+
+                        <configuration>
+                            <finalName>${project.artifactId}-${project.version}-fat</finalName>
+
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <coreClass>${transformer.class}</coreClass>
+                                    </manifestEntries>
+                                </transformer>
+
+                                <!-- if we use META-INF/services -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+
+                            <!-- Important: keep module-info.class -->
+                            <shadeSourcesContent>true</shadeSourcesContent> <!-- todo looks like this does not work BUT however we do not want a module-info.class in fat -->
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
