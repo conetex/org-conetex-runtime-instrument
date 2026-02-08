@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,10 +49,33 @@ class AVLTreeTest {
         // Aufruf (gibt Ausgaben auf stdout, wir rufen nur auf, um die Codezeilen zu decken)
         tree.preOrder(tree.getRoot());
         System.out.println(" - preOrder");
+
         tree.inOrder(tree.getRoot());
         System.out.println(" - inOrder");
+
+        Iterator<X> i = tree.iterator();
+        while(i.hasNext()){
+            System.out.print( i.next() + "; ");
+        }
+        System.out.println(" - inOrderIterator A");
+        for( X x : tree ){
+            System.out.print( x + "; ");
+        }
+        System.out.println(" - inOrderIterator B");
+
         tree.reverseOrder(tree.getRoot());
         System.out.println(" - reverseOrder");
+
+        for (Iterator<X> ir = tree.reverseIterator(); ir.hasNext(); ) {
+            System.out.print( ir.next() + "; ");
+        }
+        System.out.println(" - reverseOrderIterator A");
+        for (X x : tree.reverseIterable()) {
+            System.out.print( x + "; ");
+        }
+        System.out.println(" - reverseOrderIterator B");
+
+
         tree.postOrder(tree.getRoot());
         System.out.println(" - postOrder");
     }

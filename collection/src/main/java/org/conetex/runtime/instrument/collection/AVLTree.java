@@ -1,12 +1,24 @@
 package org.conetex.runtime.instrument.collection;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 public class AVLTree<T extends Comparable<T>> {
 
-    static abstract class AbstractNode<K extends Comparable<K>, V> {
+    public interface Entry<K extends Comparable<K>, V> {
 
-        abstract K key();
+        K key();
 
-        abstract V value();
+        V value();
+
+    }
+
+    static abstract class AbstractNode<K extends Comparable<K>, V> implements Entry<K, V>
+    {
+
+        public abstract K key();
+
+        public abstract V value();
 
         abstract int height();
 
@@ -97,7 +109,7 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        K key() {
+        public K key() {
             return this.key;
         }
 
@@ -449,7 +461,7 @@ public class AVLTree<T extends Comparable<T>> {
         abstract void updateValue(AbstractLeafNode<K,V> source);
 
         @Override
-        abstract V value();
+        public abstract V value();
 
         @Override
         AbstractNode<K,V> find(K keyToFind) {
@@ -485,7 +497,7 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        K key() {
+        public K key() {
             return this.key;
         }
 
@@ -529,7 +541,8 @@ public class AVLTree<T extends Comparable<T>> {
 
         void deleteFromTree(K keyToDelete) {
             if(keyToDelete == null){
-                throw new NullPointerException("can not delete null");
+                //throw new NullPointerException("can not delete null");
+                return;
             }
             while(true) {
                 AbstractNode<K,V> theRoot;
@@ -558,7 +571,8 @@ public class AVLTree<T extends Comparable<T>> {
 
         V findInTree(K keyToFind) {
             if(keyToFind == null){
-                throw new NullPointerException("can not find null");
+                //throw new NullPointerException("can not find null");
+                return null;
             }
 
             AbstractNode<K,V> theRoot;
@@ -679,7 +693,7 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        K value() {
+        public K value() {
             return super.key;
         }
 
@@ -697,7 +711,7 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        K value() {
+        public K value() {
             return super.key;
         }
 
@@ -708,18 +722,29 @@ public class AVLTree<T extends Comparable<T>> {
 
     }
 
-    public static class Set<K extends Comparable<K>> extends AbstractTree<K,K> {
+    public static class Set<K extends Comparable<K>> extends AbstractTree<K,K> implements Iterable<K> {
 
         void insertIntoTree(K keyToInsert) {
             if(keyToInsert == null){
-                throw new NullPointerException("can not insert null");
+                //throw new NullPointerException("can not insert null");
+                return;
             }
             super.insert(new SetLeafNode<>(keyToInsert));
         }
 
-        public SetIterator<K> iterator() {
+        @Override
+        public Iterator<K> iterator() {
             return new SetIterator<>(this.getRoot());
         }
+
+        public Iterable<K> reverseIterable() {
+            return () -> new ReverseSetIterator<>(this.getRoot());
+        }
+
+        public Iterator<K> reverseIterator() {
+            return new ReverseSetIterator<>(this.getRoot());
+        }
+
     }
 
     private static class MapNodeChange<K extends Comparable<K>,V> extends AbstractNodeChange<K,V> {
@@ -758,7 +783,7 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        V value() {
+        public V value() {
             return this.value;
         }
 
@@ -790,7 +815,7 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        V value() {
+        public V value() {
             return this.value;
         }
 
@@ -801,18 +826,29 @@ public class AVLTree<T extends Comparable<T>> {
 
     }
 
-    public static class Map<K extends Comparable<K>, V> extends AbstractTree<K,V> {
+    public static class Map<K extends Comparable<K>, V> extends AbstractTree<K,V> implements Iterable<Entry<K,V>> {
 
         void insertIntoTree(K keyToInsert, V valueToInsert) {
             if(keyToInsert == null){
-                throw new NullPointerException("can not insert null");
+                //throw new NullPointerException("can not insert null");
+                return;
             }
             super.insert(new MapLeafNode<>(keyToInsert, valueToInsert));
         }
 
-        public MapEntryIterator<K,V> iterator() {
-            return new MapEntryIterator<>(this.getRoot());
+        @Override
+        public Iterator<Entry<K,V>> iterator() {
+            return new MapIterator<>(this.getRoot());
         }
+
+        public Iterable<Entry<K,V>> reverseIterable() {
+            return () -> new ReverseMapIterator<>(this.getRoot());
+        }
+
+        public Iterator<Entry<K,V>> reverseIterator() {
+            return new ReverseMapIterator<>(this.getRoot());
+        }
+
     }
 
     public static void main(String[] args) {
@@ -869,11 +905,17 @@ public class AVLTree<T extends Comparable<T>> {
 
     }
 
+    private static record LinkedListEntry<K extends Comparable<K>, V>(
+            AbstractNode<K, V> value,
+            LinkedListEntry<K, V> next
+    ) {}
+
 
     // InOrder Node iterator (yields AbstractNode<K,V>) — keine imports, vollqualifizierte Typen
-    private static class NodeIterator<K extends Comparable<K>, V> implements java.util.Iterator<AbstractNode<K,V>> {
+    private static class NodeIterator<K extends Comparable<K>, V>  {
 
-        private final java.util.Deque<AbstractNode<K,V>> stack = new java.util.ArrayDeque<>();
+        //private final java.util.Deque<AbstractNode<K,V>> stack = new java.util.ArrayDeque<>();
+        private LinkedListEntry<K,V> stack;
 
         NodeIterator(AbstractNode<K,V> root) {
             pushLeft(root);
@@ -881,69 +923,108 @@ public class AVLTree<T extends Comparable<T>> {
 
         private void pushLeft(AbstractNode<K,V> node) {
             while (node != null) {
-                stack.push(node);
+                this.stack = new LinkedListEntry<>(node, stack);
                 node = node.left();
             }
         }
 
-        @Override
         public boolean hasNext() {
-            return !stack.isEmpty();
+            return this.stack != null;
         }
 
-        @Override
-        public AbstractNode<K,V> next() {
+        public Entry<K,V> nextNode() {
             if (!hasNext()) {
-                throw new java.util.NoSuchElementException();
+                //throw new NoSuchElementException();
+                return null;
             }
-            AbstractNode<K,V> node = stack.pop();
+            AbstractNode<K,V> node = this.stack.value;
+            this.stack = this.stack.next;
             pushLeft(node.right());
             return node;
         }
+
     }
 
-    // Iterator für Set: liefert Keys
-    public static class SetIterator<K extends Comparable<K>> implements java.util.Iterator<K> {
+    private static class ReverseNodeIterator<K extends Comparable<K>, V> {
 
-        private final NodeIterator<K,K> nodeIterator;
+        private LinkedListEntry<K,V> stack;
 
-        SetIterator(AbstractNode<K,K> root) {
-            this.nodeIterator = new NodeIterator<>(root);
+        ReverseNodeIterator(AbstractNode<K,V> root) {
+            pushRight(root);
         }
 
-        @Override
+        private void pushRight(AbstractNode<K,V> node) {
+            while (node != null) {
+                this.stack = new LinkedListEntry<>(node, stack);
+                node = node.right();
+            }
+        }
+
         public boolean hasNext() {
-            return nodeIterator.hasNext();
+            return this.stack != null;
+        }
+
+        public AbstractNode<K,V> nextNode() {
+            if (!hasNext()) {
+                //throw new NoSuchElementException();
+                return null;
+            }
+            AbstractNode<K,V> node = this.stack.value;
+            this.stack = this.stack.next;
+            pushRight(node.left());
+            return node;
+        }
+
+    }
+
+    public static class SetIterator<K extends Comparable<K>> extends NodeIterator<K, K> implements java.util.Iterator<K> {
+
+        SetIterator(AbstractNode<K, K> root) {
+            super(root);
         }
 
         @Override
         public K next() {
-            AbstractNode<K,K> node = nodeIterator.next();
+            Entry<K,K> node = super.nextNode();
             return node.key();
         }
     }
 
-    // Iterator für Map: liefert Map.Entry<K,V>
-    public static class MapEntryIterator<K extends Comparable<K>, V> //implements java.util.Iterator<java.util.Map.Entry<K,V>>
-    {
+    public static class ReverseSetIterator<K extends Comparable<K>> extends ReverseNodeIterator<K, K> implements java.util.Iterator<K> {
 
-        private final NodeIterator<K,V> nodeIterator;
-
-        MapEntryIterator(AbstractNode<K,V> root) {
-            this.nodeIterator = new NodeIterator<>(root);
+        ReverseSetIterator(AbstractNode<K, K> root) {
+            super(root);
         }
 
-        public boolean hasNext() {
-            return nodeIterator.hasNext();
-        }
-
-        public java.util.Map.Entry<K,V> next() {
-            AbstractNode<K,V> node = nodeIterator.next();
-            return new java.util.AbstractMap.SimpleImmutableEntry<>(node.key(), node.value());
+        @Override
+        public K next() {
+            AbstractNode<K,K> node = super.nextNode();
+            return node.key();
         }
     }
 
+    public static class MapIterator<K extends Comparable<K>, V> extends NodeIterator<K, V> implements java.util.Iterator<Entry<K,V>> {
 
+        MapIterator(AbstractNode<K, V> root) {
+            super(root);
+        }
 
+        @Override
+        public Entry<K, V> next() {
+            return super.nextNode();
+        }
+    }
+
+    public static class ReverseMapIterator<K extends Comparable<K>, V> extends ReverseNodeIterator<K, V> implements java.util.Iterator<Entry<K,V>> {
+
+        ReverseMapIterator(AbstractNode<K, V> root) {
+            super(root);
+        }
+
+        @Override
+        public Entry<K, V> next() {
+            return super.nextNode();
+        }
+    }
 
 }
