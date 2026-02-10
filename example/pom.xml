@@ -7,17 +7,20 @@
     <parent>
         <groupId>org.conetex.runtime.instrument</groupId>
         <artifactId>parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>example</artifactId>
 
+    <name>example</name>
+    <description>example</description>
+    
     <dependencies>
         <dependency>
             <groupId>org.conetex.runtime.instrument</groupId>
             <artifactId>metrics-cost</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
         </dependency>
     </dependencies>
 

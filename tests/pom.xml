@@ -7,12 +7,15 @@
     <parent>
         <groupId>org.conetex.runtime.instrument</groupId>
         <artifactId>parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>org.conetex.runtime.instrument.tests</groupId>
     <artifactId>test-parent</artifactId>
+
+    <name>tests</name>
+    <description>tests</description>
 
     <packaging>pom</packaging>
 

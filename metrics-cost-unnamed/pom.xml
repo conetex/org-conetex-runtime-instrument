@@ -6,11 +6,14 @@
     <parent>
         <groupId>org.conetex.runtime.instrument</groupId>
         <artifactId>parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>metrics-cost-unnamed</artifactId>
+
+    <name>cost unnamed</name>
+    <description>cost unnamed</description>
 
     <properties>
         <bootstrap.class>org.conetex.runtime.instrument.metrics.cost.unnamed.CounterMethods</bootstrap.class>

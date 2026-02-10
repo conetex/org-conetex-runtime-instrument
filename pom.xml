@@ -6,7 +6,10 @@
 
     <groupId>org.conetex.runtime.instrument</groupId>
     <artifactId>parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
+
+    <name>org.conetex.runtime.instrument</name>
+    <description>org.conetex.runtime.instrument</description>
 
     <packaging>pom</packaging>
 
@@ -27,5 +30,101 @@
         <module>tests</module>
         <module>example</module>
     </modules>
+
+    <url>https://github.com/conetex/org-conetex-runtime-instrument</url>
+
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/conetex/org-conetex-runtime-instrument</url>
+        <connection>scm:git:https://github.com/conetex/org-conetex-runtime-instrument.git</connection>
+        <developerConnection>scm:git:git@github.com/conetex/org-conetex-runtime-instrument.git</developerConnection>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>matthias-franke</id>
+            <name>Matthias Franke</name>
+        </developer>
+    </developers>
+
+    <build>
+        <plugins>
+
+            <!-- JAR (needed for publish) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <!--<goal>jar</goal>-->
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Javadoc (needed for publish) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals><goal>jar</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Sign (needed for publish) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals><goal>sign</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Publish -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.9.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <excludeArtifacts>
+
+                        <artifact>example</artifact>
+
+                        <artifact>test-parent</artifact>
+                        <!-- tests modules -->
+                        <artifact>empty</artifact>
+                        <artifact>integration</artifact>
+                        <artifact>jar</artifact>
+                        <artifact>jar-blocked</artifact>
+                        <artifact>jar-module</artifact>
+                        <!-- tests modules -->
+
+                    </excludeArtifacts>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
 
 </project>
