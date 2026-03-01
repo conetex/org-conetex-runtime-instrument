@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.conetex.runtime.instrument.tests</groupId>
+        <artifactId>test-parent</artifactId>
+        <version>0.0.1</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>count-opcodes</artifactId>
+
+    <name>test count opcodes</name>
+    <description>test count opcodes description</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- transformerArgs:instrumentationTargetClassorg/conetex/runtime/test/instrument/count/opcodes/MainCountOpcodesvisit_mv_statXic_count_opcodes; -->
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>
+                        -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=transformerArgs:instrumentationTargetClassorg/conetex/runtime/test/instrument/count/opcodes/MainCountOpcodes,visit_mv_static_count_opcodes;pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
+                    </argLine>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

@@ -24,6 +24,7 @@
         <module>jar</module>
         <module>jar-blocked</module>
         <module>jar-module</module>
+        <module>count-opcodes</module>
         <module>integration</module>
     </modules>
 

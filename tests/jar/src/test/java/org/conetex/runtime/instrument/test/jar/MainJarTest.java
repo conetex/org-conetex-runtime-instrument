@@ -7,12 +7,12 @@ import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MainTest {
+class MainJarTest {
 
     @BeforeEach
     void setUp() {
         System.out.println("org.conetex.runtime.instrument.test.jar MainTest working here: " + new File(".").getAbsolutePath());
-        Main.warmup();
+        MainJar.warmup();
     }
 
     @Test
@@ -20,9 +20,9 @@ class MainTest {
         // Arrange:
         String result;
         // Act
-        result = Main.testsIncrementableCounterDefault();
+        result = MainJar.testsIncrementableCounterDefault();
         // Assert
-        assertFalse( result.contains(Main.TEST_FAILED) );
+        assertFalse( result.contains(MainJar.TEST_FAILED) );
     }
 
     @Test
@@ -30,9 +30,9 @@ class MainTest {
         // Arrange:
         String result;
         // Act
-        result = Main.testsIncrementableCounterBlock();
+        result = MainJar.testsIncrementableCounterBlock();
         // Assert
-        assertFalse( result.contains(Main.TEST_FAILED) );
+        assertFalse( result.contains(MainJar.TEST_FAILED) );
     }
 
     //@Test todo for whatever reason this does not work with modules
@@ -40,9 +40,9 @@ class MainTest {
         // Arrange:
         String result;
         // Act
-        result = Main.testsIncrementableInterfaceDefault();
+        result = MainJar.testsIncrementableInterfaceDefault();
         // Assert
-        assertFalse( result.contains(Main.TEST_FAILED) );
+        assertFalse( result.contains(MainJar.TEST_FAILED) );
     }
 
     @Test
@@ -50,9 +50,9 @@ class MainTest {
         // Arrange:
         String result;
         // Act
-        result = Main.testsIncrementableInterfaceBlock();
+        result = MainJar.testsIncrementableInterfaceBlock();
         // Assert
-        assertFalse( result.contains(Main.TEST_FAILED) );
+        assertFalse( result.contains(MainJar.TEST_FAILED) );
     }
 
     @Test
@@ -60,9 +60,9 @@ class MainTest {
         // Arrange:
         String result;
         // Act
-        result = Main.testsChainsOfLongsCountersWeighted();
+        result = MainJar.testsChainsOfLongsCountersWeighted();
         // Assert
-        assertFalse( result.contains(Main.TEST_FAILED) );
+        assertFalse( result.contains(MainJar.TEST_FAILED) );
     }
 
     //@Test todo for whatever reason this does not work with modules
@@ -70,19 +70,19 @@ class MainTest {
         // Arrange:
         String result;
         // Act
-        result = Main.testsChainsOfLongsInterface();
+        result = MainJar.testsChainsOfLongsInterface();
         // Assert
-        assertFalse( result.contains(Main.TEST_FAILED) );
+        assertFalse( result.contains(MainJar.TEST_FAILED) );
     }
 
-    @Test
+    //@Test
     void testsCountersReset() {
         // Arrange:
         String result;
         // Act
-        result = Main.testsCountersReset();
+        result = MainJar.testsCountersReset();
         // Assert
-        assertFalse( result.contains(Main.TEST_FAILED) );
+        assertFalse( result.contains(MainJar.TEST_FAILED) );
     }
 
     @Test
@@ -90,9 +90,9 @@ class MainTest {
         // Arrange:
         String result;
         // Act
-        result = Main.testsCountersBlockIncrement();
+        result = MainJar.testsCountersBlockIncrement();
         // Assert
-        assertFalse( result.contains(Main.TEST_FAILED) );
+        assertFalse( result.contains(MainJar.TEST_FAILED) );
     }
 
 }

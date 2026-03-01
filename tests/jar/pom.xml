@@ -38,8 +38,10 @@
                         -javaagent:${project.basedir}/../../agent/target/agent-${project.version}-fat.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
                  optional -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar
 
-
-
+                transformerArgs options:
+                    visit_mv_static
+                    visit_mv_dynamic
+                    visit_mv_static_count_opcodes
 
             -->
 
@@ -49,7 +51,7 @@
                 <version>3.2.5</version>
                 <configuration>
                     <argLine>
-                        -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
+                        -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=transformerArgs:visit_mv_static;pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
                     </argLine>
                 </configuration>
             </plugin>

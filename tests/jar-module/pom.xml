@@ -14,7 +14,7 @@
     <artifactId>jar-module</artifactId>
 
     <name>test jar module</name>
-    <description>test ja module</description>
+    <description>test jar module</description>
 
     <dependencies>
         <dependency>

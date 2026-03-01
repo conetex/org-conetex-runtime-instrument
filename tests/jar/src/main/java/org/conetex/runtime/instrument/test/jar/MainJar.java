@@ -10,7 +10,7 @@ import java.io.File;
 /*
 java -javaagent:agent/target/agent-0.0.1-SNAPSHOT.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-0.0.1-SNAPSHOT.jar -cp test/jar/target/jar-0.0.1-SNAPSHOT.jar org.conetex.runtime.instrument.test.jar.Main
  */
-public class Main {
+public class MainJar {
 
     public static final String TEST_FAILED = "test FAILED";
     public static final String TEST_OK = "test OK";

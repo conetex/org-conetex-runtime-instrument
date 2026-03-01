@@ -1,14 +1,81 @@
 package org.conetex.runtime.instrument.collection;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
-public class AVLTree<T extends Comparable<T>> {
+/**
+ * A utility container class that provides an in-memory, self-balancing AVL tree
+ * implementation and related types.  This class groups the tree node
+ * abstractions and two concrete public data structures:
+ * {@link AvlTree.Set} (a set of keys) and {@link AvlTree.Map} (a key/value map),
+ * together with iterators and entry types used to traverse and access stored
+ * elements.
+ *
+ * <p><b>Behavior</b>
+ * <ul>
+ *   <li>Elements are ordered by their natural ordering (keys must implement {@code Comparable}).</li>
+ *   <li>Insert operations replace existing entries with equal keys rather than creating duplicates.</li>
+ *   <li>Null keys are ignored by the public insert/delete/find entry points (no {@code NullPointerException} is thrown by those methods).</li>
+ * </ul>
+ *
+ * <p><b>Threading</b>
+ * <p>The implementation uses internal synchronization at the tree and node level
+ * to coordinate concurrent modifications.  Typical operations (insert, delete,
+ * find, and iteration via the provided iterators) are implemented with
+ * synchronization to allow safe concurrent use in common scenarios; however,
+ * callers should not rely on external atomicity across multiple method calls
+ * (for example, a separate check-then-act sequence) without their own
+ * synchronization.
+ *
+ * <p><b>Performance</b>
+ * <p>Operations maintain AVL balance invariants; expected time complexity for
+ * single-key operations (insert, delete, find) is O(log n) where n is the
+ * number of elements in the tree.
+ *
+ * <p><b>Usage</b>
+ * <pre>
+ *   AvlTree.Set&lt;Integer&gt; set = new AvlTree.Set&lt;&gt;();
+ *   set.insertIntoTree(42);
+ *
+ *   AvlTree.Map&lt;String, Integer&gt; map = new AvlTree.Map&lt;&gt;();
+ *   map.insertIntoTree("key", 123);
+ * </pre>
+ *
+ * @see AvlTree.Set
+ * @see AvlTree.Map
+ * @see AvlTree.Entry
+ */
+public class AvlTree {
 
+    public interface ValueFactory<V> {
+        V create();
+    }
+
+    public interface ValueUpdate<V> {
+        V update(V existingValue);
+    }
+
+    private AvlTree(){}
+
+    /**
+     * Represents a key/value pair stored in the AVL tree.
+     *
+     * @param <K> the key type, must be Comparable
+     * @param <V> the value type
+     */
     public interface Entry<K extends Comparable<K>, V> {
 
+        /**
+         * Returns the key associated with this entry.
+         *
+         * @return the key of this entry
+         */
         K key();
 
+        /**
+         * Returns the value associated with this entry.
+         *
+         * @return the value of this entry
+         */
         V value();
 
     }
@@ -16,23 +83,25 @@ public class AVLTree<T extends Comparable<T>> {
     static abstract class AbstractNode<K extends Comparable<K>, V> implements Entry<K, V>
     {
 
-        public abstract K key();
-
-        public abstract V value();
-
         abstract int height();
 
         abstract AbstractNode<K,V> left();
 
         abstract AbstractNode<K,V> right();
 
-        abstract AbstractNodeChange<K,V> insert(AbstractLeafNode<K,V> nodeToInsert);
+        abstract AbstractNodeChange<K,V> insert(K keyToInsert, ValueFactory<V> v, ValueUpdate<V> u);
 
         abstract AbstractNode<K,V> find(K keyToFind);
 
         abstract AbstractNodeChange<K,V> delete(K keyToDelete);
 
         abstract AbstractNodeChange<K,V> change(AbstractNode<K,V> left, AbstractNode<K,V> right);
+
+        abstract AbstractLeafNode<K,V> createLeaf(K keyToInsert, ValueFactory<V> valueFactory);
+
+        abstract void updateValue(ValueUpdate<V> valueUpdater);
+
+        abstract void setValue(V value);
 
     }
 
@@ -108,6 +177,11 @@ public class AVLTree<T extends Comparable<T>> {
             }
         }
 
+        /**
+         * Returns the key stored in this balanced node.
+         *
+         * @return the node key
+         */
         @Override
         public K key() {
             return this.key;
@@ -168,7 +242,7 @@ public class AVLTree<T extends Comparable<T>> {
                                 return null;
                             }
                             this.left = newLeft.implement();
-                            if (this.right != null && this.right instanceof AVLTree.AbstractBalancedNode<K,V> rightA && rightA.height > newLeft.height + 1) {
+                            if (this.right != null && this.right instanceof AvlTree.AbstractBalancedNode<K,V> rightA && rightA.height > newLeft.height + 1) {
                                 // right heavy
                                 if (this.right.left() == null || (this.right.right() != null && this.right.left().height() <= this.right.right().height())) {
                                     // RR
@@ -213,9 +287,8 @@ public class AVLTree<T extends Comparable<T>> {
                         newValueNode = newValueNode.left();
                     }
                     // copy data from successor to this
-                    //this.takeOverKeyValue(newValueNode);
                     this.key = newValueNode.key();
-                    this.updateValue(newValueNode.value());
+                    this.setValue(newValueNode.value());
                     // remove successor
                     valueToRemove = newValueNode.key();
                 }
@@ -237,7 +310,7 @@ public class AVLTree<T extends Comparable<T>> {
                             return null;
                         }
                         this.right = newRight.implement();
-                        if (this.left != null && this.left instanceof AVLTree.AbstractBalancedNode<K,V> leftA && leftA.height > newRight.height + 1) {
+                        if (this.left != null && this.left instanceof AvlTree.AbstractBalancedNode<K,V> leftA && leftA.height > newRight.height + 1) {
                             // left heavy
                             if ( leftA.right() == null || (leftA.left() != null && leftA.left().height() >= leftA.right().height()) ) {
                                 // LL
@@ -264,19 +337,19 @@ public class AVLTree<T extends Comparable<T>> {
 
         // Insert a key into the AVL tree and return the new root of the subtree
         @Override
-        AbstractNodeChange<K,V> insert(AbstractLeafNode<K,V> nodeToInsert) {
-            int cmp = nodeToInsert.key.compareTo(this.key);
+        AbstractNodeChange<K,V> insert(K keyToInsert, ValueFactory<V> v, ValueUpdate<V> u) {
+            int cmp = keyToInsert.compareTo(this.key);
             if (cmp < 0){
                 AbstractNode<K,V> oldLeft;
                 while(true) {
                     synchronized (this) {
                         if (this.left == null) {
                             //return new SetNodeFactoryN<>(nodeToInsert, this.key, this.right);
-                            return this.change(nodeToInsert, this.right);
+                            return this.change(this.createLeaf(keyToInsert, v), this.right);
                         }
                         oldLeft = this.left;
                     }
-                    AbstractNodeChange<K,V> newLeft = oldLeft.insert(nodeToInsert);
+                    AbstractNodeChange<K,V> newLeft = oldLeft.insert(keyToInsert, v, u);
                     synchronized (this) {
                         if (this.left != oldLeft) {
                             // another thread changed this.left ==> retry
@@ -286,18 +359,14 @@ public class AVLTree<T extends Comparable<T>> {
                         if(newLeft == null){
                             return null;
                         }
-                        if ( //newLeft instanceof AVLTree.AbstractBalancedNode<K,K> newLeftA &&
+                        if ( //newLeft instanceof AvlTree.AbstractBalancedNode<K,K> newLeftA &&
                                 newLeft.height - 1 > (this.right == null ? 0 : this.right.height())) {
                             // left heavy
                             if (newLeft.right == null || (newLeft.left != null && newLeft.left.height() >= newLeft.right.height())) {
                                 // LL
-                                //return this.rotateRightNew(newLeft, oldLeft);
-                                //return newLeft.callRotateRight(this);
                                 return this.rotateRightNew(newLeft);
                             }
                             // left.right HIGHER ==> LR
-                            //return this.rotateLeftRightNew(newLeft, oldLeft);
-                            //return newLeft.callRotateLeftRight(this);
                             return this.rotateLeftRightNew(newLeft);
                         }
                         this.left = newLeft.implement();
@@ -311,47 +380,44 @@ public class AVLTree<T extends Comparable<T>> {
                 while(true) {
                     synchronized (this) {
                         if (this.right == null) {
-                            return this.change(this.left, nodeToInsert);
+                            return this.change(this.left, this.createLeaf(keyToInsert, v));
                         }
                         oldRight = this.right;
                     }
-                    AbstractNodeChange<K,V> newRight = oldRight.insert(nodeToInsert);
+                    AbstractNodeChange<K,V> newRight = oldRight.insert(keyToInsert, v, u);
                     synchronized (this) {
                         if (this.right == oldRight) {
                             // no other thread changed this.right in between
                             if(newRight == null){
                                 return null;
                             }
-                            if (//newRight instanceof AVLTree.AbstractBalancedNode<K,K> newRightA &&
+                            if (//newRight instanceof AvlTree.AbstractBalancedNode<K,K> newRightA &&
                                     newRight.height - 1 > (this.left == null ? 0 : this.left.height())){
                                 // right heavy
                                 if (newRight.left == null || (newRight.right != null && newRight.left.height() <= newRight.right.height())) {
                                     // RR
-                                    //return this.rotateLeftNew(newRight, oldRight);
-                                    //return newRight.callRotateLeft(this);
                                     return this.rotateLeftNew(newRight);
                                 }
                                 // right.left HIGHER ==> RL
-                                //return this.rotateRightLeftNew(newRight, oldRight);
-                                //return newRight.callRotateRightLeft(this);
                                 return this.rotateRightLeftNew(newRight);
                             }
                             this.right = newRight.implement();
                             return null;
-                            //return new SetNodeFactoryN<>(this.left, this.key, newRight);
                         }   // else: another thread changed this.left ==> retry
                     }
                 }
             }
             // insert in this node ==> replace data
             synchronized (this) {
-                this.updateValue(nodeToInsert.value());
+                this.updateValue( u );
                 return null;//new SetNodeFactory<>(this.left, this.key, this.right);
             }
 
         }
 
-        abstract void updateValue(V value);
+        abstract void updateValue(ValueUpdate<V> valueUpdater);
+
+        abstract void setValue(V newValue);
 
         // LL
         private AbstractNodeChange<K,V> rotateRightNew(AbstractNodeChange<K,V> newRoot) {
@@ -443,25 +509,32 @@ public class AVLTree<T extends Comparable<T>> {
 
         @Override
         // Insert a key into the AVL tree and return the new root of the subtree
-        AbstractNodeChange<K,V> insert(AbstractLeafNode<K,V> nodeToInsert) {
+        AbstractNodeChange<K,V> insert(K keyToInsert, ValueFactory<V> v, ValueUpdate<V> u) {
             synchronized (this) {
-                int cmp = nodeToInsert.key.compareTo(this.key);
+                int cmp = keyToInsert.compareTo(this.key);
                 if (cmp < 0){
-                    return this.change(nodeToInsert, null);
+                    return this.change(this.createLeaf(keyToInsert, v), null);
                 }
                 if (cmp > 0){
-                    return this.change(null, nodeToInsert);
+                    return this.change(null, this.createLeaf(keyToInsert, v));
                 }
                 // replace data
-                this.updateValue(nodeToInsert);
+                this.updateValue( u );
                 return null;
             }
         }
 
-        abstract void updateValue(AbstractLeafNode<K,V> source);
-
+        /**
+         * Returns the value stored in this leaf node.
+         *
+         * @return the leaf node value
+         */
         @Override
         public abstract V value();
+
+        abstract void updateValue(ValueUpdate<V> valueUpdater);
+
+        abstract void setValue(V v);
 
         @Override
         AbstractNode<K,V> find(K keyToFind) {
@@ -511,18 +584,20 @@ public class AVLTree<T extends Comparable<T>> {
             return this.root;
         }
 
-        void insert(AbstractLeafNode<K,V> valueToInsert) {
+        abstract AbstractLeafNode<K,V> create(K keyToInsert, ValueFactory<V> valueFactory);
+
+        void insert(K keyToInsert, ValueFactory<V> v, ValueUpdate<V> u) {
 
             while(true) {
                 AbstractNode<K,V> theRoot;
                 synchronized(this) {
                     if(this.root == null){
-                        this.root = valueToInsert;
+                        this.root = this.create(keyToInsert, v);
                         return;
                     }
                     theRoot = this.root;
                 }
-                AbstractNodeChange<K,V> newRoot = theRoot.insert(valueToInsert);
+                AbstractNodeChange<K,V> newRoot = theRoot.insert(keyToInsert, v, u);
                 synchronized (this) {
                     if (this.root != theRoot) {
                         // another thread changed this.root ==> retry
@@ -569,7 +644,9 @@ public class AVLTree<T extends Comparable<T>> {
             }
         }
 
-        V findInTree(K keyToFind) {
+        //abstract AbstractLeafNode<K,V> createNewLeaf(K key, V value);
+
+        private AbstractNode<K,V> find(K keyToFind) {
             if(keyToFind == null){
                 //throw new NullPointerException("can not find null");
                 return null;
@@ -583,7 +660,11 @@ public class AVLTree<T extends Comparable<T>> {
                 theRoot = this.root;
             }
 
-            AbstractNode<K,V> result = theRoot.find(keyToFind);
+            return theRoot.find(keyToFind);
+        }
+
+        public V findInTree(K keyToFind) {
+            AbstractNode<K,V> result = this.find(keyToFind);
             if(result == null){
                 return null;
             }
@@ -662,7 +743,7 @@ public class AVLTree<T extends Comparable<T>> {
 
         @Override
         AbstractNode<K,K> implement() {
-            return new SetNode<K>(super.left, super.key, super.right, super.height);
+            return new SetNode<>(super.left, super.key, super.right, super.height);
         }
 
     }
@@ -678,18 +759,28 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        void updateValue(K value) {
+        void updateValue(ValueUpdate<K> valueUpdater) {
+            // value is key. key can not be updated
+        }
+
+        @Override
+        void setValue(K value) {
             // value is key. key can not be updated
         }
 
         @Override
         final AbstractNodeChange<K,K> change(AbstractNode<K,K> left, AbstractNode<K,K> right) {
-            return new SetNodeChange<K>(left, super.key, right);
+            return new SetNodeChange<>(left, super.key, right);
+        }
+
+        @Override
+        SetLeafNode<K> createLeaf(K keyToInsert, ValueFactory<K> valueFactory) {
+            return new SetLeafNode<>(keyToInsert);
         }
 
         @Override
         AbstractBalancedNode<K,K> create(AbstractNode<K,K> left, AbstractNode<K,K> right) {
-            return new SetNode<K>(left, super.key, right);
+            return new SetNode<>(left, super.key, right);
         }
 
         @Override
@@ -706,7 +797,12 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        void updateValue(AbstractLeafNode<K,K> source) {
+        void updateValue(ValueUpdate<K> valueUpdater) {
+            // value is key. key can not be updated
+        }
+
+        @Override
+        void setValue(K value) {
             // value is key. key can not be updated
         }
 
@@ -717,32 +813,86 @@ public class AVLTree<T extends Comparable<T>> {
 
         @Override
         AbstractNodeChange<K,K> change(AbstractNode<K,K> left, AbstractNode<K,K> right) {
-            return new SetNodeChange<K>(left, super.key, right);
+            return new SetNodeChange<>(left, super.key, right);
+        }
+
+        @Override
+        SetLeafNode<K> createLeaf(K keyToInsert, ValueFactory<K> valueFactory) {
+            return new SetLeafNode<>(keyToInsert);
         }
 
     }
 
+    /**
+     * A set backed by an AVL tree. Elements are stored as keys; duplicates replace existing entries.
+     *
+     * @param <K> the element type, must implement Comparable
+     */
     public static class Set<K extends Comparable<K>> extends AbstractTree<K,K> implements Iterable<K> {
 
+        /**
+         * Creates a new, empty AvlTree-backed set.
+         *
+         * <p>The constructed set is initially empty and ready to accept elements via
+         * {@link AvlTree.Set#insertIntoTree(K)}. Elements are ordered by their
+         * natural ordering (keys must implement {@code Comparable}).
+         *
+         * <p>Note: this constructor runs in constant time and performs no I/O. The
+         * set's instance methods use internal synchronization for concurrent access;
+         * callers should apply external synchronization if they require atomicity
+         * across multiple operations.
+         */
+        public Set() {}
+
+        /**
+         * Insert a key into the set-backed AVL tree.
+         * If the key is null, the method returns without inserting.
+         *
+         * @param keyToInsert the key to insert into the tree
+         */
         void insertIntoTree(K keyToInsert) {
             if(keyToInsert == null){
                 //throw new NullPointerException("can not insert null");
                 return;
             }
-            super.insert(new SetLeafNode<>(keyToInsert));
+            super.insert(
+                keyToInsert,
+                ()->{return keyToInsert;},
+                (K existingKey)->{return existingKey;}
+            );
         }
 
+        /**
+         * Returns an iterator over the elements in this set in ascending (in-order) order.
+         *
+         * @return an iterator over the keys in ascending order
+         */
         @Override
         public Iterator<K> iterator() {
             return new SetIterator<>(this.getRoot());
         }
 
+        /**
+         * Returns an iterable that iterates over the elements in descending (reverse in-order) order.
+         *
+         * @return an iterable for reverse-order traversal of keys
+         */
         public Iterable<K> reverseIterable() {
             return () -> new ReverseSetIterator<>(this.getRoot());
         }
 
+        /**
+         * Returns an iterator that iterates over the elements in descending (reverse in-order) order.
+         *
+         * @return an iterator for reverse-order traversal of keys
+         */
         public Iterator<K> reverseIterator() {
             return new ReverseSetIterator<>(this.getRoot());
+        }
+
+        @Override
+        SetLeafNode<K> create(K key, ValueFactory<K> valueFactory) {
+            return new SetLeafNode<>(key);
         }
 
     }
@@ -758,7 +908,7 @@ public class AVLTree<T extends Comparable<T>> {
 
         @Override
         AbstractNode<K,V> implement() {
-            return new MapNode<K,V>(super.left, super.key, this.value, super.right, super.height);
+            return new MapNode<>(super.left, super.key, this.value, super.right, super.height);
         }
 
     }
@@ -778,7 +928,12 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        void updateValue(V value) {
+        void updateValue(ValueUpdate<V> valueUpdater) {
+            this.value = valueUpdater.update(this.value);
+        }
+
+        @Override
+        void setValue(V value) {
             this.value = value;
         }
 
@@ -789,12 +944,17 @@ public class AVLTree<T extends Comparable<T>> {
 
         @Override
         AbstractNodeChange<K,V> change(AbstractNode<K,V> left, AbstractNode<K,V> right) {
-            return new MapNodeChange<K,V>(left, super.key, this.value, right);
+            return new MapNodeChange<>(left, super.key, this.value, right);
+        }
+
+        @Override
+        MapLeafNode<K, V> createLeaf(K keyToInsert, ValueFactory<V> valueFactory) {
+            return new MapLeafNode<>(keyToInsert, valueFactory.create());
         }
 
         @Override
         AbstractBalancedNode<K,V> create(AbstractNode<K,V> left, AbstractNode<K,V> right) {
-            return new MapNode<K,V>(left, super.key, this.value, right);
+            return new MapNode<>(left, super.key, this.value, right);
         }
 
     }
@@ -809,9 +969,13 @@ public class AVLTree<T extends Comparable<T>> {
         }
 
         @Override
-        void updateValue(AbstractLeafNode<K,V> source) {
-            super.key = source.key;
-            this.value = source.value();
+        void updateValue(ValueUpdate<V> valueUpdater) {
+            this.value = valueUpdater.update(this.value);
+        }
+
+        @Override
+        void setValue(V value) {
+            this.value = value;
         }
 
         @Override
@@ -821,101 +985,135 @@ public class AVLTree<T extends Comparable<T>> {
 
         @Override
         AbstractNodeChange<K,V> change(AbstractNode<K,V> left, AbstractNode<K,V> right) {
-            return new MapNodeChange<K,V>(left, super.key, this.value, right);
+            return new MapNodeChange<>(left, super.key, this.value, right);
+        }
+
+        @Override
+        MapLeafNode<K, V> createLeaf(K keyToInsert, ValueFactory<V> valueFactory) {
+            return new MapLeafNode<>(keyToInsert, valueFactory.create());
         }
 
     }
 
+    /**
+     * A map backed by an AVL tree. Keys are ordered by their natural ordering.
+     *
+     * @param <K> the key type, must implement Comparable
+     * @param <V> the value type
+     */
     public static class Map<K extends Comparable<K>, V> extends AbstractTree<K,V> implements Iterable<Entry<K,V>> {
 
+        /**
+         * Creates a new, empty AvlTree-backed map.
+         *
+         * <p>The constructed map is initially empty and ready to accept key/value
+         * pairs via {@link AvlTree.Map#insertIntoTree(K, V)}. Keys are
+         * ordered by their natural ordering (they must implement {@code Comparable}).
+         *
+         * <p>Note: this constructor does not perform any I/O and runs in constant
+         * time. The map's instance methods use internal synchronization for
+         * concurrent access; callers should still apply external synchronization if
+         * they require atomicity across multiple operations.
+         */
+        public Map() {}
+
+        /**
+         * Insert a key/value pair into the map-backed AVL tree.
+         * If the key is null, the method returns without inserting.
+         *
+         * @param keyToInsert the key to insert
+         * @param valueToInsert the value associated with the key
+         */
         void insertIntoTree(K keyToInsert, V valueToInsert) {
             if(keyToInsert == null){
                 //throw new NullPointerException("can not insert null");
                 return;
             }
-            super.insert(new MapLeafNode<>(keyToInsert, valueToInsert));
+            super.insert(
+                keyToInsert,
+                ()    -> {return valueToInsert;},
+                (V a) -> {return valueToInsert;}
+            );
         }
 
+        public void insertIntoTree(K keyToInsert, ValueFactory<V> v, ValueUpdate<V> u) {
+            if(keyToInsert == null){
+                //throw new NullPointerException("can not insert null");
+                return;
+            }
+            super.insert(
+                    keyToInsert,
+                    v,
+                    u
+            );
+        }
+
+        /**
+         * Returns an iterator over the map entries in ascending (in-order) key order.
+         *
+         * @return an iterator over entries (key/value pairs) in ascending key order
+         */
         @Override
         public Iterator<Entry<K,V>> iterator() {
             return new MapIterator<>(this.getRoot());
         }
 
+        /**
+         * Returns an iterable that iterates over the map entries in descending (reverse in-order) key order.
+         *
+         * @return an iterable for reverse-order traversal of entries
+         */
         public Iterable<Entry<K,V>> reverseIterable() {
             return () -> new ReverseMapIterator<>(this.getRoot());
         }
 
+        /**
+         * Returns an iterator that iterates over the map entries in descending (reverse in-order) key order.
+         *
+         * @return an iterator for reverse-order traversal of entries
+         */
         public Iterator<Entry<K,V>> reverseIterator() {
             return new ReverseMapIterator<>(this.getRoot());
         }
 
-    }
-
-    public static void main(String[] args) {
-        Set<Integer> tree = new Set<>();
-
-        tree.insertIntoTree(3);
-        tree.insertIntoTree(2);
-        tree.insertIntoTree(1);
-
-        tree.insertIntoTree(4);
-        tree.insertIntoTree(5);
-        tree.insertIntoTree(6);
-
-        tree.insertIntoTree(7);
-        tree.insertIntoTree(16);
-        tree.insertIntoTree(25);
-
-        tree.insertIntoTree(19);
-        tree.insertIntoTree(20);
-
-        tree.insertIntoTree(5);
-
-        System.out.println("Preorder traversal of constructed AVL tree is : ");
-        tree.preOrder(tree.getRoot());
-        System.out.println();
-
-        System.out.println("Inorder traversal of constructed AVL tree is : ");
-        tree.inOrder(tree.getRoot());
-        System.out.println();
-
-        System.out.println("Postorder traversal of constructed AVL tree is : ");
-        tree.postOrder(tree.getRoot());
-        System.out.println();
-
-        tree.deleteFromTree(19);
-        tree.deleteFromTree(6);
-
-        tree.deleteFromTree(7);
-
-        tree.deleteFromTree(4);
-        tree.deleteFromTree(16);
-
-        System.out.println("Preorder traversal of constructed AVL tree is : ");
-        tree.preOrder(tree.getRoot());
-        System.out.println();
-
-        System.out.println("Inorder traversal of constructed AVL tree is : ");
-        tree.inOrder(tree.getRoot());
-        System.out.println();
-
-        System.out.println("Postorder traversal of constructed AVL tree is : ");
-        tree.postOrder(tree.getRoot());
-        System.out.println();
+        @Override
+        MapLeafNode<K, V> create(K keyToInsert, ValueFactory<V> valueFactory) {
+            return new MapLeafNode<>(keyToInsert, valueFactory.create());
+        }
 
     }
 
-    private static record LinkedListEntry<K extends Comparable<K>, V>(
+    private record LinkedListEntry<K extends Comparable<K>, V>(
             AbstractNode<K, V> value,
             LinkedListEntry<K, V> next
     ) {}
 
+    private static abstract class AbstractNodeIterator<K extends Comparable<K>, V>  {
 
-    // InOrder Node iterator (yields AbstractNode<K,V>) — keine imports, vollqualifizierte Typen
-    private static class NodeIterator<K extends Comparable<K>, V>  {
-
-        //private final java.util.Deque<AbstractNode<K,V>> stack = new java.util.ArrayDeque<>();
         private LinkedListEntry<K,V> stack;
+
+        AbstractNodeIterator() {}
+
+        /**
+         * Returns {@code true} if the reverse-order iterator has more elements to yield.
+         *
+         * <p>This method inspects the iterator's internal stack to determine whether
+         * there are remaining nodes to traverse in reverse in-order sequence.
+         *
+         * <p>Note: the result reflects the iterator's current state and may change if
+         * the underlying tree is modified concurrently. The iterator's methods are not
+         * safe for concurrent modification without external synchronization.
+         *
+         * @return {@code true} if there is at least one more element available, {@code false} otherwise
+         */
+        public final boolean hasNext() {
+            return this.stack != null;
+        }
+
+    }
+
+    // InOrder Node iterator (yields AbstractNode<K,V>) — no imports, full qualified types
+    private static class NodeIterator<K extends Comparable<K>, V> extends AbstractNodeIterator<K,V> {
 
         NodeIterator(AbstractNode<K,V> root) {
             pushLeft(root);
@@ -923,31 +1121,40 @@ public class AVLTree<T extends Comparable<T>> {
 
         private void pushLeft(AbstractNode<K,V> node) {
             while (node != null) {
-                this.stack = new LinkedListEntry<>(node, stack);
+                super.stack = new LinkedListEntry<>(node, super.stack);
                 node = node.left();
             }
         }
 
-        public boolean hasNext() {
-            return this.stack != null;
-        }
-
+        /**
+         * Returns the next node in in-order traversal and advances the iterator.
+         *
+         * <p>If the iterator has no more elements this method returns {@code null}
+         * (the implementation does not throw {@code NoSuchElementException}).
+         *
+         * <p>The returned object implements {@link AvlTree.Entry} and provides access
+         * to the node's key and value. The iterator's internal stack is advanced so
+         * subsequent calls continue the traversal.
+         *
+         * <p>Note: the result reflects the iterator's state at the time of the call
+         * and may become invalid if the underlying tree is modified concurrently.
+         *
+         * @return the next {@code Entry<K,V>} in ascending (in-order) order, or {@code null} if none
+         */
         public Entry<K,V> nextNode() {
-            if (!hasNext()) {
-                //throw new NoSuchElementException();
-                return null;
+            if (hasNext()) {
+                AbstractNode<K,V> node = super.stack.value;
+                super.stack = super.stack.next;
+                pushLeft(node.right());
+                return node;
             }
-            AbstractNode<K,V> node = this.stack.value;
-            this.stack = this.stack.next;
-            pushLeft(node.right());
-            return node;
+            //throw new NoSuchElementException();
+            return null;
         }
 
     }
 
-    private static class ReverseNodeIterator<K extends Comparable<K>, V> {
-
-        private LinkedListEntry<K,V> stack;
+    private static class ReverseNodeIterator<K extends Comparable<K>, V> extends AbstractNodeIterator<K,V> {
 
         ReverseNodeIterator(AbstractNode<K,V> root) {
             pushRight(root);
@@ -955,34 +1162,56 @@ public class AVLTree<T extends Comparable<T>> {
 
         private void pushRight(AbstractNode<K,V> node) {
             while (node != null) {
-                this.stack = new LinkedListEntry<>(node, stack);
+                super.stack = new LinkedListEntry<>(node, super.stack);
                 node = node.right();
             }
         }
 
-        public boolean hasNext() {
-            return this.stack != null;
-        }
-
+        /**
+         * Returns the next node in reverse in-order traversal and advances the iterator.
+         *
+         * <p>If the iterator has no more elements this method returns {@code null}
+         * (the implementation does not throw {@code NoSuchElementException}).
+         *
+         * <p>The returned value is the internal {@code AbstractNode<K,V>} representing
+         * the next element; callers can use {@code key()} and {@code value()} on the
+         * returned node. The iterator's internal stack is advanced so subsequent calls
+         * continue the reverse traversal.
+         *
+         * <p>Note: the result reflects the iterator's state at the time of the call
+         * and may become invalid if the underlying tree is modified concurrently.
+         *
+         * @return the next {@code AbstractNode<K,V>} in descending (reverse in-order) order, or {@code null} if none
+         */
         public AbstractNode<K,V> nextNode() {
             if (!hasNext()) {
                 //throw new NoSuchElementException();
                 return null;
             }
-            AbstractNode<K,V> node = this.stack.value;
-            this.stack = this.stack.next;
+            AbstractNode<K,V> node = super.stack.value;
+            super.stack = super.stack.next;
             pushRight(node.left());
             return node;
         }
 
     }
 
+    /**
+     * Iterator over set elements in ascending order.
+     *
+     * @param <K> element type
+     */
     public static class SetIterator<K extends Comparable<K>> extends NodeIterator<K, K> implements java.util.Iterator<K> {
 
         SetIterator(AbstractNode<K, K> root) {
             super(root);
         }
 
+        /**
+         * Returns the next key in ascending order.
+         *
+         * @return the next key
+         */
         @Override
         public K next() {
             Entry<K,K> node = super.nextNode();
@@ -990,12 +1219,22 @@ public class AVLTree<T extends Comparable<T>> {
         }
     }
 
+    /**
+     * Iterator over set elements in descending order.
+     *
+     * @param <K> element type
+     */
     public static class ReverseSetIterator<K extends Comparable<K>> extends ReverseNodeIterator<K, K> implements java.util.Iterator<K> {
 
         ReverseSetIterator(AbstractNode<K, K> root) {
             super(root);
         }
 
+        /**
+         * Returns the next key in descending order.
+         *
+         * @return the next key
+         */
         @Override
         public K next() {
             AbstractNode<K,K> node = super.nextNode();
@@ -1003,24 +1242,46 @@ public class AVLTree<T extends Comparable<T>> {
         }
     }
 
+    /**
+     * Iterator over map entries in ascending key order.
+     *
+     * @param <K> key type
+     * @param <V> value type
+     */
     public static class MapIterator<K extends Comparable<K>, V> extends NodeIterator<K, V> implements java.util.Iterator<Entry<K,V>> {
 
         MapIterator(AbstractNode<K, V> root) {
             super(root);
         }
 
+        /**
+         * Returns the next map entry (key/value pair) in ascending key order.
+         *
+         * @return the next entry
+         */
         @Override
         public Entry<K, V> next() {
             return super.nextNode();
         }
     }
 
+    /**
+     * Iterator over map entries in descending key order.
+     *
+     * @param <K> key type
+     * @param <V> value type
+     */
     public static class ReverseMapIterator<K extends Comparable<K>, V> extends ReverseNodeIterator<K, V> implements java.util.Iterator<Entry<K,V>> {
 
         ReverseMapIterator(AbstractNode<K, V> root) {
             super(root);
         }
 
+        /**
+         * Returns the next map entry (key/value pair) in descending key order.
+         *
+         * @return the next entry
+         */
         @Override
         public Entry<K, V> next() {
             return super.nextNode();

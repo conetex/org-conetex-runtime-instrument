@@ -31,6 +31,9 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
     void addToHandledClasses(String handledClassJvmName);
 
     @SuppressWarnings("unused")
+    void initTransformer(String argsCommaSeparated);
+
+    @SuppressWarnings("unused")
     void resetCounters();
 
     // ----------------------------------------------------
@@ -41,9 +44,6 @@ public interface RetransformingClassFileTransformer extends ClassFileTransformer
 
     // ----------------------------------------------------
     // used by agent for reporting
-
-    ChainsOfLongs getConfig();
-
     @SuppressWarnings("unused")
     ResultLongDividedByInt[] report();
 
