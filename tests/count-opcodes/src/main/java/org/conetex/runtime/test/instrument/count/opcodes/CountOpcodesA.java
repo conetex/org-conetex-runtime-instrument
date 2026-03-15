@@ -11,12 +11,12 @@ import java.util.stream.Collectors;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class MainCountOpcodes {
+public class CountOpcodesA {
 
     public static void mainA(String[] args) {
         try (PrintStream out = new PrintStream(
                 Files.newOutputStream(
-                        Paths.get("target", "MainCountOpcodes.txt"),
+                        Paths.get("target", "MainCountOpcodesA.txt"),
                         StandardOpenOption.CREATE,
                         StandardOpenOption.APPEND
                 ),
@@ -39,7 +39,7 @@ public class MainCountOpcodes {
     public static void mainB(String[] args) {
         try (PrintStream out = new PrintStream(
                 Files.newOutputStream(
-                        Paths.get("target", "MainCountOpcodes.txt"),
+                        Paths.get("target", "MainCountOpcodesB.txt"),
                         StandardOpenOption.CREATE,
                         StandardOpenOption.APPEND
                 ),
@@ -60,7 +60,7 @@ public class MainCountOpcodes {
         }
     }
 
-    public static void main(String[] args) {
+    public static void xmain(String[] args) {
         //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
         // to see how IntelliJ IDEA suggests fixing it.
         System.out.printf("Hello and welcome!");

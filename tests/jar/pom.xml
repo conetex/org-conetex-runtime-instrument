@@ -31,6 +31,18 @@
         </dependency>
     </dependencies>
 
+    <properties>
+        <test.pathToTransformerJar>
+            pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
+        </test.pathToTransformerJar>
+        <testA.agentArgs>
+            transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,targetClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA;${test.pathToTransformerJar}
+        </testA.agentArgs>
+        <testB.agentArgs>
+            transformerArgs:reportFile=reportB.txt,visit_mv_static_count_opcodes,targetClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesB;${test.pathToTransformerJar}
+        </testB.agentArgs>
+    </properties>
+
     <build>
         <plugins>
             <!-- use maven-surefire-plugin to run tests with integrated agent and instrument on not finally build jar -->
@@ -49,13 +61,56 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
-                <configuration>
-                    <argLine>
-                        -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=transformerArgs:visit_mv_static;pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
-                    </argLine>
-                </configuration>
-            </plugin>
+                <executions>
 
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testMain</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=transformerArgs:visit_mv_static;pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
+                            </argLine>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testCountOpcodesA</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                                -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testA.agentArgs}
+                            </argLine>
+                            <includes>
+                                <include>**/*CountOpcodesTestA.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testCountOpcodesB</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                                -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testB.agentArgs}
+                            </argLine>
+                            <includes>
+                                <include>**/*CountOpcodesTestB.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

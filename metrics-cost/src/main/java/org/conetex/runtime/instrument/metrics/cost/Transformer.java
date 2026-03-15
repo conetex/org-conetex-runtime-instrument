@@ -523,16 +523,16 @@ durchgehen.
     @Override
     public void initTransformer(String argsCommaSeparated){
         System.out.println("||-> " + argsCommaSeparated);
+        String[] args = argsCommaSeparated.split(",");
         if(argsCommaSeparated.contains("visit_mv_static_count_opcodes")){
             System.out.println("||--> " + argsCommaSeparated);
             this.visitMethod = Visitor.VISIT_MV_STATIC_COUNT_OPCODES;
-            String[] args = argsCommaSeparated.split(",");
-            String prefix = "instrumentationTargetClass";
+            String prefixInstrumentationTargetClass = "targetClass=";
             for (String arg : args) {
-                System.out.println("||---> " + arg);
-                if (arg.startsWith(prefix)) {
-                    System.out.println("||----> " + arg.substring(prefix.length()));
-                    instrumentationTargetClasses.add(arg.substring(prefix.length()));
+                if (arg.startsWith(prefixInstrumentationTargetClass)) {
+                    String classParam = arg.substring(prefixInstrumentationTargetClass.length());
+                    System.out.println("||----> " + classParam);
+                    instrumentationTargetClasses.add(classParam);
                 }
             }
         }
@@ -544,6 +544,15 @@ durchgehen.
         }
         else {
             this.visitMethod = Visitor.VISIT_MV_DEFAULT;
+        }
+        String prefixInstrumentationReportFile = "reportFile=";
+        for (String arg : args) {
+            System.out.println("||---> " + arg);
+            if (arg.startsWith(prefixInstrumentationReportFile)) {
+                String fileParam = arg.substring(prefixInstrumentationReportFile.length());
+                System.out.println("||----> " + fileParam);
+                REPORT_FILE = Paths.get("target", fileParam);
+            }
         }
     }
 
@@ -813,7 +822,8 @@ durchgehen.
         }
     }
 
-    private static final Path REPORT_FILE = Paths.get("target", "instrumentation-report.txt");
+//    private static final Path REPORT_FILE = Paths.get("target", "instrumentation-report.txt");
+    private static Path REPORT_FILE = Paths.get("target", "instrumentation-report.txt");
 
     @Override
     public ResultLongDividedByInt[] report() {

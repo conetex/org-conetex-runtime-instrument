@@ -6,7 +6,7 @@ import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MainCountOpcodes2Test {
+class CountOpcodesTestB {
     @Test
     void testsB() {
         // Arrange
@@ -14,7 +14,7 @@ class MainCountOpcodes2Test {
         // Act and Assert
         assertDoesNotThrow(
                 ()->{
-                    MainCountOpcodes.mainB(null);
+                    CountOpcodesA.xmain(null);
                 }
         );
     }
