@@ -36,11 +36,16 @@
             pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
         </test.pathToTransformerJar>
         <testA.agentArgs>
-            transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,targetClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA;${test.pathToTransformerJar}
+            transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA;${test.pathToTransformerJar}
         </testA.agentArgs>
         <testB.agentArgs>
-            transformerArgs:reportFile=reportB.txt,visit_mv_static_count_opcodes,targetClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesB;${test.pathToTransformerJar}
+            transformerArgs:reportFile=reportB.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesB;${test.pathToTransformerJar}
         </testB.agentArgs>
+
+        <testBlocked.agentArgs>
+            ${test.pathToTransformerJar}
+        </testBlocked.agentArgs>
+
     </properties>
 
     <build>
@@ -108,7 +113,23 @@
                             </includes>
                         </configuration>
                     </execution>
-
+                    <!--<execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testBlocked</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                                -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testBlocked.agentArgs}
+                                -cp jar org.conetex.runtime.instrument.test.jar.blocked.MainJarBlocked
+                            </argLine>
+                            <includes>
+                                <include>**/*CountOpcodesTestB.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>-->
                 </executions>
             </plugin>
         </plugins>

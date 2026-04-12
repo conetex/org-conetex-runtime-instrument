@@ -527,12 +527,12 @@ durchgehen.
         if(argsCommaSeparated.contains("visit_mv_static_count_opcodes")){
             System.out.println("||--> " + argsCommaSeparated);
             this.visitMethod = Visitor.VISIT_MV_STATIC_COUNT_OPCODES;
-            String prefixInstrumentationTargetClass = "targetClass=";
+            String prefixInstrumentationcountOpcodesTrgClass = "countOpcodesTrgClass=";
             for (String arg : args) {
-                if (arg.startsWith(prefixInstrumentationTargetClass)) {
-                    String classParam = arg.substring(prefixInstrumentationTargetClass.length());
+                if (arg.startsWith(prefixInstrumentationcountOpcodesTrgClass)) {
+                    String classParam = arg.substring(prefixInstrumentationcountOpcodesTrgClass.length());
                     System.out.println("||----> " + classParam);
-                    instrumentationTargetClasses.add(classParam);
+                    instrumentationcountOpcodesTrgClasses.add(classParam);
                 }
             }
         }
@@ -570,7 +570,7 @@ durchgehen.
         Counters.blockIncrement(incrementationBlocked);
     }
 
-    private final Set<String> instrumentationTargetClasses;
+    private final Set<String> instrumentationcountOpcodesTrgClasses;
 
     private final Set<String> handledClasses;
 
@@ -597,7 +597,7 @@ durchgehen.
         this.handledClasses = new TreeSet<>();
         this.transformFailedClasses = new TreeSet<>();
         this.transformSkippedClasses = new TreeSet<>();
-        this.instrumentationTargetClasses = new TreeSet<>();
+        this.instrumentationcountOpcodesTrgClasses = new TreeSet<>();
 
         // todo is this solved in general?
         // calling this leads to
@@ -651,8 +651,8 @@ durchgehen.
 
         this.handledClasses.add(classJvmName);
 
-        if(!this.instrumentationTargetClasses.isEmpty()){
-            if(!this.instrumentationTargetClasses.contains(classJvmName)){
+        if(!this.instrumentationcountOpcodesTrgClasses.isEmpty()){
+            if(!this.instrumentationcountOpcodesTrgClasses.contains(classJvmName)){
                 System.out.println("transform not whitelisted: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
                         classBeingRedefined + " (classBeingRedefined) | " +
                         (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");

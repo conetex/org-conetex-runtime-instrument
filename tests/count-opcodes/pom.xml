@@ -30,14 +30,14 @@
             pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
         </test.pathToTransformerJar>
         <testA.agentArgs>
-            transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,targetClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA;${test.pathToTransformerJar}
+            transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA;${test.pathToTransformerJar}
         </testA.agentArgs>
         <testB.agentArgs>
-            transformerArgs:reportFile=reportB.txt,visit_mv_static_count_opcodes,targetClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesB;${test.pathToTransformerJar}
+            transformerArgs:reportFile=reportB.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesB;${test.pathToTransformerJar}
         </testB.agentArgs>
     </properties>
 
-    <!-- transformerArgs:targetClass=org/conetex/runtime/test/instrument/count/opcodes/MainCountOpcodesvisit_mv_statXic_count_opcodes; -->
+    <!-- transformerArgs:countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/MainCountOpcodesvisit_mv_statXic_count_opcodes; -->
 
     <build>
         <plugins>

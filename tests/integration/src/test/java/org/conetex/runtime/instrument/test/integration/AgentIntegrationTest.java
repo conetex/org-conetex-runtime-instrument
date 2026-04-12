@@ -50,7 +50,23 @@ class AgentIntegrationTest {
 
     @Test
     void testInstrumentationOfCountOpcodesInSeparateJvm() throws Exception {
-        Process process = process("count-opcodes","org.conetex.runtime.test.instrument.count.opcodes.MainCountOpcodes")
+        Process process = process("jar","org.conetex.runtime.test.instrument.count.opcodes.CountOpcodesA")
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start();
+
+        System.out.println("=== count-opcodes test JVM OUTPUT ==>");
+        int exitCode = process.waitFor();
+        System.out.println("exit code " + exitCode);
+        System.out.println("<== count-opcodes test JVM OUTPUT ===");
+
+        // --- Assertions ---
+        assertEquals(STATUS_OK, exitCode, "JVM exited with STATUS_OK " + STATUS_OK + " status");
+    }
+
+    @Test
+    void testInstrumentationOfBlockedJarInSeparateJvmNEW() throws Exception {
+        Process process = process("jar","org.conetex.runtime.instrument.test.jar.MainJar")
                 .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                 .redirectError(ProcessBuilder.Redirect.INHERIT)
                 .start();
@@ -95,14 +111,19 @@ class AgentIntegrationTest {
 
         ProcessBuilder pb = new ProcessBuilder(
                 "java",
-                "-javaagent:" + agentJar + "=pathToTransformerJar:" +
+                "-javaagent:" + agentJar + "=" +
+                        "pathToTransformerJar:" +
                         "../../metrics-cost/target/metrics-cost-" + version + "-fat.jar" +
-                        ",../../metrics-cost-unnamed/target/metrics-cost-unnamed-" + version + ".jar",
+                        ",../../metrics-cost-unnamed/target/metrics-cost-unnamed-" + version + ".jar" +
+                        ";" +
+                        "transformerArgs:reportFile=" + moduleToTest + "-" + classToTest + ".txt",
                 "-cp",
                 testJar.toString(),
                 classToTest
         );
-
+//-javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testB.agentArgs}
+//transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA
+// ;${test.pathToTransformerJar}        
         return pb;
     }
 

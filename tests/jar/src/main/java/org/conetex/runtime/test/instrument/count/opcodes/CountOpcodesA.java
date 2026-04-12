@@ -60,6 +60,11 @@ public class CountOpcodesA {
         }
     }
 
+    // used by integration test
+    public static void main(String[] args) {
+        System.out.printf("Hello and welcome integration test");
+    }
+
     public static void xmain(String[] args) {
         //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
         // to see how IntelliJ IDEA suggests fixing it.
