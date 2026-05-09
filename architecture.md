@@ -48,21 +48,8 @@ graph TD
 
     %% Data flow
     C --> F
-    D --> F
-    E --> F
-
-    %% Example and tests
-    G[example] --> A
-    G --> C
-    G --> D
-    G --> E
-    G --> F
-
-    H[tests] --> A
-    H --> C
-    H --> D
-    H --> E
-    H --> F
+    D --> C
+    E --> C
 ```
 
 # 🧭 Module Roles Diagram
@@ -73,7 +60,7 @@ flowchart TB
     A[agent\nActivation Layer] --> B[interfaces\nShared API]
     A --> C[counter\nCounters]
     A --> D[metrics-cost\nCost Metrics]
-    A --> E[metrics-cost-unnamed\nCost Metrics (Unnamed Modules)]
+    A --> E[metrics-cost-unnamed\nCost Metrics Unnamed]
     A --> F[collection\nData Collection]
 
     C --> F
@@ -101,23 +88,23 @@ autonumber
     participant JVM as JVM ClassLoader
     participant Agent as agent<br/>premain/agentmain
     participant Trans as Instrumentation<br/>Transformer Registry
-    participant MC as metrics-cost / counter<br/>Bytecode Transformers
-    participant Coll as collection<br/>Data Collector
+    participant MC as metrics-cost<br/>Bytecode Transformer
+    participant Co as counter<br/>Data Collector
     participant App as Application Class
 
     JVM->>Agent: Start JVM with -javaagent<br/>or attach at runtime
     Agent->>Trans: Register ClassFileTransformer(s)
     Note right of Agent: agent does NOT transform bytecode<br/>only registers and configures
 
-    JVM->>Trans: loadClass("MyClass")
+    JVM->>Trans: loadClass("Application Class")
     Trans->>MC: delegate transform(classBytes)
     Note right of MC: metrics-cost / counter<br/>modify bytecode
 
     MC-->>Trans: return transformedClassBytes
     Trans-->>JVM: return transformedClassBytes
 
-    JVM->>App: defineClass(MyClass*)
+    JVM->>App: redefineClass("Application Class")
 
-    App->>Coll: emit measurement events<br/>(counters, timings, cost)
-    Coll-->>Coll: aggregate & store metrics
+    App->>Co: emit measurement events<br/>(increase counters)
+    Coll-->>Co: aggregate & store metrics
 ```
