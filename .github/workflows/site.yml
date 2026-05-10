@@ -29,6 +29,15 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Install Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+
+      - name: Configure Graphviz
+        run: |
+          echo "GRAPHVIZ_DOT=/usr/bin/dot" >> $GITHUB_ENV
+
       #
       # Install D2
       #
