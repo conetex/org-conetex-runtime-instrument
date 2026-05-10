@@ -32,32 +32,32 @@ jobs:
       #
       # Install D2
       #
-#      - name: Install D2
-#        run: |
-#          curl -fsSL https://d2lang.com/install.sh | sh -s --
-#
-#          echo "$HOME/.d2/bin" >> $GITHUB_PATH
+      - name: Install D2
+        run: |
+          curl -fsSL https://d2lang.com/install.sh | sh -s --
+
+          echo "$HOME/.d2/bin" >> $GITHUB_PATH
 
       #
       # Generate diagrams
       #
-#      - name: Render D2 diagrams
-#        run: |
-#
-#          mkdir -p target/site/images
-#
-#          for file in src/site/d2/*.d2
-#          do
-#            name=$(basename "$file" .d2)
-#
-#            d2 "$file" "target/site/images/$name.svg"
-#          done
+      - name: Render D2 diagrams
+        run: |
+
+          mkdir -p target/site/images
+
+          for file in src/site/d2/*.d2
+          do
+            name=$(basename "$file" .d2)
+
+            d2 "$file" "target/site/images/$name.svg"
+          done
 
       #
       # Maven site
       #
       - name: Build site
-        run: mvn -B clean site
+        run: mvn -B site
 
       #
       # Upload Pages artifact
