@@ -3,7 +3,7 @@ name: Build and Publish Site
 on:
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: read
