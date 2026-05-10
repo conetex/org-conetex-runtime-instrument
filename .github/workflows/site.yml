@@ -29,6 +29,9 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      #
+      # Install Graphviz (it is used by plantuml 4 components)
+      #
       - name: Install Graphviz
         run: |
           sudo apt-get update

@@ -33,11 +33,10 @@ Together, they implement a modular Java runtime instrumentation framework based 
 
 ![architecturepuml](images/architecture.svg)
 
-![ArchitectureD2](images/architectured2.svg)
-
-
-<img src="images/architectured2.svg"/>
-
+<!--
+<img src="images/thisGetsToBig.svg"/>
+![ArchitectureD2](images/thisGetsToBig.svg)
+--> 
 
 # 🧭 Module Roles Diagram
 
