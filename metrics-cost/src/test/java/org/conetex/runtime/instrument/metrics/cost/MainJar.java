@@ -1,26 +1,26 @@
-package org.conetex.runtime.instrument.test.jar;
+package org.conetex.runtime.instrument.metrics.cost;
 
 import org.conetex.runtime.instrument.counter.Counter;
 import org.conetex.runtime.instrument.counter.CountersWeighted;
 import org.conetex.runtime.instrument.interfaces.arithmetic.ChainsOfLongs;
 import org.conetex.runtime.instrument.interfaces.counter.Incrementable;
-import org.conetex.runtime.instrument.metrics.cost.Counters;
 
 import java.io.File;
+
 /*
 java -javaagent:agent/target/agent-0.0.1-SNAPSHOT.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-0.0.1-SNAPSHOT.jar -cp test/jar/target/jar-0.0.1-SNAPSHOT.jar org.conetex.runtime.instrument.test.jar.Main
  */
-public class Main {
+public class MainJar {
 
     public static final String TEST_FAILED = "test FAILED";
     public static final String TEST_OK = "test OK";
 
     // TODO for whatever reason tests are not successfully for every run. threads? duplicate counters?
-    public static void main(String[] args) {
+    public static void xmain(String[] args) {
 
         System.out.println("org.conetex.runtime.instrument.test.jar MainTest working here: " + new File(".").getAbsolutePath());
 
-        warmup();
+        xwarmup();
 
         // test
         testsIncrementableInterfaceDefault();
@@ -36,7 +36,7 @@ public class Main {
         testsCountersBlockIncrement();
     }
 
-    public static synchronized void warmup() {
+    public static synchronized void xwarmup() {
         // warmup 1
         for (int i = 0; i < Counters.COUNTERS.length; i++) {
             Incrementable c = Counters.COUNTERS[i];
@@ -60,6 +60,27 @@ public class Main {
         for(int i = 0; i < Counters.COUNTERS.length; i++){
             Counter c = Counters.COUNTERS[i];
             c.reset();
+            c.blockIncrement(false);
+            long counterBefore = c.peek().getValue();
+            c.increment();
+            long counterAfter = c.peek().getValue();
+
+            msg.append(outputResult(counterAfter, counterBefore, expected, testName, i));
+        }
+        return msg.toString();
+    }
+
+    public static synchronized String testsIncrementableInterfaceDefault() {
+        String testName = "Incrementable | default increment";
+        long expected = 1;
+
+        StringBuilder msg = new StringBuilder();
+        for (int i = 0; i < Counters.COUNTERS.length; i++) {
+            Incrementable c = Counters.COUNTERS[i];
+            //Counter c = Counters.COUNTERS[i];
+            c.reset();
+            //Counters.COUNTERS[i].reset();
+            c.blockIncrement(false);
             long counterBefore = c.peek().getValue();
             c.increment();
             long counterAfter = c.peek().getValue();
@@ -80,25 +101,7 @@ public class Main {
             long counterBefore = c.peek().getValue();
             c.blockIncrement(true);
             c.increment();
-            c.blockIncrement(false);
-            long counterAfter = c.peek().getValue();
-
-            msg.append(outputResult(counterAfter, counterBefore, expected, testName, i));
-        }
-        return msg.toString();
-    }
-
-    public static synchronized String testsIncrementableInterfaceDefault() {
-        String testName = "Incrementable | default increment";
-        long expected = 1;
-
-        StringBuilder msg = new StringBuilder();
-        for (int i = 0; i < Counters.COUNTERS.length; i++) {
-            Incrementable c = Counters.COUNTERS[i];
-            c.reset();
-            Counters.COUNTERS[i].reset();
-            long counterBefore = c.peek().getValue();
-            c.increment();
+            //c.blockIncrement(false);
             long counterAfter = c.peek().getValue();
 
             msg.append(outputResult(counterAfter, counterBefore, expected, testName, i));
@@ -117,7 +120,7 @@ public class Main {
             long counterBefore = c.peek().getValue();
             c.blockIncrement(true);
             c.increment();
-            c.blockIncrement(false);
+            //c.blockIncrement(false);
             long counterAfter = c.peek().getValue();
 
             msg.append(outputResult(counterAfter, counterBefore, expected, testName, i));

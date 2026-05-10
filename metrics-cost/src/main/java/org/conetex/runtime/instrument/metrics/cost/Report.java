@@ -127,9 +127,8 @@ public class Report {
         System.out.println(" ================ ");
 
     }
-    public static ResultLongDividedByInt[] calculateTotalCost(RetransformingClassFileTransformer transformer) {
-        return transformer.getConfig().average();
-    }
+
+
 
 
 

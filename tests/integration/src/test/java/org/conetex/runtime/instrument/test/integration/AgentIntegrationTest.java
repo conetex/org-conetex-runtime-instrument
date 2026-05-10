@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AgentIntegrationTest {
 
+    static final int STATUS_OK = 0;
+
     static final int STATUS_BLOCKED = 403; // see org.conetex.runtime.instrument.metrics.cost.Transformer.STATUS_BLOCKED
 
     //@Test todo reactivate (it did not resonse)
@@ -20,7 +22,7 @@ class AgentIntegrationTest {
         // since we are working in <projectRoot>/test/integration and agent is located in <projectRoot>/agent the command is:
         // java -javaagent:../../agent/target/agent-0.0.1-SNAPSHOT-fat.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar -cp ../jar/target/jar-0.0.1-SNAPSHOT.jar org.conetex.runtime.instrument.test.jar.Main
 
-        Process process = process("jar", "org.conetex.runtime.instrument.test.jar.Main").start();
+        Process process = process("jar", "org.conetex.runtime.instrument.test.jar.MainJar").start();
 
         String stdOutput;
         try (InputStream is = process.getInputStream()) {
@@ -45,20 +47,52 @@ class AgentIntegrationTest {
 
     }
 
+
     @Test
-    void testInstrumentationOfBlockedJarInSeparateJvm() throws Exception {
-        Process process = process("jar-blocked","org.conetex.runtime.instrument.test.jar.blocked.Main")
+    void testInstrumentationOfCountOpcodesInSeparateJvm() throws Exception {
+        Process process = process("jar","org.conetex.runtime.test.instrument.count.opcodes.CountOpcodesA")
                 .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                 .redirectError(ProcessBuilder.Redirect.INHERIT)
                 .start();
 
-        System.out.println("=== block test JVM OUTPUT ==>");
+        System.out.println("=== count-opcodes test JVM OUTPUT ==>");
         int exitCode = process.waitFor();
         System.out.println("exit code " + exitCode);
-        System.out.println("<== block test JVM OUTPUT ===");
+        System.out.println("<== count-opcodes test JVM OUTPUT ===");
 
         // --- Assertions ---
-        assertEquals(STATUS_BLOCKED, exitCode, "JVM exited with " + STATUS_BLOCKED + " status");
+        assertEquals(STATUS_OK, exitCode, "JVM exited with STATUS_OK " + STATUS_OK + " status");
+    }
+
+    @Test
+    void testInstrumentationOfBlockedJarInSeparateJvmNEW() throws Exception {
+        Process process = process("jar","org.conetex.runtime.instrument.test.jar.MainJar")
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start();
+
+        System.out.println("=== count-opcodes test JVM OUTPUT ==>");
+        int exitCode = process.waitFor();
+        System.out.println("exit code " + exitCode);
+        System.out.println("<== count-opcodes test JVM OUTPUT ===");
+
+        // --- Assertions ---
+        assertEquals(STATUS_OK, exitCode, "JVM exited with STATUS_OK " + STATUS_OK + " status");
+    }
+
+    @Test
+    void testInstrumentationOfBlockedJarInSeparateJvm() throws Exception {
+        Process process = process("jar-blocked","org.conetex.runtime.instrument.test.jar.blocked.MainJarBlocked")
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start();
+        System.out.println("=== jar-blocked test JVM OUTPUT ==>");
+        int exitCode = process.waitFor();
+        System.out.println("exit code " + exitCode);
+        System.out.println("<== jar-blocked test JVM OUTPUT ===");
+
+        // --- Assertions ---
+        assertEquals(STATUS_BLOCKED, exitCode, "JVM exited with STATUS_BLOCKED " + STATUS_BLOCKED + " status");
     }
 
     private static ProcessBuilder process(String moduleToTest, String classToTest) throws IOException {
@@ -77,14 +111,19 @@ class AgentIntegrationTest {
 
         ProcessBuilder pb = new ProcessBuilder(
                 "java",
-                "-javaagent:" + agentJar + "=pathToTransformerJar:" +
+                "-javaagent:" + agentJar + "=" +
+                        "pathToTransformerJar:" +
                         "../../metrics-cost/target/metrics-cost-" + version + "-fat.jar" +
-                        ",../../metrics-cost-unnamed/target/metrics-cost-unnamed-" + version + ".jar",
+                        ",../../metrics-cost-unnamed/target/metrics-cost-unnamed-" + version + ".jar" +
+                        ";" +
+                        "transformerArgs:reportFile=" + moduleToTest + "-" + classToTest + ".txt",
                 "-cp",
                 testJar.toString(),
                 classToTest
         );
-
+//-javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testB.agentArgs}
+//transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA
+// ;${test.pathToTransformerJar}        
         return pb;
     }
 

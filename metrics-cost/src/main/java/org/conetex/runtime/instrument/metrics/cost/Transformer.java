@@ -1,14 +1,26 @@
 package org.conetex.runtime.instrument.metrics.cost;
 
+import org.conetex.runtime.instrument.collection.AvlTree;
+import org.conetex.runtime.instrument.counter.Counter;
 import org.conetex.runtime.instrument.counter.CountersWeighted;
 import org.conetex.runtime.instrument.interfaces.RetransformingClassFileTransformer;
 import org.conetex.runtime.instrument.interfaces.arithmetic.ResultLongDividedByInt;
+import org.conetex.runtime.instrument.interfaces.counter.LinkedLong;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Set;
@@ -469,8 +481,10 @@ durchgehen.
             "java/lang/invoke/" , // needed for bootstrap calls
 
             // unblock test-classes
-            "org/conetex/runtime/instrument/test/jar/Main"            ,
-            "org/conetex/runtime/instrument/test/jar/MainTest"        ,
+            "org/conetex/runtime/instrument/test/jar/MainJar"            ,
+            "org/conetex/runtime/instrument/test/jar/MainJarTest"        ,
+            //"org/conetex/runtime/instrument/test/count/opcodes/MainCountOpcodes",
+            "org/conetex/runtime/instrument/test/count/opcodes/MainCountOpcodesTest",
             //"org/conetex/runtime/instrument/test/jar/module/Main"     ,
             //"org/conetex/runtime/instrument/test/jar/module/MainTest"
 
@@ -504,13 +518,46 @@ durchgehen.
         this.mainClassJvmName = mainClassJvmName;
     }
 
-    public void addToHandledClasses(String classJvmName) {
-        this.handledClasses.add(classJvmName);
+    private int visitMethod = Visitor.VISIT_MV_STATIC;
+    
+    @Override
+    public void initTransformer(String argsCommaSeparated){
+        System.out.println("||-> " + argsCommaSeparated);
+        String[] args = argsCommaSeparated.split(",");
+        if(argsCommaSeparated.contains("visit_mv_static_count_opcodes")){
+            System.out.println("||--> " + argsCommaSeparated);
+            this.visitMethod = Visitor.VISIT_MV_STATIC_COUNT_OPCODES;
+            String prefixInstrumentationcountOpcodesTrgClass = "countOpcodesTrgClass=";
+            for (String arg : args) {
+                if (arg.startsWith(prefixInstrumentationcountOpcodesTrgClass)) {
+                    String classParam = arg.substring(prefixInstrumentationcountOpcodesTrgClass.length());
+                    System.out.println("||----> " + classParam);
+                    instrumentationcountOpcodesTrgClasses.add(classParam);
+                }
+            }
+        }
+        else if(argsCommaSeparated.contains("visit_mv_static")){
+            this.visitMethod = Visitor.VISIT_MV_STATIC;
+        }
+        else if(argsCommaSeparated.contains("visit_mv_dynamic")){
+            this.visitMethod = Visitor.VISIT_MV_DYNAMIC;
+        }
+        else {
+            this.visitMethod = Visitor.VISIT_MV_DEFAULT;
+        }
+        String prefixInstrumentationReportFile = "reportFile=";
+        for (String arg : args) {
+            System.out.println("||---> " + arg);
+            if (arg.startsWith(prefixInstrumentationReportFile)) {
+                String fileParam = arg.substring(prefixInstrumentationReportFile.length());
+                System.out.println("||----> " + fileParam);
+                REPORT_FILE = Paths.get("target", fileParam);
+            }
+        }
     }
 
-    @Override
-    public CountersWeighted getConfig() {
-        return Counters.CONFIG;
+    public void addToHandledClasses(String classJvmName) {
+        this.handledClasses.add(classJvmName);
     }
 
     @Override
@@ -522,6 +569,8 @@ durchgehen.
     public void blockIncrement(boolean incrementationBlocked) {
         Counters.blockIncrement(incrementationBlocked);
     }
+
+    private final Set<String> instrumentationcountOpcodesTrgClasses;
 
     private final Set<String> handledClasses;
 
@@ -548,6 +597,7 @@ durchgehen.
         this.handledClasses = new TreeSet<>();
         this.transformFailedClasses = new TreeSet<>();
         this.transformSkippedClasses = new TreeSet<>();
+        this.instrumentationcountOpcodesTrgClasses = new TreeSet<>();
 
         // todo is this solved in general?
         // calling this leads to
@@ -601,6 +651,15 @@ durchgehen.
 
         this.handledClasses.add(classJvmName);
 
+        if(!this.instrumentationcountOpcodesTrgClasses.isEmpty()){
+            if(!this.instrumentationcountOpcodesTrgClasses.contains(classJvmName)){
+                System.out.println("transform not whitelisted: " + loader + " (loader) | " + classJvmName + " (classJvmName) | " +
+                        classBeingRedefined + " (classBeingRedefined) | " +
+                        (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");
+                return classFileBuffer;
+            }
+        }
+
         for(String untransformable : UNTRANSFORMABLE){
             if (
                     classJvmName.equals(untransformable) ||                                     // class
@@ -629,7 +688,7 @@ durchgehen.
                 (protectionDomain == null ? "null" : protectionDomain.hashCode()) + " (protectionDomain)");
 
         try {
-            return transform(classFileBuffer);
+            return transform(classFileBuffer, this.visitMethod);
         }
         catch(CyclicCallException e){
             System.err.println("circle " + classJvmName + " | " + e.getClass().getName() + " | " +
@@ -708,12 +767,13 @@ durchgehen.
         }
     }
 
-    private static synchronized byte[] transform(byte[] classBytes) {
+    
+    private static synchronized byte[] transform(byte[] classBytes, int visitMethod) {
         System.out.println(" classWriter->");
         ClassReader reader = new ClassReader(classBytes);
         ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);
         //ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
-        ClassVisitor visitor = new Visitor(writer);
+        ClassVisitor visitor = new Visitor(writer, visitMethod);
         reader.accept(visitor, ClassReader.EXPAND_FRAMES);
         //reader.accept(visitor, ClassReader.SKIP_FRAMES);
         byte[] re = writer.toByteArray();
@@ -735,12 +795,84 @@ durchgehen.
         return classBytes;
     }
 
-    @Override
-    public ResultLongDividedByInt[] report(){
-        ResultLongDividedByInt[] totalCost =  Report.calculateTotalCost(this);
-        System.out.println("overall costs:");
-        System.out.println(Arrays.toString(totalCost));
-        return totalCost;
+
+    public ResultLongDividedByInt[] report2(){
+        if(this.visitMethod == Visitor.VISIT_MV_STATIC_COUNT_OPCODES){
+            System.out.println("counter;opCode;value");
+            for(AvlTree.Entry<String, Counter> counterOfOpcode : CountOpcodes.COUNTERS){
+                LinkedLong counterNode = counterOfOpcode.value().peek();
+                System.out.print(counterOfOpcode.key() + ";" + counterNode.getValue());
+                counterNode = counterNode.getPrevious();
+                while(counterNode != null && counterNode.hasPrevious()){
+                    counterNode = counterNode.getPrevious();
+                    System.out.print("." + counterNode.getValue());
+                }
+                System.out.println();
+            }
+            System.out.println("---------------");
+            Visitor.printOpCodes(System.out);
+
+            return null;
+        }
+        else{
+            ResultLongDividedByInt[] totalCost =  Counters.CONFIG.average();;
+            System.out.println("overall costs:");
+            System.out.println(Arrays.toString(totalCost));
+            return totalCost;
+        }
     }
+
+//    private static final Path REPORT_FILE = Paths.get("target", "instrumentation-report.txt");
+    private static Path REPORT_FILE = Paths.get("target", "instrumentation-report.txt");
+
+    @Override
+    public ResultLongDividedByInt[] report() {
+        try (PrintStream out = new PrintStream(
+                Files.newOutputStream(
+                        REPORT_FILE,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.APPEND
+                ),
+                true, // autoFlush
+                StandardCharsets.UTF_8
+        )) {
+
+            if (this.visitMethod == Visitor.VISIT_MV_STATIC_COUNT_OPCODES) {
+
+                out.println("counter;opCode;value");
+
+                for (AvlTree.Entry<String, Counter> counterOfOpcode : CountOpcodes.COUNTERS) {
+                    LinkedLong counterNode = counterOfOpcode.value().peek();
+
+                    out.print(counterOfOpcode.key() + ";" + counterNode.getValue());
+
+                    counterNode = counterNode.getPrevious();
+                    while (counterNode != null && counterNode.hasPrevious()) {
+                        counterNode = counterNode.getPrevious();
+                        out.print("." + counterNode.getValue());
+                    }
+                    out.println();
+                }
+
+                out.println("---------------");
+                Visitor.printOpCodes(out); // Visitor bekommt eine PrintStream-Variante
+
+                return null;
+
+            } else {
+                ResultLongDividedByInt[] totalCost = Counters.CONFIG.average();
+                out.println("overall costs:");
+                out.println(Arrays.toString(totalCost));
+                return totalCost;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+
 
 }

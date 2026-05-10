@@ -3,6 +3,7 @@ package org.conetex.runtime.instrument.agent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.module.Configuration;
@@ -10,9 +11,12 @@ import java.lang.module.ModuleFinder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.*;
 import java.util.jar.*;
 
@@ -20,6 +24,8 @@ import java.util.jar.*;
 public class Instrument {
 
     public static final String ARG_PATHS_OF_INSTRUMENTATION_JARS = "pathToTransformerJar";
+
+    public static final String ARG_TRANSFORMER_ARGS = "transformerArgs";
 
     static void applyX(String agentArgs, Instrumentation inst) {
         System.out.println("working here: " + new File(".").getAbsolutePath());
@@ -146,7 +152,7 @@ public class Instrument {
         */
 
         // add Shutdown-Hook
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        /*Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutdown-Hook started.");
             try {
                 try {
@@ -167,7 +173,39 @@ public class Instrument {
             finally {
                 System.out.println("Shutdown-Hook ended.");
             }
-        }));
+        }));*/
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            AgentLog.log("Shutdown-Hook started.");
+
+            try {
+                // 1) blockIncrement(true) – Fehler nur loggen, nicht rethrowen
+                try {
+                    Method blockIncrementMethod =
+                            transformer.getClass().getMethod("blockIncrement", boolean.class);
+                    blockIncrementMethod.invoke(transformer, true);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    AgentLog.log("ERROR Failed to call blockIncrement(true)", e);
+                }
+
+                // 2) report() – Fehler nur loggen, nicht rethrowen
+                try {
+                    Method reportMethod = transformer.getClass().getMethod("report");
+                    reportMethod.invoke(transformer);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    AgentLog.log("ERROR Failed to call report()", e);
+                }
+
+            } catch (Throwable t) {
+                // Catch-all, damit der Hook niemals die JVM „sprengt“
+                AgentLog.log("FATAL: Unexpected error in shutdown hook", t);
+            } finally {
+                AgentLog.log("Shutdown-Hook ended.");
+                // Optional: Stream NICHT schließen, falls noch andere Stellen loggen
+                // Wenn du sicher bist, dass nur der Hook loggt:
+                // AgentLog.close();
+            }
+        }, "agent-shutdown-hook"));
+
 
         System.out.println("premain end");
 
@@ -295,7 +333,9 @@ public class Instrument {
 
         System.out.println("premain prepare transformer '" + agentArgs + "' | '" + inst + "'");
 
-        File[] instrumentationFiles = findInstrumentationFilesFromAgentArgs(agentArgs);
+        Map<String, String> agentArgMaps = parseAgentArgs(agentArgs);
+
+        File[] instrumentationFiles = findInstrumentationFilesFromAgentArgs(agentArgMaps);
         ClassFileTransformer transformer = null;
         for (File bootstrapFile : instrumentationFiles){
             // load class
@@ -316,6 +356,26 @@ public class Instrument {
         if(transformer == null){
             throw new RuntimeException("no transformer created");
         }
+
+        // add params to transformer
+        String transformerArgs = agentArgMaps.get(ARG_TRANSFORMER_ARGS);
+        if (transformerArgs != null && !transformerArgs.isEmpty()) {
+            try {
+                System.out.println(">>>-> " + transformerArgs);
+                Method initTransformerMethod = transformer.getClass().getMethod("initTransformer", String.class);
+                initTransformerMethod.invoke(transformer, transformerArgs);
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException("Failed to call initTransformer", e);
+            }
+        }
+
+        /*try {
+            Method initMethod = transformer.getClass().getMethod("initMainClassJvmName", String.class);
+            initMethod.invoke(transformer, mainClassJvmStr);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to call initMainClassJvmName", e);
+        }
+        System.out.println("premain createdTransformer " + transformer);*/
 
         // add classes to handled list
         try {
@@ -440,7 +500,30 @@ public class Instrument {
 
 
 
-
+        // add Shutdown-Hook
+        ClassFileTransformer finalTransformer = transformer;
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutdown-Hook started.");
+            try {
+                try {
+                    Method blockIncrementMethod = finalTransformer.getClass().getMethod("blockIncrement", boolean.class);
+                    blockIncrementMethod.invoke(finalTransformer, true);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    System.err.println("ERROR Failed to call blockIncrement(false): (" + e.getClass() + ") " + e.getMessage());
+                    throw new RuntimeException("Failed to call blockIncrement(false)", e);
+                }
+                try {
+                    Method reportMethod = finalTransformer.getClass().getMethod("report");
+                    reportMethod.invoke(finalTransformer);
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    System.err.println("ERROR Failed to call report: (" + e.getClass() + ") " + e.getMessage());
+                    throw new RuntimeException("Failed to call report (" + e.getMessage() + ")", e);
+                }
+            }
+            finally {
+                System.out.println("Shutdown-Hook ended.");
+            }
+        }));
 
         inst.addTransformer(transformer, true);
         System.out.println("premain transformer added");
@@ -581,8 +664,9 @@ public class Instrument {
         return bootstrapJar;
     }
 
-    private static File[] findInstrumentationFilesFromAgentArgs(String agentArgs) {
-        Map<String, String> args = parseAgentArgs(agentArgs);
+
+
+    private static File[] findInstrumentationFilesFromAgentArgs(Map<String, String> args) {
         String bootstrapJarPathsStr = args.get(ARG_PATHS_OF_INSTRUMENTATION_JARS);
         if (bootstrapJarPathsStr == null || bootstrapJarPathsStr.isEmpty()) {
             throw new IllegalArgumentException("premain Missing required agent argument: " + ARG_PATHS_OF_INSTRUMENTATION_JARS + ":<paths-to-instrumentation-jars>");
@@ -718,8 +802,10 @@ public class Instrument {
             String[] kv = part.split(":", 2);
             if (kv.length == 1) {
                 map.put(kv[0].trim(), "true");
+                System.out.println("parseAgentArgs: " + kv[0].trim());
             } else {
                 map.put(kv[0].trim(), kv[1].trim());
+                System.out.println("parseAgentArgs: " + kv[0].trim() + " " + kv[1].trim());
             }
         }
         return map;
@@ -817,6 +903,57 @@ public class Instrument {
         Method mainMethod = mainClass.getDeclaredMethod("main", String[].class);
         String[] mainArgs = {};
         mainMethod.invoke(null, (Object) mainArgs);
+    }
+
+    public static final class AgentLog {
+
+        private static final Path LOG_FILE = Paths.get("target", "agent-shutdown.log");
+        private static volatile PrintStream LOG;
+
+        private AgentLog() {}
+
+        private static PrintStream logStream() {
+            PrintStream s = LOG;
+            if (s == null) {
+                synchronized (AgentLog.class) {
+                    s = LOG;
+                    if (s == null) {
+                        try {
+                            Files.createDirectories(LOG_FILE.getParent());
+                            s = new PrintStream(
+                                    Files.newOutputStream(
+                                            LOG_FILE,
+                                            StandardOpenOption.CREATE,
+                                            StandardOpenOption.APPEND
+                                    ),
+                                    true, // autoFlush
+                                    StandardCharsets.UTF_8
+                            );
+                            LOG = s;
+                        } catch (IOException e) {
+                            // Fallback: im Worst Case auf System.err
+                            e.printStackTrace();
+                            LOG = System.err;
+                            s = LOG;
+                        }
+                    }
+                }
+            }
+            return s;
+        }
+
+        public static void log(String msg) {
+            PrintStream out = logStream();
+            out.println(Instant.now() + " [" + Thread.currentThread().getName() + "] " + msg);
+        }
+
+        public static void log(String msg, Throwable t) {
+            PrintStream out = logStream();
+            out.println(Instant.now() + " [" + Thread.currentThread().getName() + "] " + msg);
+            if (t != null) {
+                t.printStackTrace(out);
+            }
+        }
     }
 
 }

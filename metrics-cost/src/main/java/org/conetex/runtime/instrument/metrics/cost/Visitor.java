@@ -3,10 +3,109 @@ package org.conetex.runtime.instrument.metrics.cost;
 import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
+
 public class Visitor extends ClassVisitor {
 
-    public Visitor(ClassVisitor cv) {
+    public static final int VISIT_MV_STATIC = 0;
+    public static final int VISIT_MV_DYNAMIC = 1;
+    public static final int VISIT_MV_STATIC_COUNT_OPCODES = 2;
+
+    public static final int VISIT_MV_DEFAULT = VISIT_MV_STATIC;
+
+    final int visitMethod;
+
+    public Visitor(ClassVisitor cv, int visitMethod) {
         super(Opcodes.ASM9, cv);
+        this.visitMethod = visitMethod;
+    }
+
+    public static void printOpCodes(PrintStream out){
+        out.println("IFEQ        : " + Opcodes.IFEQ        );
+        out.println("IFNE        : " + Opcodes.IFNE        );
+        out.println("IFLT        : " + Opcodes.IFLT        );
+        out.println("IFGE        : " + Opcodes.IFGE        );
+        out.println("IFGT        : " + Opcodes.IFGT        );
+        out.println("IFLE        : " + Opcodes.IFLE        );
+        out.println("IF_ICMPEQ   : " + Opcodes.IF_ICMPEQ   );
+        out.println("IF_ICMPNE   : " + Opcodes.IF_ICMPNE   );
+        out.println("IF_ICMPLT   : " + Opcodes.IF_ICMPLT   );
+        out.println("IF_ICMPGE   : " + Opcodes.IF_ICMPGE   );
+        out.println("IF_ICMPGT   : " + Opcodes.IF_ICMPGT   );
+        out.println("IF_ICMPLE   : " + Opcodes.IF_ICMPLE   );
+        out.println("IFNULL      : " + Opcodes.IFNULL      );
+        out.println("IFNONNULL   : " + Opcodes.IFNONNULL   );
+        out.println("IF_ACMPEQ   : " + Opcodes.IF_ACMPEQ   );
+        out.println("IF_ACMPNE   : " + Opcodes.IF_ACMPNE   );
+        out.println("ILOAD       : " + Opcodes.ILOAD       );
+        out.println("LLOAD       : " + Opcodes.LLOAD       );
+        out.println("FLOAD       : " + Opcodes.FLOAD       );
+        out.println("DLOAD       : " + Opcodes.DLOAD       );
+        out.println("ALOAD       : " + Opcodes.ALOAD       );
+        out.println("ISTORE      : " + Opcodes.ISTORE      );
+        out.println("LSTORE      : " + Opcodes.LSTORE      );
+        out.println("FSTORE      : " + Opcodes.FSTORE      );
+        out.println("DSTORE      : " + Opcodes.DSTORE      );
+        out.println("ASTORE      : " + Opcodes.ASTORE      );
+        out.println("LCMP        : " + Opcodes.LCMP        );
+        out.println("FCMPG       : " + Opcodes.FCMPG       );
+        out.println("FCMPL       : " + Opcodes.FCMPL       );
+        out.println("DCMPG       : " + Opcodes.DCMPG       );
+        out.println("DCMPL       : " + Opcodes.DCMPL       );
+        out.println("IADD        : " + Opcodes.IADD        );
+        out.println("ISUB        : " + Opcodes.ISUB        );
+        out.println("LADD        : " + Opcodes.LADD        );
+        out.println("LSUB        : " + Opcodes.LSUB        );
+        out.println("FADD        : " + Opcodes.FADD        );
+        out.println("FSUB        : " + Opcodes.FSUB        );
+        out.println("DADD        : " + Opcodes.DADD        );
+        out.println("DSUB        : " + Opcodes.DSUB        );
+        out.println("INEG        : " + Opcodes.INEG        );
+        out.println("LNEG        : " + Opcodes.LNEG        );
+        out.println("FNEG        : " + Opcodes.FNEG        );
+        out.println("DNEG        : " + Opcodes.DNEG        );
+        out.println("IMUL        : " + Opcodes.IMUL        );
+        out.println("LMUL        : " + Opcodes.LMUL        );
+        out.println("FMUL        : " + Opcodes.FMUL        );
+        out.println("DMUL        : " + Opcodes.DMUL        );
+        out.println("IDIV        : " + Opcodes.IDIV        );
+        out.println("IREM        : " + Opcodes.IREM        );
+        out.println("LDIV        : " + Opcodes.LDIV        );
+        out.println("LREM        : " + Opcodes.LREM        );
+        out.println("FDIV        : " + Opcodes.FDIV        );
+        out.println("DDIV        : " + Opcodes.DDIV        );
+        out.println("FREM        : " + Opcodes.FREM        );
+        out.println("DREM        : " + Opcodes.DREM        );
+        out.println("IALOAD      : " + Opcodes.IALOAD      );
+        out.println("LALOAD      : " + Opcodes.LALOAD      );
+        out.println("FALOAD      : " + Opcodes.FALOAD      );
+        out.println("DALOAD      : " + Opcodes.DALOAD      );
+        out.println("AALOAD      : " + Opcodes.AALOAD      );
+        out.println("BALOAD      : " + Opcodes.BALOAD      );
+        out.println("CALOAD      : " + Opcodes.CALOAD      );
+        out.println("SALOAD      : " + Opcodes.SALOAD      );
+        out.println("IASTORE     : " + Opcodes.IASTORE     );
+        out.println("LASTORE     : " + Opcodes.LASTORE     );
+        out.println("FASTORE     : " + Opcodes.FASTORE     );
+        out.println("DASTORE     : " + Opcodes.DASTORE     );
+        out.println("AASTORE     : " + Opcodes.AASTORE     );
+        out.println("BASTORE     : " + Opcodes.BASTORE     );
+        out.println("CASTORE     : " + Opcodes.CASTORE     );
+        out.println("SASTORE     : " + Opcodes.SASTORE     );
+        out.println("MONITORENTER: " + Opcodes.MONITORENTER);
+        out.println("MONITOREXIT : " + Opcodes.MONITOREXIT );
+        out.println("ATHROW      : " + Opcodes.ATHROW      );
+        out.println("GETFIELD    : " + Opcodes.GETFIELD    );
+        out.println("GETSTATIC   : " + Opcodes.GETSTATIC   );
+        out.println("PUTFIELD    : " + Opcodes.PUTFIELD    );
+        out.println("PUTSTATIC   : " + Opcodes.PUTSTATIC   );
+        out.println("ANEWARRAY   : " + Opcodes.ANEWARRAY   );
+        out.println("CHECKCAST   : " + Opcodes.CHECKCAST   );
+        out.println("INSTANCEOF  : " + Opcodes.INSTANCEOF  );
+        out.println("NEWARRAY    : " + Opcodes.NEWARRAY    );
+        out.println("NEWARRAY own: " + -255                );
+        out.println("MethodEntry : " + -256                );
     }
 
     @Override
@@ -40,7 +139,18 @@ public class Visitor extends ClassVisitor {
             }
 
             private void visitMv(String incrementMethodEntry, int opcode){
-                visitMvStatic(incrementMethodEntry);
+                if(Visitor.this.visitMethod == VISIT_MV_STATIC) {
+                    visitMvStatic(incrementMethodEntry);
+                }
+                else if(Visitor.this.visitMethod == VISIT_MV_DYNAMIC) {
+                    visitMvStatic(incrementMethodEntry);
+                }
+                else if(Visitor.this.visitMethod == VISIT_MV_STATIC_COUNT_OPCODES) {
+                    visitMvStaticCountOpcodes(incrementMethodEntry, opcode);
+                }
+                else{
+                    visitMvStatic(incrementMethodEntry);
+                }
             }
 
             private void visitMvStatic(String incrementMethodEntry) {

@@ -14,6 +14,6 @@
     <artifactId>jar-blocked</artifactId>
 
     <name>test jar blocked</name>
-    <description>test jar blocked</description>
+    <description>test jar blocked called from integration</description>
 
 </project>
