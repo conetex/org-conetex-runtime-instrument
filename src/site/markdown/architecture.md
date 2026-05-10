@@ -33,8 +33,6 @@ Together, they implement a modular Java runtime instrumentation framework based 
 
 ![Architecture](images/architecture.svg)
 
-<img src="images/architecture.svg" width="80%"/>
-
 # 🧭 Module Roles Diagram
 
 ```mermaid
