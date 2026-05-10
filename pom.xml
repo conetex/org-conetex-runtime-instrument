@@ -160,7 +160,7 @@
                 </configuration>
             </plugin>
 
-            <!-- DOC plantuml
+            <!-- DOC plantuml -->
             <plugin>
                 <groupId>com.github.jeluard</groupId>
                 <artifactId>plantuml-maven-plugin</artifactId>
@@ -203,7 +203,7 @@
                     <format>svg</format>
                 </configuration>
             </plugin>
-            -->
+
 
 
         </plugins>
