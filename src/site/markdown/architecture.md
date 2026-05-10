@@ -31,37 +31,9 @@ Together, they implement a modular Java runtime instrumentation framework based 
 
 # 🔗 Module Dependency Diagram
 
-```plantuml
-@startuml
-title Module Overview — Class Instrumentation
+![Architecture](images/architecture.svg)
 
-left to right direction
-
-component agent as A
-component interfaces as B
-component counter as C
-component "metrics-cost" as D
-component "metrics-cost-unnamed" as E
-component collection as F
-
-' Core modules
-A --> B
-A --> C
-A --> D
-A --> E
-A --> F
-
-' Instrumentation logic
-C --> B
-D --> B
-E --> B
-
-' Data flow
-C --> F
-D --> C
-E --> C
-@enduml
-```
+<img src="images/architecture.svg" width="80%"/>
 
 # 🧭 Module Roles Diagram
 
