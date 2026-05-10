@@ -16,16 +16,16 @@ In essence:
 ## Out of Scope (Handled by Other Modules)
 
 - **Bytecode transformation**  
-  Implemented in: [`metrics-cost`](../metrics-cost/purpose.md), [`metrics-cost-unnamed`](../metrics-cost-unnamed/purpose.md), [`counter`](../counter/purpose.md)
+  Implemented in: [`metrics-cost`](../../../metrics-cost/purpose.md), [`metrics-cost-unnamed`](../../../metrics-cost-unnamed/purpose.md), [`counter`](../../../counter/purpose.md)
 
 - **Generating measurement events (counters, timings, cost data)**  
-  Implemented in: [`counter`](../counter/purpose.md), [`metrics-cost`](../metrics-cost/purpose.md)
+  Implemented in: [`counter`](../../../counter/purpose.md), [`metrics-cost`](../../../metrics-cost/purpose.md)
 
 - **Defining instrumentation interfaces**  
-  Implemented in: [`interfaces`](../interfaces/purpose.md)
+  Implemented in: [`interfaces`](../../../interfaces/purpose.md)
 
 - **Activating or configuring the instrumentation system**  
   Implemented in: [`agent`](../agent/purpose.md)
 
 - **Providing example usage**  
-  Implemented in: [`example`](../example/purpose.md)
+  Implemented in: [`example`](../../../example/purpose.md)

@@ -22,10 +22,10 @@ In essence:
   Implemented in: [`agent`](../agent/purpose.md)
 
 - **Defining shared instrumentation interfaces**  
-  Implemented in: [`interfaces`](../interfaces/purpose.md)
+  Implemented in: [`interfaces`](../../../interfaces/purpose.md)
 
 - **Injecting cost or timing measurements**  
-  Implemented in: [`metrics-cost`](../metrics-cost/purpose.md), [`metrics-cost-unnamed`](../metrics-cost-unnamed/purpose.md)
+  Implemented in: [`metrics-cost`](../../../metrics-cost/purpose.md), [`metrics-cost-unnamed`](../../../metrics-cost-unnamed/purpose.md)
 
 - **Providing example usage**  
-  Implemented in: [`example`](../example/purpose.md)
+  Implemented in: [`example`](../../../example/purpose.md)

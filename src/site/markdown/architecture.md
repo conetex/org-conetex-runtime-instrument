@@ -31,25 +31,36 @@ Together, they implement a modular Java runtime instrumentation framework based 
 
 # 🔗 Module Dependency Diagram
 
-```mermaid
-graph TD
+```plantuml
+@startuml
+title Module Overview — Class Instrumentation
 
-    %% Core modules
-    A[agent] --> B[interfaces]
-    A --> C[counter]
-    A --> D[metrics-cost]
-    A --> E[metrics-cost-unnamed]
-    A --> F[collection]
+left to right direction
 
-    %% Instrumentation logic
-    C --> B
-    D --> B
-    E --> B
+component agent as A
+component interfaces as B
+component counter as C
+component "metrics-cost" as D
+component "metrics-cost-unnamed" as E
+component collection as F
 
-    %% Data flow
-    C --> F
-    D --> C
-    E --> C
+' Core modules
+A --> B
+A --> C
+A --> D
+A --> E
+A --> F
+
+' Instrumentation logic
+C --> B
+D --> B
+E --> B
+
+' Data flow
+C --> F
+D --> C
+E --> C
+@enduml
 ```
 
 # 🧭 Module Roles Diagram
@@ -80,6 +91,7 @@ flowchart TB
     H --> F
 ```
 
+# 🔧 Class Instrumentation Sequence
 
 ```mermaid
 sequenceDiagram
@@ -96,9 +108,9 @@ autonumber
     Agent->>Trans: Register ClassFileTransformer(s)
     Note right of Agent: agent does NOT transform bytecode<br/>only registers and configures
 
-    JVM->>Trans: loadClass("Application Class")
+    JVM->>Trans: load / reload Classes not transformed yet (e.g. "Application Class")
+    Note right of Trans: metrics-cost / counter<br/>modify bytecode
     Trans->>MC: delegate transform(classBytes)
-    Note right of MC: metrics-cost / counter<br/>modify bytecode
 
     MC-->>Trans: return transformedClassBytes
     Trans-->>JVM: return transformedClassBytes
@@ -106,5 +118,5 @@ autonumber
     JVM->>App: redefineClass("Application Class")
 
     App->>Co: emit measurement events<br/>(increase counters)
-    Coll-->>Co: aggregate & store metrics
+    Co-->>Co: calculate metrics
 ```

@@ -16,13 +16,13 @@ In essence:
 ## Out of Scope (Handled by Other Modules)
 
 - **Implementing counters or cost metrics**  
-  Implemented in: [`counter`](../counter/purpose.md), [`metrics-cost`](../metrics-cost/purpose.md)
+  Implemented in: [`counter`](../counter/purpose.md), [`metrics-cost`](../../../metrics-cost/purpose.md)
 
 - **Collecting or aggregating measurement data**  
   Implemented in: [`collection`](../collection/purpose.md)
 
 - **Performing bytecode transformation**  
-  Implemented in: [`metrics-cost`](../metrics-cost/purpose.md), [`metrics-cost-unnamed`](../metrics-cost-unnamed/purpose.md), [`counter`](../counter/purpose.md)
+  Implemented in: [`metrics-cost`](../../../metrics-cost/purpose.md), [`metrics-cost-unnamed`](../../../metrics-cost-unnamed/purpose.md), [`counter`](../counter/purpose.md)
 
 - **Activating the instrumentation system**  
   Implemented in: [`agent`](../agent/purpose.md)

@@ -16,19 +16,19 @@ In essence:
 ## Out of Scope (Handled by Other Modules)
 
 - **Bytecode transformation**  
-  Implemented in: [`metrics-cost`](../metrics-cost/purpose.md), [`metrics-cost-unnamed`](../metrics-cost-unnamed/purpose.md), [`counter`](../counter/purpose.md)
+  Implemented in: [`metrics-cost`](../../../metrics-cost/purpose.md), [`metrics-cost-unnamed`](../../../metrics-cost-unnamed/purpose.md), [`counter`](../../../counter/purpose.md)
 
 - **Injection of counters, timers, or cost‑measurement logic**  
-  Implemented in: [`counter`](../counter/purpose.md), [`metrics-cost`](../metrics-cost/purpose.md)
+  Implemented in: [`counter`](../../../counter/purpose.md), [`metrics-cost`](../../../metrics-cost/purpose.md)
 
 - **Data collection and aggregation**  
-  Implemented in: [`collection`](../collection/purpose.md)
+  Implemented in: [`collection`](../../../collection/purpose.md)
 
 - **Instrumentation APIs and shared interfaces**  
-  Implemented in: [`interfaces`](../interfaces/purpose.md)
+  Implemented in: [`interfaces`](../../../interfaces/purpose.md)
 
 - **Instrumentation rules and transformation strategies**  
-  Implemented in: [`metrics-cost`](../metrics-cost/purpose.md), [`counter`](../counter/purpose.md)
+  Implemented in: [`metrics-cost`](../../../metrics-cost/purpose.md), [`counter`](../../../counter/purpose.md)
 
 - **Example usage and demonstration code**  
-  Implemented in: [`example`](../example/purpose.md)
+  Implemented in: [`example`](../../../example/purpose.md)

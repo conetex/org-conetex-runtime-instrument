@@ -149,7 +149,33 @@
                 </executions>
             </plugin>
 
+
+            <!-- DOC -->
+
+                    <!-- Asciidoctor: rendert .adoc und .md, inkl. inline PlantUML via asciidoctorj-diagram -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>4.0.0-M13</version>
+            </plugin>
+
+
+
+
+
         </plugins>
     </build>
+
+    <!--<reporting>
+        <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>3.5.0</version>
+            </plugin>
+
+        </plugins>
+    </reporting>-->
 
 </project>
