@@ -11,23 +11,58 @@ permissions:
   id-token: write
 
 jobs:
+
   build:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
+      #
+      # Java
+      #
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
 
-      - name: Build Site
-        run: mvn -B site
+      #
+      # Install D2
+      #
+      - name: Install D2
+        run: |
+          curl -fsSL https://d2lang.com/install.sh | sh -s --
 
-      - name: Upload site artifact
+          echo "$HOME/.d2/bin" >> $GITHUB_PATH
+
+      #
+      # Generate diagrams
+      #
+      - name: Render D2 diagrams
+        run: |
+
+          mkdir -p target/site/images
+
+          for file in src/site/d2/*.d2
+          do
+            name=$(basename "$file" .d2)
+
+            d2 "$file" "target/site/images/$name.svg"
+          done
+
+      #
+      # Maven site
+      #
+      - name: Build site
+        run: mvn -B clean site
+
+      #
+      # Upload Pages artifact
+      #
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: target/site
@@ -42,6 +77,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

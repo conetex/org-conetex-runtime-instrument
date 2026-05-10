@@ -31,7 +31,9 @@ Together, they implement a modular Java runtime instrumentation framework based 
 
 # 🔗 Module Dependency Diagram
 
-![Architecture](images/architecture.svg)
+![../plantuml/architecture.puml](images/architecture.svg)
+
+![ArchitectureD2](images/architectured2.svg)
 
 # 🧭 Module Roles Diagram
 
