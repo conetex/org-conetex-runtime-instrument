@@ -120,3 +120,5 @@ autonumber
     App->>Co: emit measurement events<br/>(increase counters)
     Co-->>Co: calculate metrics
 ```
+
+<script type="module" src="js/mermaid-init.js"></script>
