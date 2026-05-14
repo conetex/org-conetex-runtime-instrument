@@ -4,6 +4,7 @@
     push:
       branches:
         - main
+        - rel
 
   permissions:
     contents: read
