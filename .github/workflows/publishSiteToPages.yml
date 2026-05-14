@@ -4,13 +4,11 @@ on:
   push:
     branches:
       - master
-    tags:
-      - 'v*'
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+#  pages: write
+#  id-token: write
 
 jobs:
 
@@ -37,16 +35,6 @@ jobs:
       - name: Build site
         run: mvn -B clean verify
 
-      - name: Determine docs version
-        id: version
-        run: |
-          
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "DOCS_VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
-          else
-            echo "DOCS_VERSION=latest" >> $GITHUB_ENV
-          fi
-                                       -
       # ==================================================
       # Copy module JavaDocs + Coverage
       # ==================================================
@@ -100,35 +88,61 @@ jobs:
             fi
           
           done
-  
 
+      #
+      # Maven version
+      #
+      - name: Extract Maven version
+        run: |
+          VERSION=$(mvn help:evaluate \
+            -Dexpression=project.version \
+            -q \
+            -DforceStdout)
+
+          echo "DOCS_VERSION=$VERSION" >> $GITHUB_ENV
 
       # ==================================================
-      # Upload GitHub Pages artifact
+      # Prepare versioned deployment
       # ==================================================
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: target/site
+      - name: Prepare deployment structure
+        run: |
 
-  deploy:
-    needs: build
+          mkdir -p deploy/${DOCS_VERSION}
+          mkdir -p deploy/latest
 
-    runs-on: ubuntu-latest
+          cp -r target/site/* deploy/${DOCS_VERSION}/
+          cp -r target/site/* deploy/latest/
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-
-      #- name: Deploy to GitHub Pages
-      #  id: deployment
-      #  uses: actions/deploy-pages@v4
-
-      - name: Deploy to GitHub Pages
+      # ==================================================
+      # Deploy GitHub Pages
+      # ==================================================
+      - name: Deploy GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: deploy
           clean: false
+
+      # ==================================================
+      # Upload GitHub Pages artifact
+      # ==================================================
+      #- name: Upload Pages Artifact
+      #  uses: actions/upload-pages-artifact@v3
+      #  with:
+      #    path: target/site
+
+  #deploy:
+  #  needs: build#
+
+  #  runs-on: ubuntu-latest
+
+  #  environment:
+  #    name: github-pages
+  #    url: ${{ steps.deployment.outputs.page_url }}
+
+  #  steps:
+
+      #- name: Deploy to GitHub Pages
+      #  id: deployment
+      #  uses: actions/deploy-pages@v4
+
