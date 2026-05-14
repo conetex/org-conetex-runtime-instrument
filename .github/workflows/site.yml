@@ -35,24 +35,6 @@
           run: mvn -B clean verify
 
         # ==================================================
-        # Create final site structure
-        # ==================================================
-
-        - name: Create site directories
-          run: |
-            mkdir -p target/site
-            mkdir -p target/site/apidocs
-            mkdir -p target/site/coverage
-
-        # ==================================================
-        # Copy AsciiDoc site
-        # ==================================================
-
-        - name: Copy generated docs
-          run: |
-            cp -r target/generated-docs/* target/site/
-
-        # ==================================================
         # Copy module JavaDocs + Coverage
         # ==================================================
 
@@ -98,11 +80,11 @@
               # ------------------------------
             
               if [ -d "$module/target/site/jacoco" ]; then
-                mkdir -p "target/site/coverage/$module_name"
+                mkdir -p "target/site/jacoco/$module_name"
             
                 cp -r \
                   "$module/target/site/jacoco/"* \
-                  "target/site/coverage/$module_name/"
+                  "target/site/jacoco/$module_name/"
               fi
             
             done
