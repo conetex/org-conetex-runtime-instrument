@@ -32,7 +32,7 @@ jobs:
       #
       # Maven verify
       #
-      - name: Build site
+      - name: Build
         run: mvn -B clean verify
 
       # ==================================================
