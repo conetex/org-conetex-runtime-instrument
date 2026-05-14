@@ -48,7 +48,7 @@ class AgentIntegrationTest {
     }
 
 
-    //TODO does not work on github @Test
+    @Test
     void testInstrumentationOfCountOpcodesInSeparateJvm() throws Exception {
         Process process = process("jar","org.conetex.runtime.test.instrument.count.opcodes.CountOpcodesA")
                 .redirectOutput(ProcessBuilder.Redirect.INHERIT)
@@ -80,7 +80,7 @@ class AgentIntegrationTest {
         assertEquals(STATUS_OK, exitCode, "JVM exited with STATUS_OK " + STATUS_OK + " status");
     }
 
-    @Test
+    // TODO does not work in github @Test
     void testInstrumentationOfBlockedJarInSeparateJvm() throws Exception {
         Process process = process("jar-blocked","org.conetex.runtime.instrument.test.jar.blocked.MainJarBlocked")
                 .redirectOutput(ProcessBuilder.Redirect.INHERIT)
