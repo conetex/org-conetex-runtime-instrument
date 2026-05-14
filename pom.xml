@@ -18,6 +18,8 @@
         <maven.compiler.target>18</maven.compiler.target>
         <maven.compiler.release>18</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
     </properties>
 
     <modules>
@@ -72,12 +74,14 @@
                 </executions>
             </plugin>
 
-            <!-- Javadoc (needed for publish) -->
+            <!-- Javadoc (needed for central-publishing) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.12.0</version>
+
                 <executions>
+                    <!-- for central-publishing -->
                     <execution>
                         <id>attach-javadocs</id>
                         <goals><goal>jar</goal></goals>
@@ -85,21 +89,7 @@
                 </executions>
             </plugin>
 
-            <!-- Sign (needed for publish) -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals><goal>sign</goal></goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Publish -->
+            <!-- Deploy / Publish (central-publishing) -->
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
@@ -139,18 +129,108 @@
                     </execution>
 
                     <!-- create HTML-report after tests -->
-                    <execution>
+                    <execution> <!-- per Module -->
                         <id>report</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                     </execution>
+
+                    <!-- global <execution>
+                        <id>report-aggregate</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>-->
                 </executions>
             </plugin>
 
+            <!-- Asciidoctor -->
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>3.2.0</version>
 
-            <!-- DOC -->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-pdf</artifactId>
+                        <version>2.3.19</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram</artifactId>
+                        <version>3.0.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram-plantuml</artifactId>
+                        <version>1.2025.3</version>
+                    </dependency>
+                </dependencies>
+
+                <executions>
+                    <execution>
+                        <id>generate-docs</id>
+
+                        <phase>generate-resources</phase>
+
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+
+                        <configuration>
+
+                            <requires>
+                                <require>asciidoctor-diagram</require>
+                            </requires>
+
+                            <!-- Quelle -->
+                            <sourceDirectory>
+                                ${project.basedir}/src/site/asciidoc
+                            </sourceDirectory>
+
+                            <!-- Startdatei
+                            <sources>
+                                <include>index.adoc</include>
+                            </sources>-->
+
+                            <!-- Ziel -->
+                            <outputDirectory>
+                                ${project.build.directory}/site/asciidoc
+                            </outputDirectory>
+
+                            <!-- Backend -->
+                            <backend>html5</backend>
+
+                            <!--
+                            <includes>
+                                <include>**/*.adoc</include>
+                            </includes>
+                            -->
+
+                            <attributes>
+                                <toc>left</toc>
+                                <icons>font</icons>
+                                <source-highlighter>highlightjs</source-highlighter>
+                                <plantuml-format>svg</plantuml-format>
+
+                                <sectnums>true</sectnums>
+                                <plantuml-format>svg</plantuml-format>
+                                <!--
+                                <imagesoutdir>${project.build.directory}/siteAdoc/diagrams</imagesoutdir>
+-->
+                            </attributes>
+
+
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- DOC
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
@@ -158,9 +238,9 @@
                 <configuration>
                     <siteDirectory>src/site</siteDirectory>
                 </configuration>
-            </plugin>
+            </plugin> -->
 
-            <!-- DOC plantuml -->
+            <!-- DOC plantuml
             <plugin>
                 <groupId>com.github.jeluard</groupId>
                 <artifactId>plantuml-maven-plugin</artifactId>
@@ -203,7 +283,7 @@
                     <format>svg</format>
                 </configuration>
             </plugin>
-
+-->
 
 
         </plugins>

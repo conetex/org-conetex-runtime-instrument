@@ -1,95 +1,132 @@
-name: Build and Publish Site
+  name: Publish Documentation
 
-on:
-  push:
-    branches:
-      - master
+  on:
+    push:
+      branches:
+        - main
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+  permissions:
+    contents: read
+    pages: write
+    id-token: write
 
-jobs:
+  concurrency:
+    group: pages
+    cancel-in-progress: true
 
-  build:
-    runs-on: ubuntu-latest
+  jobs:
 
-    steps:
+    build-docs:
+      runs-on: ubuntu-latest
 
-      - name: Checkout
-        uses: actions/checkout@v4
+      steps:
 
-      #
-      # Java
-      #
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
+        - name: Checkout
+          uses: actions/checkout@v4
 
-      #
-      # Install Graphviz (it is used by plantuml 4 components)
-      #
-      - name: Install Graphviz
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y graphviz
+        - name: Setup Java
+          uses: actions/setup-java@v4
+          with:
+            distribution: temurin
+            java-version: 21
+            cache: maven
 
-      - name: Configure Graphviz
-        run: |
-          echo "GRAPHVIZ_DOT=/usr/bin/dot" >> $GITHUB_ENV
+        - name: Build
+          run: mvn -B clean verify
 
-      #
-      # Install D2
-      #
-      - name: Install D2
-        run: |
-          curl -fsSL https://d2lang.com/install.sh | sh -s --
+        # ==================================================
+        # Create final site structure
+        # ==================================================
 
-          echo "$HOME/.d2/bin" >> $GITHUB_PATH
+        - name: Create site directories
+          run: |
+            mkdir -p target/site
+            mkdir -p target/site/apidocs
+            mkdir -p target/site/coverage
 
-      #
-      # Generate diagrams
-      #
-      - name: Render D2 diagrams
-        run: |
+        # ==================================================
+        # Copy AsciiDoc site
+        # ==================================================
 
-          mkdir -p target/site/images
+        - name: Copy generated docs
+          run: |
+            cp -r target/generated-docs/* target/site/
 
-          for file in src/site/d2/*.d2
-          do
-            name=$(basename "$file" .d2)
+        # ==================================================
+        # Copy module JavaDocs + Coverage
+        # ==================================================
 
-            d2 "$file" "target/site/images/$name.svg"
-          done
+        - name: Collect reports
+          run: |
+            
+            modules=(
+              interfaces
+              counter
+              collection
+              metrics-cost
+              metrics-cost-unnamed
+              agent
+              example
+            
+              tests/empty
+              tests/jar
+              tests/jar-blocked
+              tests/jar-module
+              tests/integration
+            )
+            
+            for module in "${modules[@]}"; do
+            
+              module_name=$(basename "$module")
+            
+              echo "Processing $module"
+            
+              # ------------------------------
+              # JavaDoc
+              # ------------------------------
+            
+              if [ -d "$module/target/reports/apidocs" ]; then
+                mkdir -p "target/site/apidocs/$module_name"
+            
+                cp -r \
+                  "$module/target/reports/apidocs/"* \
+                  "target/site/apidocs/$module_name/"
+              fi
+            
+              # ------------------------------
+              # JaCoCo
+              # ------------------------------
+            
+              if [ -d "$module/target/site/jacoco" ]; then
+                mkdir -p "target/site/coverage/$module_name"
+            
+                cp -r \
+                  "$module/target/site/jacoco/"* \
+                  "target/site/coverage/$module_name/"
+              fi
+            
+            done
 
-      #
-      # Maven site
-      #
-      - name: Build site
-        run: mvn -B site
+        # ==================================================
+        # Upload GitHub Pages artifact
+        # ==================================================
 
-      #
-      # Upload Pages artifact
-      #
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: target/site
+        - name: Upload Pages artifact
+          uses: actions/upload-pages-artifact@v3
+          with:
+            path: target/site
 
-  deploy:
-    needs: build
+    deploy:
+      needs: build-docs
 
-    runs-on: ubuntu-latest
+      runs-on: ubuntu-latest
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
 
-    steps:
+      steps:
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        - name: Deploy to GitHub Pages
+          id: deployment
+          uses: actions/deploy-pages@v4
