@@ -147,7 +147,7 @@
                 </executions>
             </plugin>
 
-            <!-- Asciidoctor -->
+            <!-- DOC Asciidoctor -->
             <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
@@ -180,7 +180,12 @@
                         <goals>
                             <goal>process-asciidoc</goal>
                         </goals>
+<!--
+https://conetex.github.io/org-conetex-runtime-instrument/apidocs/agent/org.conetex.runtime.instrument.agent/org/conetex/runtime/instrument/agent/Instrument.AgentLog.html
+https://conetex.github.io/org-conetex-runtime-instrument/jacoco/collection/index.html
+https://conetex.github.io/org-conetex-runtime-instrument/asciidoc/
 
+-->
                         <configuration>
 
                             <requires>
@@ -225,6 +230,42 @@
                             </attributes>
 
 
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- DOC stuff we do not need to transform or render -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+
+                <executions>
+
+                    <execution>
+                        <id>collect-javadocs</id>
+
+                        <!-- WICHTIG -->
+                        <inherited>false</inherited>
+
+                        <phase>verify</phase>
+
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+
+                        <configuration>
+                            <outputDirectory>
+                                ${project.build.directory}/site/raw
+                            </outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>
+                                        ${project.basedir}/src/site/raw
+                                    </directory>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>
