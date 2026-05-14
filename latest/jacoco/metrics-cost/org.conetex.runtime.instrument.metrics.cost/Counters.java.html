@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Counters.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">metrics-cost</a> &gt; <a href="index.source.html" class="el_package">org.conetex.runtime.instrument.metrics.cost</a> &gt; <span class="el_source">Counters.java</span></div><h1>Counters.java</h1><pre class="source lang-java linenums">package org.conetex.runtime.instrument.metrics.cost;
+
+import org.conetex.runtime.instrument.counter.CountersWeighted;
+import org.conetex.runtime.instrument.counter.LongLimits;
+import org.conetex.runtime.instrument.counter.Counter;
+
+<span class="nc" id="L7">public final class Counters {</span>
+
+    static {
+<span class="fc" id="L10">        System.err.println(&quot;Counters loaded: &quot; + Counters.class + &quot; (class) - &quot; + Counters.class.getModule() + &quot; (module) - &quot; + Counter.class.getClassLoader() + &quot; (loader)&quot;);</span>
+    }
+
+<span class="fc" id="L13">    public final static LongLimits CONFIG_MIN_MAX = new LongLimits(0L, Long.MAX_VALUE);</span>
+
+<span class="fc" id="L15">    public static final Counter ARITHMETIC_ADD_SUB_NEG = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L16">    public static final Counter ARITHMETIC_DIV_REM = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L17">    public static final Counter ARITHMETIC_MUL = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L18">    public static final Counter ARRAY_LOAD = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L19">    public static final Counter ARRAY_NEW = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L20">    public static final Counter ARRAY_STORE = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L21">    public static final Counter COMPARE_INT = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L22">    public static final Counter COMPARE_LONG = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L23">    public static final Counter COMPARE_OBJECT = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L24">    public static final Counter EXCEPTION_THROW = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L25">    public static final Counter FIELD_LOAD = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L26">    public static final Counter FIELD_STORE = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L27">    public static final Counter JUMP = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L28">    public static final Counter METHOD_CALL = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L29">    public static final Counter METHOD_ENTRY = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L30">    public static final Counter MONITOR = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L31">    public static final Counter VARIABLE_LOAD = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L32">    public static final Counter VARIABLE_STORE = new Counter(CONFIG_MIN_MAX, true);</span>
+<span class="fc" id="L33">    public static final Counter TYPE_CHECK = new Counter(CONFIG_MIN_MAX, true);</span>
+
+<span class="fc" id="L35">    public static final Counter[] COUNTERS = new Counter[]{</span>
+                Counters.ARITHMETIC_ADD_SUB_NEG,
+                Counters.ARITHMETIC_DIV_REM,
+                Counters.ARITHMETIC_MUL,
+                Counters.ARRAY_LOAD,
+                Counters.ARRAY_NEW,
+                Counters.ARRAY_STORE,
+                Counters.COMPARE_INT,
+                Counters.COMPARE_LONG,
+                Counters.COMPARE_OBJECT,
+                Counters.EXCEPTION_THROW,
+                Counters.FIELD_LOAD,
+                Counters.FIELD_STORE,
+                Counters.JUMP,
+                Counters.METHOD_CALL,
+                Counters.METHOD_ENTRY,
+                Counters.MONITOR,
+                Counters.VARIABLE_LOAD,
+                Counters.VARIABLE_STORE,
+                Counters.TYPE_CHECK
+    };
+
+<span class="fc" id="L57">    public final static CountersWeighted CONFIG = new CountersWeighted(</span>
+            CONFIG_MIN_MAX,
+            COUNTERS,
+            new int[] {
+                    35,//165, // ArithmeticAddSubNeg
+                    109,//890, // ArithmeticDivRem
+                    43,//956, // ArithmeticMul
+                    48,//352, // ArrayLoad
+                    98,//901, // ArrayNew
+                    65,//934, // ArrayStore
+                    30,//769, // CompareInt
+                    39,//560, // CompareLong
+                    43,//956, // CompareObject
+                    109,//890, // ExceptionThrow
+                    52,//747, // FieldLoad
+                    61,//539, // FieldStore
+                    28,//571, // Jump
+                    54,//945, // MethodCall
+                    0,//  0, // MethodEntry
+                    76,//923, // Monitor
+                    50,//550, // VariableLoad
+                    21,//978, // VariableStore
+                    26,//374  // TypeCheck
+            }
+            );
+
+    public static void reset() {
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for(Counter c : COUNTERS){</span>
+<span class="fc" id="L85">            c.reset();</span>
+        }
+<span class="fc" id="L87">    }</span>
+
+    public static void blockIncrement(boolean incrementationBlocked) {
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        for(Counter c : COUNTERS){</span>
+<span class="fc" id="L91">            c.blockIncrement(incrementationBlocked);</span>
+        }
+<span class="fc" id="L93">    }</span>
+
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementArithmeticAddSubNeg() {
+<span class="nc" id="L98">        Counters.ARITHMETIC_ADD_SUB_NEG.increment();</span>
+<span class="nc" id="L99">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementArithmeticDivRem() {
+<span class="nc" id="L103">        Counters.ARITHMETIC_DIV_REM.increment();</span>
+<span class="nc" id="L104">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementArithmeticMul() {
+<span class="nc" id="L108">        Counters.ARITHMETIC_MUL.increment();</span>
+<span class="nc" id="L109">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementArrayLoad() {
+<span class="nc" id="L113">        Counters.ARRAY_LOAD.increment();</span>
+<span class="nc" id="L114">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementArrayNew() {
+<span class="nc" id="L118">        Counters.ARRAY_NEW.increment();</span>
+<span class="nc" id="L119">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementArrayStore() {
+<span class="nc" id="L123">        Counters.ARRAY_STORE.increment();</span>
+<span class="nc" id="L124">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementCompareInt() {
+<span class="nc" id="L128">        Counters.COMPARE_INT.increment();</span>
+<span class="nc" id="L129">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementCompareLong() {
+<span class="nc" id="L133">        Counters.COMPARE_LONG.increment();</span>
+<span class="nc" id="L134">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementCompareObject() {
+<span class="nc" id="L138">        Counters.COMPARE_OBJECT.increment();</span>
+<span class="nc" id="L139">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementExceptionThrow() {
+<span class="nc" id="L143">        Counters.EXCEPTION_THROW.increment();</span>
+<span class="nc" id="L144">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementFieldLoad() {
+<span class="nc" id="L148">        Counters.FIELD_LOAD.increment();</span>
+<span class="nc" id="L149">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementFieldStore() {
+<span class="nc" id="L153">        Counters.FIELD_STORE.increment();</span>
+<span class="nc" id="L154">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementJump() {
+<span class="nc" id="L158">        Counters.JUMP.increment();</span>
+<span class="nc" id="L159">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementMethodCall() {
+<span class="nc" id="L163">        Counters.METHOD_CALL.increment();</span>
+<span class="nc" id="L164">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementMethodEntry() {
+<span class="nc" id="L168">        Counters.METHOD_ENTRY.increment();</span>
+<span class="nc" id="L169">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementMonitor() {
+<span class="nc" id="L173">        Counters.MONITOR.increment();</span>
+<span class="nc" id="L174">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementVariableLoad() {
+<span class="nc" id="L178">        Counters.VARIABLE_LOAD.increment();</span>
+<span class="nc" id="L179">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementVariableStore() {
+<span class="nc" id="L183">        Counters.VARIABLE_STORE.increment();</span>
+<span class="nc" id="L184">    }</span>
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static void incrementTypeCheck() {
+<span class="nc" id="L188">        Counters.TYPE_CHECK.increment();</span>
+<span class="nc" id="L189">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

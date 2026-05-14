@@ -1,0 +1,879 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Transformer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">metrics-cost</a> &gt; <a href="index.source.html" class="el_package">org.conetex.runtime.instrument.metrics.cost</a> &gt; <span class="el_source">Transformer.java</span></div><h1>Transformer.java</h1><pre class="source lang-java linenums">package org.conetex.runtime.instrument.metrics.cost;
+
+import org.conetex.runtime.instrument.collection.AvlTree;
+import org.conetex.runtime.instrument.counter.Counter;
+import org.conetex.runtime.instrument.counter.CountersWeighted;
+import org.conetex.runtime.instrument.interfaces.RetransformingClassFileTransformer;
+import org.conetex.runtime.instrument.interfaces.arithmetic.ResultLongDividedByInt;
+import org.conetex.runtime.instrument.interfaces.counter.LinkedLong;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.lang.instrument.Instrumentation;
+import java.lang.instrument.UnmodifiableClassException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.security.ProtectionDomain;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
+
+public class Transformer implements RetransformingClassFileTransformer {
+
+    /*
+prompt:
+wenn man mit einem agent per asm java klassen instrumentiert.
+welche packages muss man auf jeden fall ausschließen?
+welche packages müssen auch von professionellen tools von der instrumentierung ausgeschlossen werden?
+mit &quot;professionellen tools&quot; meine ich tools zur instrumentierung zur instrumentierung also zum beispiel byte-buddy oder
+IDEs also zum Beispiel intellij-idea, eclipse, android-studio.
+
+
+---------------------------------------
+1. answer chatGPT code guru:
+
+Systemkritische Packages (immer ausschließen)
+Es gibt eine Reihe von Systemklassen und Systempaketen, die du immer ausschließen solltest, unabhängig vom Tool zur Instrumentierung. Änderungen an diesen Klassen können die JVM destabilisieren oder schwerwiegende Sicherheitsrisiken verursachen.
+
+Ausschlusskandidaten für die JVM:
+Core Java-Klassen (werden vom BootstrapClassLoader geladen):
+
+java.lang.*
+Beispiele: java.lang.Object, java.lang.String, java.lang.Thread, java.lang.Class.
+java.util.*
+Beispiele: java.util.concurrent, java.util.Map, java.util.ArrayList.
+java.io.*:
+Beispiele: java.io.InputStream, java.io.OutputStream, java.io.File.
+java.net.*:
+Netzwerkklassen der JVM: java.net.Socket, java.net.URL.
+java.nio.*:
+Paket für NIO (non-blocking I/O). Beispiele: java.nio.file.Path, java.nio.channels.
+Java Reflection API:
+java.lang.reflect.* (z. B. Field, Method, Constructor).
+ClassLoader- und Bytecode-Klassen:
+
+java.lang.ClassLoader
+java.lang.invoke.MethodHandles: Wird verwendet, um dynamische Methodenaufrufe zu ermöglichen.
+Security-Klassen:
+
+java.security.* (z. B. java.security.PrivilegedAction).
+Module- und interne JVM-Klassen (ab Java 9+):
+
+jdk.internal.*:
+Dies enthält interne JVM-APIs, die systemkritisch sind. Beispiele:
+jdk.internal.loader.ClassLoaders.
+jdk.internal.reflect.*.
+java.base-Modul:
+Alle Klassen im java.base-Modul sollten tabu sein, da die JVM selbst auf diese Klassen angewiesen ist.
+
+
+private static final String[] EXCLUDES_PACKAGES = new String[]{
+    // Core JVM classes
+    &quot;java/lang/Object&quot;,              // reason: Fundamental root class of all Java objects; system-critical.
+    &quot;java/lang/String&quot;,              // reason: Immutable core class, any changes can destabilize the JVM.
+    &quot;java/lang/Class&quot;,               // reason: Represents classes and interfaces in the JVM; affects class metadata.
+    &quot;java/lang/Thread&quot;,              // reason: Central to multithreading in Java; critical.
+    &quot;java/lang/ThreadLocal&quot;,         // reason: Thread-local storage, crucial for concurrency.
+    &quot;java/lang/Throwable&quot;,           // reason: Base class for exceptions; fundamental for error handling.
+    &quot;java/lang/System&quot;,              // reason: Entry point for system-related operations (e.g., I/O, environment variables).
+
+    // JVM internal mechanics
+    &quot;java/lang/invoke/&quot;,             // reason: Dynamic method invocation (MethodHandles, CallSite); cannot safely modify.
+    &quot;java/lang/ref/&quot;,                // reason: Reference types for GC (SoftReference, WeakReference); GC-sensitive classes.
+    &quot;java/lang/reflect/&quot;,            // reason: Reflection API classes (e.g., Field, Method); used indirectly by many tools.
+
+    // Collections and functional interfaces
+    &quot;java/util/ArrayList&quot;,           // reason: Common list implementation; critical performance issues if modified.
+    &quot;java/util/HashMap&quot;,             // reason: Core map implementation; used widely. Changes could cause issues.
+    &quot;java/util/concurrent/&quot;,         // reason: Classes for concurrency (ThreadPool, Future); any interference is dangerous.
+    &quot;java/util/stream/&quot;,             // reason: Streams API classes; unsafe Modifikation kann die Stream-Operationen beeinflussen.
+    &quot;java/util/Base64&quot;,              // reason: Encoding/decoding functionality, errors in modification affect data handling.
+
+    // I/O classes
+    &quot;java/io/File&quot;,                  // reason: Represents file systems; changes risk file handling corruption.
+    &quot;java/io/InputStream&quot;,           // reason: Base class for input streams; critical for I/O operations.
+    &quot;java/io/OutputStream&quot;,          // reason: Base class for output streams; fundamental for data writing.
+    &quot;java/io/BufferedReader&quot;,        // reason: I/O buffering (common in file reading); critical performance impact.
+
+    // Networking
+    &quot;java/net/Socket&quot;,               // reason: Represents a networking socket; manipulation risks breaking communication.
+    &quot;java/net/ServerSocket&quot;,         // reason: Fundamental class for server-side networking.
+    &quot;java/net/URL&quot;,                  // reason: Represents Universal Resource Locator; unsafe changes can corrupt URLs.
+
+    // NIO
+    &quot;java/nio/file/Path&quot;,            // reason: Represents file system paths; critical for modern I/O.
+    &quot;java/nio/channels/&quot;,            // reason: Handles NIO channels; low-level byte operations.
+
+    // Security
+    &quot;java/security/MessageDigest&quot;,   // reason: Used for hashing algorithms (MD5, SHA); any change affects core cryptography.
+    &quot;java/security/cert/&quot;,           // reason: X.509 certificate handling; interference can break TLS/SSL.
+    &quot;javax/crypto/&quot;,                 // reason: Cryptography APIs (AES, RSA); unsafe modifications affect secure communication.
+
+    // Module system (Java 9+)
+    &quot;java/lang/module/&quot;,             // reason: Represents the Java module system; interference risks Java 9+ modular applications.
+
+    // Internal JDK classes (always exclude)
+    &quot;jdk/internal/loader/&quot;,          // reason: Handles class loading internally; breaking these can destabilize the JVM entirely.
+    &quot;jdk/internal/math/&quot;,            // reason: Math operations (e.g., BigInteger internals); critical for proper operation.
+    &quot;jdk/internal/reflect/&quot;,         // reason: Reflection internals; unsafe changes affect metadata operations.
+    &quot;sun/misc/Unsafe&quot;,               // reason: Private APIs for unsafe memory operations; interference can corrupt runtime.
+
+    // ASM-related classes
+    &quot;org/objectweb/asm/&quot;,            // reason: Critical classes used by ASM itself; infinite recursion risks.
+    &quot;org/objectweb/asm/util/&quot;,       // reason: Helper utilities for debugging ASM output; instrumentation of them compromises logging.
+
+    // ByteBuddy-related classes
+    &quot;net/bytebuddy/&quot;,                // reason: ByteBuddy classes (used for dynamic proxies and weavers).
+
+    // IDE-related exclusion
+    &quot;com/intellij/&quot;,                 // reason: IntelliJ IDEA classes, critical for plugin and IDE operations.
+    &quot;org/eclipse/&quot;,                  // reason: Eclipse IDE functionality, avoiding interference with IDE runtime processes.
+
+    // Framework-specific exclusion
+    &quot;org/springframework/&quot;,          // reason: Spring Framework with dynamic proxies and AOP mechanisms (e.g., Beans).
+    &quot;org/hibernate/&quot;,                // reason: Hibernate ORM proxies; internal optimizations for persistence.
+
+    // Testing frameworks
+    &quot;org/junit/&quot;,                    // reason: JUnit testing framework; instrumenting tests compromises repeatability.
+    &quot;org/testng/&quot;,                   // reason: TestNG testing framework functionality.
+
+    // JVM dynamic proxies
+    &quot;com/sun/proxy/$Proxy&quot;,          // reason: JVM-generated dynamic proxy classes during runtime; should not be modified.
+};
+
+
+---------------------------------------
+
+answer chatGpt pri
+
+Ja – **Profiler sind genau die Gegenbeispiele** zu „nur Applikationscode instrumentieren“.
+Sie gehen *bewusst* sehr weit, **aber nie vollständig**. Auch kommerzielle Profiler haben harte Ausschlüsse.
+
+Ich gebe dir das **realistische Bild aus echten Profilern** (Async-Profiler, JProfiler, YourKit, Flight Recorder, Glowroot, Elastic APM).
+
+---
+
+# 1️⃣ Grundprinzip von Profilern
+
+Profiler wollen:
+
+* **Callstacks**
+* **Zeit**
+* **Allokationen**
+* **Locks**
+* **IO / CPU / GC**
+
+❗ Aber sie dürfen **nicht**:
+
+* den Classloader brechen
+* Rekursionen erzeugen
+* den GC beeinflussen
+* JIT-Optimierungen zerstören
+* Sicherheitsmechanismen umgehen
+
+➡️ Deshalb **instrumentieren Profiler weniger Bytecode als man denkt**.
+
+---
+
+# 2️⃣ Kategorien von Ausschlüssen bei Profilern
+
+## A) **Unantastbare JVM-Klassen**
+
+Diese werden **nie** instrumentiert – selbst von Profilern:
+
+```text
+java.lang.Object
+java.lang.Class
+java.lang.Thread
+java.lang.ClassLoader
+java.lang.System
+java.lang.invoke.*
+java.lang.ref.*
+sun.misc.Unsafe
+jdk.internal.*
+```
+
+📌 **Warum?**
+
+* HotSpot geht von *exaktem Bytecode* aus
+* JIT setzt Intrinsics voraus
+* Sicherheits- &amp; Performance-Garantien
+
+➡️ Beispiel: **Async-Profiler** nutzt *Sampling*, nicht Instrumentierung, genau deswegen.
+
+---
+
+## B) **Classloading &amp; Bytecode-Frameworks**
+
+```text
+java.lang.instrument.*
+org.objectweb.asm.*
+net.bytebuddy.*
+javassist.*
+```
+
+📌 **Warum?**
+
+* Selbstinstrumentierung
+* Rekursion beim Transformieren
+* Deadlocks im ClassLoader
+
+➡️ Alle Profiler haben explizite „do not touch“-Listen für diese Packages.
+
+---
+
+## C) **Concurrency &amp; Locks (nur sehr gezielt!)**
+
+Profiler:
+
+* **messen Locks**
+* instrumentieren aber **keine Lock-Implementierungen**
+
+```text
+java.util.concurrent.locks.*
+java.util.concurrent.atomic.*
+java.util.concurrent.ForkJoin*
+```
+
+📌 **Warum?**
+
+* Instrumentierung verändert Lock-Timing
+* Deadlocks &amp; Heisenbugs
+
+➡️ Lock-Profiler nutzen:
+
+* JVMTI Events
+* Safepoints
+* OS-Timer
+
+---
+
+## D) **GC &amp; Memory Internals**
+
+```text
+java.lang.ref.*
+java.nio.*
+sun.nio.*
+jdk.internal.ref.*
+```
+
+📌 **Warum?**
+
+* Referenzverarbeitung ist GC-kritisch
+* Bytecode-Änderung = Speicherleak oder Crash
+
+➡️ Allocation-Profiling:
+
+* TLAB Hooks
+* JVMTI ObjectAllocation events
+* Stack walking
+
+---
+
+## E) **JIT &amp; Intrinsics**
+
+```text
+java.lang.Math
+java.lang.String
+java.lang.System.arraycopy
+```
+
+📌 **Warum?**
+
+* HotSpot ersetzt diese Methoden durch native Intrinsics
+* Instrumentierung verhindert Optimierungen
+
+➡️ Profiler *lesen* hier nur CPU-Zeit, kein Bytecode-Edit.
+
+---
+
+## F) **Eigene Profiler-Klassen**
+
+Alle Profiler haben **strikte Self-Exclusion**:
+
+```text
+com.yourkit.*
+com.jprofiler.*
+org.asyncprofiler.*
+```
+
+📌 **Warum?**
+
+* Endlosschleifen
+* verfälschte Messwerte
+
+---
+
+## G) **Logging &amp; Monitoring Libraries**
+
+```text
+org.slf4j.*
+ch.qos.logback.*
+org.apache.logging.*
+```
+
+📌 **Warum?**
+
+* Logging passiert überall
+* Rekursion + massiver Overhead
+
+➡️ Profiler erfassen Logging **nur als Zeitanteil**, nicht instrumentiert.
+
+---
+
+## H) **Native / JNI Boundaries**
+
+```text
+java.lang.Runtime
+java.lang.Process*
+sun.nio.ch.*
+```
+
+📌 **Warum?**
+
+* Native Calls lassen sich nicht sauber instrumentieren
+* Übergänge werden über Stack-Sampling erfasst
+
+---
+
+# 3️⃣ Konkrete Beispiele realer Profiler
+
+## 🔥 Async-Profiler
+
+* **keine Bytecode-Instrumentierung** für Timing
+* Sampling via:
+
+  * perf events
+  * safepoint bias
+* Instrumentiert **nur optional**:
+
+  * Allocation tracking
+* Ausschluss: fast alles JVM-Core
+
+---
+
+## 🧠 JProfiler / YourKit
+
+* Kombination aus:
+
+  * JVMTI
+  * minimaler Bytecode-Instrumentierung
+* Ausschlusslisten enthalten:
+
+  * `java.lang.*`
+  * `java.util.concurrent.*`
+  * `sun.*`
+  * `jdk.internal.*`
+
+---
+
+## 📊 Java Flight Recorder (JFR)
+
+* **gar keine Bytecode-Instrumentierung**
+* Events direkt aus HotSpot
+
+➡️ Maximale Sicherheit, minimale Verzerrung
+
+---
+
+## 🧪 Glowroot / Elastic APM
+
+* instrumentieren:
+
+  * Servlets
+  * JDBC
+  * HTTP Clients
+* schließen aus:
+
+  * JDK
+  * Framework-Internals
+  * Logging
+
+---
+
+# 4️⃣ Beispiel: Typische Profiler-Exclusion-Liste (realistisch)
+
+```java
+String[] PROFILER_EXCLUDES = {
+
+    // JVM Core
+    &quot;java/lang/&quot;,
+    &quot;jdk/&quot;,
+    &quot;sun/&quot;,
+
+    // Classloading &amp; Instrumentation
+    &quot;java/lang/instrument/&quot;,
+    &quot;org/objectweb/asm/&quot;,
+    &quot;net/bytebuddy/&quot;,
+    &quot;javassist/&quot;,
+
+    // Concurrency &amp; GC
+    &quot;java/util/concurrent/&quot;,
+    &quot;java/lang/ref/&quot;,
+    &quot;sun/misc/&quot;,
+    &quot;jdk/internal/&quot;,
+
+    // JIT Intrinsics
+    &quot;java/lang/String&quot;,
+    &quot;java/lang/Math&quot;,
+    &quot;java/lang/System&quot;,
+
+    // Logging
+    &quot;org/slf4j/&quot;,
+    &quot;ch/qos/logback/&quot;,
+    &quot;org/apache/logging/&quot;,
+
+    // Profiler itself
+    &quot;com/yourprofiler/&quot;,
+    &quot;org/asyncprofiler/&quot;
+};
+```
+
+---
+
+# 5️⃣ Wichtigste Erkenntnis (die viele übersehen)
+
+&gt; **Profiler instrumentieren nicht „viel“,
+&gt; sie instrumentieren „strategisch“**.
+
+Je näher du an:
+
+* ClassLoader
+* GC
+* JIT
+* Locks
+* Threading
+
+kommst, desto weniger Bytecode-Instrumentierung –
+und desto mehr **JVMTI / Sampling / VM Events**.
+
+---
+
+Wenn du willst, können wir als Nächstes:
+
+* 🧬 **welche Klassen Profiler *gezielt* instrumentieren**
+* ⚙️ **Hybrid-Architektur: ASM + JVMTI**
+* 📉 **Messverzerrungen durch Instrumentierung**
+* 🧪 **Benchmark: Instrumentierung vs Sampling**
+
+durchgehen.
+
+
+---------------------------------------
+
+
+
+
+
+
+    */
+<span class="nc" id="L478">    public static final String[] UNTRANSFORMABLE = {</span>
+            // type names carefully: class-names do not end with &quot;/&quot; so switch from &quot;startsWith&quot; to &quot;equals&quot;
+
+            &quot;java/lang/invoke/&quot; , // needed for bootstrap calls
+
+            // unblock test-classes
+            &quot;org/conetex/runtime/instrument/test/jar/MainJar&quot;            ,
+            &quot;org/conetex/runtime/instrument/test/jar/MainJarTest&quot;        ,
+            //&quot;org/conetex/runtime/instrument/test/count/opcodes/MainCountOpcodes&quot;,
+            &quot;org/conetex/runtime/instrument/test/count/opcodes/MainCountOpcodesTest&quot;,
+            //&quot;org/conetex/runtime/instrument/test/jar/module/Main&quot;     ,
+            //&quot;org/conetex/runtime/instrument/test/jar/module/MainTest&quot;
+
+            // &quot;java/lang/invoke/MethodHandle$1&quot; ,
+            // &quot;sun&quot; ,
+            // &quot;com/intellij/rt&quot; ,
+            // &quot;java/io/UnsupportedEncodingException&quot;,
+
+            /* todo only needed for dynamic mode and it isn't enough yet...
+            &quot;java/lang/reflect&quot; ,
+            &quot;com/intellij/rt&quot; ,
+            &quot;jdk.internal.loader.ClassLoaders&quot; ,
+            &quot;sun/invoke&quot; ,
+            &quot;java/security&quot; ,
+            &quot;java/lang/Throwable&quot;,
+            &quot;java/lang&quot;
+            */
+    };
+
+<span class="nc" id="L507">    public static final String[] BLOCKED_PACKAGES = {</span>
+            &quot;org/conetex/runtime/instrument&quot;,
+            &quot;org/objectweb/asm/&quot;
+    };
+
+    public static final int STATUS_BLOCKED = 403;
+
+    private String mainClassJvmName;
+
+    @Override
+    public void initMainClassJvmName(String mainClassJvmName) {
+<span class="nc" id="L518">        this.mainClassJvmName = mainClassJvmName;</span>
+<span class="nc" id="L519">    }</span>
+
+<span class="nc" id="L521">    private int visitMethod = Visitor.VISIT_MV_STATIC;</span>
+    
+    @Override
+    public void initTransformer(String argsCommaSeparated){
+<span class="nc" id="L525">        System.out.println(&quot;||-&gt; &quot; + argsCommaSeparated);</span>
+<span class="nc" id="L526">        String[] args = argsCommaSeparated.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">        if(argsCommaSeparated.contains(&quot;visit_mv_static_count_opcodes&quot;)){</span>
+<span class="nc" id="L528">            System.out.println(&quot;||--&gt; &quot; + argsCommaSeparated);</span>
+<span class="nc" id="L529">            this.visitMethod = Visitor.VISIT_MV_STATIC_COUNT_OPCODES;</span>
+<span class="nc" id="L530">            String prefixInstrumentationcountOpcodesTrgClass = &quot;countOpcodesTrgClass=&quot;;</span>
+<span class="nc bnc" id="L531" title="All 2 branches missed.">            for (String arg : args) {</span>
+<span class="nc bnc" id="L532" title="All 2 branches missed.">                if (arg.startsWith(prefixInstrumentationcountOpcodesTrgClass)) {</span>
+<span class="nc" id="L533">                    String classParam = arg.substring(prefixInstrumentationcountOpcodesTrgClass.length());</span>
+<span class="nc" id="L534">                    System.out.println(&quot;||----&gt; &quot; + classParam);</span>
+<span class="nc" id="L535">                    instrumentationcountOpcodesTrgClasses.add(classParam);</span>
+                }
+            }
+<span class="nc" id="L538">        }</span>
+<span class="nc bnc" id="L539" title="All 2 branches missed.">        else if(argsCommaSeparated.contains(&quot;visit_mv_static&quot;)){</span>
+<span class="nc" id="L540">            this.visitMethod = Visitor.VISIT_MV_STATIC;</span>
+        }
+<span class="nc bnc" id="L542" title="All 2 branches missed.">        else if(argsCommaSeparated.contains(&quot;visit_mv_dynamic&quot;)){</span>
+<span class="nc" id="L543">            this.visitMethod = Visitor.VISIT_MV_DYNAMIC;</span>
+        }
+        else {
+<span class="nc" id="L546">            this.visitMethod = Visitor.VISIT_MV_DEFAULT;</span>
+        }
+<span class="nc" id="L548">        String prefixInstrumentationReportFile = &quot;reportFile=&quot;;</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">        for (String arg : args) {</span>
+<span class="nc" id="L550">            System.out.println(&quot;||---&gt; &quot; + arg);</span>
+<span class="nc bnc" id="L551" title="All 2 branches missed.">            if (arg.startsWith(prefixInstrumentationReportFile)) {</span>
+<span class="nc" id="L552">                String fileParam = arg.substring(prefixInstrumentationReportFile.length());</span>
+<span class="nc" id="L553">                System.out.println(&quot;||----&gt; &quot; + fileParam);</span>
+<span class="nc" id="L554">                REPORT_FILE = Paths.get(&quot;target&quot;, fileParam);</span>
+            }
+        }
+<span class="nc" id="L557">    }</span>
+
+    public void addToHandledClasses(String classJvmName) {
+<span class="nc" id="L560">        this.handledClasses.add(classJvmName);</span>
+<span class="nc" id="L561">    }</span>
+
+    @Override
+    public void resetCounters() {
+<span class="nc" id="L565">        Counters.reset();</span>
+<span class="nc" id="L566">    }</span>
+
+    @Override
+    public void blockIncrement(boolean incrementationBlocked) {
+<span class="nc" id="L570">        Counters.blockIncrement(incrementationBlocked);</span>
+<span class="nc" id="L571">    }</span>
+
+    private final Set&lt;String&gt; instrumentationcountOpcodesTrgClasses;
+
+    private final Set&lt;String&gt; handledClasses;
+
+    @Override
+    public Set&lt;String&gt; getHandledClasses() {
+<span class="nc" id="L579">        return handledClasses;</span>
+    }
+
+    private final Set&lt;String&gt; transformFailedClasses;
+
+    @Override
+    public Set&lt;String&gt; getTransformFailedClasses() {
+<span class="nc" id="L586">        return transformFailedClasses;</span>
+    }
+
+    private final Set&lt;String&gt; transformSkippedClasses;
+
+    @Override
+    public Set&lt;String&gt; getTransformSkippedClasses() {
+<span class="nc" id="L593">        return transformSkippedClasses;</span>
+    }
+
+<span class="nc" id="L596">    public Transformer() {</span>
+<span class="nc" id="L597">        this.handledClasses = new TreeSet&lt;&gt;();</span>
+<span class="nc" id="L598">        this.transformFailedClasses = new TreeSet&lt;&gt;();</span>
+<span class="nc" id="L599">        this.transformSkippedClasses = new TreeSet&lt;&gt;();</span>
+<span class="nc" id="L600">        this.instrumentationcountOpcodesTrgClasses = new TreeSet&lt;&gt;();</span>
+
+        // todo is this solved in general?
+        // calling this leads to
+        // load all classes, before they are needed by transform.
+        // this is necessary to avoid transformation loops
+        //this.getConfig();
+        //System.out.println(&quot;Counters: &quot; + Counters.class.getModule() + &quot;(module) &quot; + Counters.class.getClassLoader() + &quot;(classLoader)&quot;);
+        //Counters.reset();
+<span class="nc" id="L609">    }</span>
+
+    @Override
+    public byte[] transform(Module module, ClassLoader loader, String classJvmName, Class&lt;?&gt; classBeingRedefined,
+                            ProtectionDomain protectionDomain, byte[] classFileBuffer) {
+<span class="nc" id="L614">        System.out.println(&quot;transform: &quot; + loader + &quot; (loader) | &quot; + classJvmName +</span>
+                &quot; (classJvmName) | &quot; + classBeingRedefined + &quot; (classBeingRedefined) | &quot; +
+<span class="nc bnc" id="L616" title="All 2 branches missed.">                (protectionDomain == null ? &quot;null&quot; : protectionDomain.hashCode()) + &quot; (protectionDomain) | &quot; + module + &quot;(module)&quot;);</span>
+<span class="nc" id="L617">        return transform(loader, classJvmName, classBeingRedefined, protectionDomain, classFileBuffer);</span>
+    }
+
+<span class="nc" id="L620">    private static boolean transformInProgress = false;</span>
+
+    @Override
+    public byte[] transform(ClassLoader loader, String classJvmName, Class&lt;?&gt; classBeingRedefined,
+                            ProtectionDomain protectionDomain, byte[] classFileBuffer) {
+<span class="nc bnc" id="L625" title="All 2 branches missed.">        if(transformInProgress){</span>
+<span class="nc" id="L626">            throw new CyclicCallException(&quot;circle&quot;);</span>
+        }
+<span class="nc" id="L628">        transformInProgress = true;</span>
+        try {
+<span class="nc" id="L630">            return transformIntern( loader,  classJvmName,  classBeingRedefined,</span>
+                     protectionDomain,  classFileBuffer);
+        }
+        finally{
+<span class="nc" id="L634">            transformInProgress = false;</span>
+        }
+    }
+
+    private byte[] transformIntern(ClassLoader loader, String classJvmName, Class&lt;?&gt; classBeingRedefined,
+                            ProtectionDomain protectionDomain, byte[] classFileBuffer) {
+
+<span class="nc bnc" id="L641" title="All 2 branches missed.">        if (classJvmName.equals(mainClassJvmName)) {</span>
+<span class="nc" id="L642">            System.out.println(&quot;transform mainClass: &quot; + classJvmName + &quot; &quot;);</span>
+        }
+
+<span class="nc bnc" id="L645" title="All 2 branches missed.">        if (this.handledClasses.contains(classJvmName)) {</span>
+<span class="nc" id="L646">            System.out.println(&quot;transform already done: &quot; + loader + &quot; (loader) | &quot; + classJvmName + &quot; (classJvmName) | &quot; +</span>
+                    classBeingRedefined + &quot; (classBeingRedefined) | &quot; +
+<span class="nc bnc" id="L648" title="All 2 branches missed.">                    (protectionDomain == null ? &quot;null&quot; : protectionDomain.hashCode()) + &quot; (protectionDomain)&quot;);</span>
+<span class="nc" id="L649">            return classFileBuffer;</span>
+        }
+
+<span class="nc" id="L652">        this.handledClasses.add(classJvmName);</span>
+
+<span class="nc bnc" id="L654" title="All 2 branches missed.">        if(!this.instrumentationcountOpcodesTrgClasses.isEmpty()){</span>
+<span class="nc bnc" id="L655" title="All 2 branches missed.">            if(!this.instrumentationcountOpcodesTrgClasses.contains(classJvmName)){</span>
+<span class="nc" id="L656">                System.out.println(&quot;transform not whitelisted: &quot; + loader + &quot; (loader) | &quot; + classJvmName + &quot; (classJvmName) | &quot; +</span>
+                        classBeingRedefined + &quot; (classBeingRedefined) | &quot; +
+<span class="nc bnc" id="L658" title="All 2 branches missed.">                        (protectionDomain == null ? &quot;null&quot; : protectionDomain.hashCode()) + &quot; (protectionDomain)&quot;);</span>
+<span class="nc" id="L659">                return classFileBuffer;</span>
+            }
+        }
+
+<span class="nc bnc" id="L663" title="All 2 branches missed.">        for(String untransformable : UNTRANSFORMABLE){</span>
+<span class="nc" id="L664">            if (</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">                    classJvmName.equals(untransformable) ||                                     // class</span>
+<span class="nc bnc" id="L666" title="All 4 branches missed.">                    (untransformable.endsWith(&quot;/&quot;) &amp;&amp; classJvmName.startsWith(untransformable)) // package</span>
+            ) {
+<span class="nc" id="L668">                System.out.println(&quot;t noTransform: &quot; + loader + &quot; (loader) | &quot; + classJvmName + &quot; (classJvmName) | &quot; +</span>
+                        classBeingRedefined + &quot; (classBeingRedefined) | &quot; +
+<span class="nc bnc" id="L670" title="All 2 branches missed.">                        (protectionDomain == null ? &quot;null&quot; : protectionDomain.hashCode()) + &quot; (protectionDomain)&quot;);</span>
+                // skip transform
+<span class="nc" id="L672">                this.transformSkippedClasses.add(classJvmName);</span>
+<span class="nc" id="L673">                return classFileBuffer;</span>
+            }
+        }
+
+<span class="nc bnc" id="L677" title="All 2 branches missed.">        for(String blockedPackage : BLOCKED_PACKAGES){</span>
+<span class="nc bnc" id="L678" title="All 2 branches missed.">            if ( classJvmName.startsWith(blockedPackage) ) {</span>
+<span class="nc" id="L679">                System.err.println(&quot;blocked transform: &quot; + loader + &quot; (loader) | &quot; + classJvmName + &quot; (classJvmName) | &quot; +</span>
+                        classBeingRedefined + &quot; (classBeingRedefined) | &quot; +
+<span class="nc bnc" id="L681" title="All 2 branches missed.">                        (protectionDomain == null ? &quot;null&quot; : protectionDomain.hashCode()) + &quot; (protectionDomain)&quot;);</span>
+<span class="nc" id="L682">                block(classJvmName);</span>
+            }
+        }
+
+<span class="nc" id="L686">        System.out.println(&quot;t doTransform: &quot; + loader + &quot; (loader) | &quot; + classJvmName + &quot; (classJvmName) | &quot; +</span>
+                classBeingRedefined + &quot; (classBeingRedefined) | &quot; +
+<span class="nc bnc" id="L688" title="All 2 branches missed.">                (protectionDomain == null ? &quot;null&quot; : protectionDomain.hashCode()) + &quot; (protectionDomain)&quot;);</span>
+
+        try {
+<span class="nc" id="L691">            return transform(classFileBuffer, this.visitMethod);</span>
+        }
+<span class="nc" id="L693">        catch(CyclicCallException e){</span>
+<span class="nc" id="L694">            System.err.println(&quot;circle &quot; + classJvmName + &quot; | &quot; + e.getClass().getName() + &quot; | &quot; +</span>
+<span class="nc" id="L695">                    e.getMessage());</span>
+<span class="nc" id="L696">            this.transformFailedClasses.add(classJvmName);</span>
+        }
+<span class="nc" id="L698">        catch (Throwable e) {</span>
+<span class="nc" id="L699">            System.err.println(&quot;t !!! exception 4 &quot; + classJvmName + &quot; | &quot; + e.getClass().getName() + &quot; | &quot; +</span>
+<span class="nc" id="L700">                    e.getMessage());</span>
+<span class="nc" id="L701">            this.transformFailedClasses.add(classJvmName);</span>
+<span class="nc" id="L702">        }</span>
+<span class="nc" id="L703">        return classFileBuffer;</span>
+    }
+
+    private void block(String classJvmName) {
+<span class="nc" id="L707">        System.err.println(&quot;blocked &quot; + classJvmName);</span>
+<span class="nc" id="L708">        System.out.println(&quot;blocked &quot; + classJvmName);</span>
+        // BLOCK class
+        // since this class should have been loaded before transformer was added to instrumentation.
+        // retransform for this class should have been skipped.
+        // todo is there any chance to make this nicer?
+        //throw new RuntimeException(&quot;blocked &quot; + classJvmName);
+        //Runtime.getRuntime().halt(STATUS_BLOCKED);
+<span class="nc" id="L715">        System.exit(STATUS_BLOCKED);</span>
+<span class="nc" id="L716">    }</span>
+
+    @Override
+    public void triggerRetransform(Instrumentation inst, Class&lt;?&gt;[] allClasses) {
+<span class="nc bnc" id="L720" title="All 2 branches missed.">        classLoop: for (Class&lt;?&gt; clazz : allClasses) {</span>
+<span class="nc" id="L721">            String classJvmName = clazz.getName().replace('.', '/');</span>
+
+//            System.out.println(&quot;retransform .....: '&quot; + classJvmName + &quot;' (classJvmName) '&quot; + clazz.getModule() + &quot;' (module) '&quot; + clazz.getClassLoader() + &quot;' (classLoader)&quot;);
+
+<span class="nc bnc" id="L725" title="All 2 branches missed.">            if(   this.handledClasses.contains( classJvmName )   ) {</span>
+<span class="nc" id="L726">                System.out.println(&quot;retransform obsolete: '&quot; + classJvmName +</span>
+                        &quot;' (classJvmName) is already transformed&quot;);
+<span class="nc" id="L728">                continue;</span>
+            }
+
+<span class="nc bnc" id="L731" title="All 2 branches missed.">            if (! inst.isModifiableClass(clazz)) {</span>
+<span class="nc" id="L732">                System.out.println(&quot;retransform skipped for unmodifiable: '&quot; + classJvmName + &quot;' (classJvmName)&quot;);</span>
+<span class="nc" id="L733">                continue;</span>
+            }
+			
+			// maybe obsolete
+<span class="nc bnc" id="L737" title="All 2 branches missed.">            for(String untransformable : UNTRANSFORMABLE){</span>
+<span class="nc" id="L738">                if (</span>
+<span class="nc bnc" id="L739" title="All 2 branches missed.">                        classJvmName.equals(untransformable) ||                                     // class</span>
+<span class="nc bnc" id="L740" title="All 4 branches missed.">                        (untransformable.endsWith(&quot;/&quot;) &amp;&amp; classJvmName.startsWith(untransformable)) // package</span>
+                ) {  // skip retransform
+<span class="nc" id="L742">                    System.out.println(&quot;retransform skipped: '&quot; + classJvmName + &quot;' (classJvmName)&quot;);</span>
+<span class="nc" id="L743">                    continue classLoop;</span>
+                }
+            }
+<span class="nc bnc" id="L746" title="All 2 branches missed.">            for(String blockedPackage : BLOCKED_PACKAGES){</span>
+<span class="nc bnc" id="L747" title="All 2 branches missed.">                if ( classJvmName.startsWith(blockedPackage) ) {</span>
+<span class="nc" id="L748">                    block(classJvmName);</span>
+                }
+            }
+
+            try {
+<span class="nc" id="L753">                inst.retransformClasses(clazz);</span>
+<span class="nc" id="L754">            } catch (UnmodifiableClassException e) {</span>
+<span class="nc" id="L755">                System.err.println(&quot;retransform failed for'&quot; + clazz + &quot;' (class). UnmodifiableClassException: &quot; +</span>
+<span class="nc" id="L756">                        e.getMessage());</span>
+<span class="nc" id="L757">                continue;</span>
+<span class="nc" id="L758">            }</span>
+<span class="nc" id="L759">            System.out.println(&quot;retransform triggered for '&quot; + clazz + &quot;' (class) || '&quot; + classJvmName +</span>
+                    &quot;' (classJvmName) --&gt;&quot;);
+        }
+<span class="nc" id="L762">    }</span>
+
+    public static class CyclicCallException extends IllegalStateException {
+        public CyclicCallException(String message) {
+<span class="nc" id="L766">            super(message);</span>
+<span class="nc" id="L767">        }</span>
+    }
+
+    
+    private static synchronized byte[] transform(byte[] classBytes, int visitMethod) {
+<span class="nc" id="L772">        System.out.println(&quot; classWriter-&gt;&quot;);</span>
+<span class="nc" id="L773">        ClassReader reader = new ClassReader(classBytes);</span>
+<span class="nc" id="L774">        ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);</span>
+        //ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
+<span class="nc" id="L776">        ClassVisitor visitor = new Visitor(writer, visitMethod);</span>
+<span class="nc" id="L777">        reader.accept(visitor, ClassReader.EXPAND_FRAMES);</span>
+        //reader.accept(visitor, ClassReader.SKIP_FRAMES);
+<span class="nc" id="L779">        byte[] re = writer.toByteArray();</span>
+<span class="nc" id="L780">        System.out.println(&quot; &lt;-classWriter&quot;);</span>
+<span class="nc" id="L781">        return re;</span>
+    }
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static byte[] noRealTransform(byte[] classBytes) {
+        // todo why does this lead to errors?
+<span class="nc" id="L787">        ClassReader reader = new ClassReader(classBytes);</span>
+<span class="nc" id="L788">        ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_FRAMES);</span>
+<span class="nc" id="L789">        return writer.toByteArray();</span>
+    }
+
+    @SuppressWarnings(&quot;unused&quot;)
+    public static byte[] noTransform(byte[] classBytes) {
+        // todo why does this lead to errors?
+<span class="nc" id="L795">        return classBytes;</span>
+    }
+
+
+    public ResultLongDividedByInt[] report2(){
+<span class="nc bnc" id="L800" title="All 2 branches missed.">        if(this.visitMethod == Visitor.VISIT_MV_STATIC_COUNT_OPCODES){</span>
+<span class="nc" id="L801">            System.out.println(&quot;counter;opCode;value&quot;);</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">            for(AvlTree.Entry&lt;String, Counter&gt; counterOfOpcode : CountOpcodes.COUNTERS){</span>
+<span class="nc" id="L803">                LinkedLong counterNode = counterOfOpcode.value().peek();</span>
+<span class="nc" id="L804">                System.out.print(counterOfOpcode.key() + &quot;;&quot; + counterNode.getValue());</span>
+<span class="nc" id="L805">                counterNode = counterNode.getPrevious();</span>
+<span class="nc bnc" id="L806" title="All 4 branches missed.">                while(counterNode != null &amp;&amp; counterNode.hasPrevious()){</span>
+<span class="nc" id="L807">                    counterNode = counterNode.getPrevious();</span>
+<span class="nc" id="L808">                    System.out.print(&quot;.&quot; + counterNode.getValue());</span>
+                }
+<span class="nc" id="L810">                System.out.println();</span>
+<span class="nc" id="L811">            }</span>
+<span class="nc" id="L812">            System.out.println(&quot;---------------&quot;);</span>
+<span class="nc" id="L813">            Visitor.printOpCodes(System.out);</span>
+
+<span class="nc" id="L815">            return null;</span>
+        }
+        else{
+<span class="nc" id="L818">            ResultLongDividedByInt[] totalCost =  Counters.CONFIG.average();;</span>
+<span class="nc" id="L819">            System.out.println(&quot;overall costs:&quot;);</span>
+<span class="nc" id="L820">            System.out.println(Arrays.toString(totalCost));</span>
+<span class="nc" id="L821">            return totalCost;</span>
+        }
+    }
+
+//    private static final Path REPORT_FILE = Paths.get(&quot;target&quot;, &quot;instrumentation-report.txt&quot;);
+<span class="nc" id="L826">    private static Path REPORT_FILE = Paths.get(&quot;target&quot;, &quot;instrumentation-report.txt&quot;);</span>
+
+    @Override
+    public ResultLongDividedByInt[] report() {
+<span class="nc" id="L830">        try (PrintStream out = new PrintStream(</span>
+<span class="nc" id="L831">                Files.newOutputStream(</span>
+                        REPORT_FILE,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.APPEND
+                ),
+                true, // autoFlush
+                StandardCharsets.UTF_8
+        )) {
+
+<span class="nc bnc" id="L840" title="All 2 branches missed.">            if (this.visitMethod == Visitor.VISIT_MV_STATIC_COUNT_OPCODES) {</span>
+
+<span class="nc" id="L842">                out.println(&quot;counter;opCode;value&quot;);</span>
+
+<span class="nc bnc" id="L844" title="All 2 branches missed.">                for (AvlTree.Entry&lt;String, Counter&gt; counterOfOpcode : CountOpcodes.COUNTERS) {</span>
+<span class="nc" id="L845">                    LinkedLong counterNode = counterOfOpcode.value().peek();</span>
+
+<span class="nc" id="L847">                    out.print(counterOfOpcode.key() + &quot;;&quot; + counterNode.getValue());</span>
+
+<span class="nc" id="L849">                    counterNode = counterNode.getPrevious();</span>
+<span class="nc bnc" id="L850" title="All 4 branches missed.">                    while (counterNode != null &amp;&amp; counterNode.hasPrevious()) {</span>
+<span class="nc" id="L851">                        counterNode = counterNode.getPrevious();</span>
+<span class="nc" id="L852">                        out.print(&quot;.&quot; + counterNode.getValue());</span>
+                    }
+<span class="nc" id="L854">                    out.println();</span>
+<span class="nc" id="L855">                }</span>
+
+<span class="nc" id="L857">                out.println(&quot;---------------&quot;);</span>
+<span class="nc" id="L858">                Visitor.printOpCodes(out); // Visitor bekommt eine PrintStream-Variante</span>
+
+<span class="nc" id="L860">                return null;</span>
+
+            } else {
+<span class="nc" id="L863">                ResultLongDividedByInt[] totalCost = Counters.CONFIG.average();</span>
+<span class="nc" id="L864">                out.println(&quot;overall costs:&quot;);</span>
+<span class="nc" id="L865">                out.println(Arrays.toString(totalCost));</span>
+<span class="nc" id="L866">                return totalCost;</span>
+            }
+
+<span class="nc" id="L869">        } catch (IOException e) {</span>
+<span class="nc" id="L870">            e.printStackTrace();</span>
+<span class="nc" id="L871">            return null;</span>
+        }
+    }
+
+
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
