@@ -1,4 +1,4 @@
-name: Build and Publish Site
+name: Build and Publish Site 2
 
 on:
   push:
@@ -30,46 +30,10 @@ jobs:
           java-version: 21
 
       #
-      # Install Graphviz (it is used by plantuml 4 components)
-      #
-      - name: Install Graphviz
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y graphviz
-
-      - name: Configure Graphviz
-        run: |
-          echo "GRAPHVIZ_DOT=/usr/bin/dot" >> $GITHUB_ENV
-
-      #
-      # Install D2
-      #
-      - name: Install D2
-        run: |
-          curl -fsSL https://d2lang.com/install.sh | sh -s --
-
-          echo "$HOME/.d2/bin" >> $GITHUB_PATH
-
-      #
-      # Generate diagrams
-      #
-      - name: Render D2 diagrams
-        run: |
-
-          mkdir -p target/site/images
-
-          for file in src/site/d2/*.d2
-          do
-            name=$(basename "$file" .d2)
-
-            d2 "$file" "target/site/images/$name.svg"
-          done
-
-      #
       # Maven site
       #
       - name: Build site
-        run: mvn -B site
+        run: mvn -B verify
 
       #
       # Upload Pages artifact
