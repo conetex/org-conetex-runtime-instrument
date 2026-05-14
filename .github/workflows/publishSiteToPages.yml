@@ -1,4 +1,4 @@
-name: Publish AsciiDoc, Jacoco, JavaDoc to Pages
+name: Publish Site to Pages (incl. Jacoco, JavaDoc)
 
 on:
   push:
@@ -33,7 +33,7 @@ jobs:
       # Maven verify
       #
       - name: Build site
-        run: mvn -B verify
+        run: mvn -B clean verify
 
       # ==================================================
       # Copy module JavaDocs + Coverage
