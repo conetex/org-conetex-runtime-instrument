@@ -110,8 +110,10 @@ jobs:
           mkdir -p deploy/${DOCS_VERSION}
           mkdir -p deploy/latest
 
-          cp -av target/site/. deploy/${DOCS_VERSION}/
-          cp -av target/site/. deploy/latest/
+          rsync -av --exclude='*/.*' target/site/ deploy/${DOCS_VERSION}/
+          rsync -av --exclude='*/.*' target/site/ deploy/latest/
+      # cp -av target/site/ deploy/${DOCS_VERSION}/
+      # cp -av target/site/ deploy/latest/
 
       # ==================================================
       # Deploy GitHub Pages

@@ -199,15 +199,15 @@ https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture
                             <sourceDirectory>
                                 ${project.basedir}/src/asciiDoc/site
                             </sourceDirectory>
-                            <standalone>true</standalone>
+                            <!--<standalone>true</standalone>-->
                             <!-- Startdatei
                             <sources>
                                 <include>index.adoc</include>
                             </sources>-->
-
+                            <preserveDirectories>true</preserveDirectories>
                             <!-- Ziel -->
                             <outputDirectory>
-                                ${project.build.directory}/site
+                                ${project.build.directory}/site/
                             </outputDirectory>
 
                             <!-- Backend -->
@@ -264,12 +264,12 @@ https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture
 
                         <configuration>
                             <outputDirectory>
-                                ${project.build.directory}/site/doc
+                                ${project.build.directory}/site/doc2
                             </outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>
-                                        ${project.basedir}/src/site/rawDoc
+                                        ${project.basedir}/src/rawDoc/site
                                     </directory>
                                 </resource>
                             </resources>
