@@ -1,0 +1,35 @@
+= Purpose of the `interfaces` Module
+
+The `interfaces` module defines the *shared APIs and contracts* used across all instrumentation modules. +
+Its responsibilities include:
+
+* defining common interfaces for counters, cost metrics, and data collectors
+* providing stable abstractions for instrumentation components
+* ensuring loose coupling between modules
+
+In essence:
+
+____
+
+The `interfaces` module is the shared contract layer that all instrumentation modules depend on.
+
+____
+
+'''
+
+== Out of Scope (Handled by Other Modules)
+
+* *Implementing counters or cost metrics* +
+ Implemented in: link:../counter/purpose.md[`counter`], link:../../../metrics-cost/purpose.md[`metrics-cost`]
+
+* *Collecting or aggregating measurement data* +
+ Implemented in: link:../collection/purpose.md[`collection`]
+
+* *Performing bytecode transformation* +
+ Implemented in: link:../../../metrics-cost/purpose.md[`metrics-cost`], link:../../../metrics-cost-unnamed/purpose.md[`metrics-cost-unnamed`], link:../counter/purpose.md[`counter`]
+
+* *Activating the instrumentation system* +
+ Implemented in: link:../agent/purpose.md[`agent`]
+
+* *Providing example usage* +
+ Implemented in: link:../example/purpose.md[`example`]

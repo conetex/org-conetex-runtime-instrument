@@ -1,0 +1,38 @@
+= Purpose of the `metrics-cost-unnamed` Module
+
+The `metrics-cost-unnamed` module provides *cost measurement instrumentation for unnamed modules* (i.e., non‑JPMS classpath environments). +
+Its responsibilities include:
+
+* adapting cost‑measurement logic for environments without explicit module metadata
+* providing a transformer compatible with unnamed modules
+* producing measurement events identical to those from `metrics-cost`
+
+In essence:
+
+____
+
+The `metrics-cost-unnamed` module ensures that cost instrumentation works in traditional classpath‑based JVM applications.
+
+____
+
+'''
+
+== Out of Scope (Handled by Other Modules)
+
+* *Collecting or aggregating cost data* +
+ Implemented in: link:../collection/purpose.md[`collection`]
+
+* *Instrumentation for named JPMS modules* +
+ Implemented in: link:../metrics-cost/purpose.md[`metrics-cost`]
+
+* *Counter‑based instrumentation* +
+ Implemented in: link:../counter/purpose.md[`counter`]
+
+* *Defining shared instrumentation interfaces* +
+ Implemented in: link:../interfaces/purpose.md[`interfaces`]
+
+* *Activating the instrumentation system* +
+ Implemented in: link:../agent/purpose.md[`agent`]
+
+* *Providing example usage* +
+ Implemented in: link:../example/purpose.md[`example`]

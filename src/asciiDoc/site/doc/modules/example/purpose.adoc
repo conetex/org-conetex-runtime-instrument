@@ -1,0 +1,32 @@
+= Purpose of the `example` Module
+
+The `example` module provides *demonstration code* that shows how the instrumentation system behaves in practice. +
+Its responsibilities include:
+
+* offering runnable examples for developers
+* illustrating how counters and cost metrics appear in real code
+* serving as a reference for testing and experimentation
+
+In essence:
+
+____
+
+The `example` module demonstrates how the instrumentation framework works when applied to real Java classes.
+
+____
+
+'''
+
+== Out of Scope (Handled by Other Modules)
+
+* *Implementing instrumentation logic* +
+ Implemented in: link:../counter/purpose.md[`counter`], link:../../../metrics-cost/purpose.md[`metrics-cost`], link:../../../metrics-cost-unnamed/purpose.md[`metrics-cost-unnamed`]
+
+* *Collecting or aggregating measurement data* +
+ Implemented in: link:../collection/purpose.md[`collection`]
+
+* *Defining shared instrumentation interfaces* +
+ Implemented in: link:../../../interfaces/purpose.md[`interfaces`]
+
+* *Activating the instrumentation system* +
+ Implemented in: link:../agent/purpose.md[`agent`]

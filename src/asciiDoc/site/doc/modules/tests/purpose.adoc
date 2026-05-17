@@ -1,0 +1,35 @@
+= Purpose of the `tests` Module
+
+The `tests` module contains *test cases* for validating the behavior of the instrumentation framework. +
+Its responsibilities include:
+
+* verifying correct operation of counters, cost metrics, and data collection
+* ensuring that bytecode transformations behave as expected
+* providing regression coverage for the instrumentation modules
+
+In essence:
+
+____
+
+The `tests` module ensures the correctness and stability of the instrumentation system.
+
+____
+
+'''
+
+== Out of Scope (Handled by Other Modules)
+
+* *Implementing instrumentation logic* +
+ Implemented in: link:../counter/purpose.md[`counter`], link:../metrics-cost/purpose.md[`metrics-cost`], link:../metrics-cost-unnamed/purpose.md[`metrics-cost-unnamed`]
+
+* *Collecting or aggregating measurement data* +
+ Implemented in: link:../collection/purpose.md[`collection`]
+
+* *Defining shared instrumentation interfaces* +
+ Implemented in: link:../interfaces/purpose.md[`interfaces`]
+
+* *Activating the instrumentation system* +
+ Implemented in: link:../agent/purpose.md[`agent`]
+
+* *Providing example usage* +
+ Implemented in: link:../example/purpose.md[`example`]

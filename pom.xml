@@ -177,6 +177,8 @@
 
                         <phase>generate-resources</phase>
 
+                        <inherited>false</inherited>
+
                         <goals>
                             <goal>process-asciidoc</goal>
                         </goals>
@@ -195,9 +197,9 @@ https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture
 
                             <!-- Quelle -->
                             <sourceDirectory>
-                                ${project.basedir}/src/site/asciidoc
+                                ${project.basedir}/src/asciiDoc/site
                             </sourceDirectory>
-
+                            <standalone>true</standalone>
                             <!-- Startdatei
                             <sources>
                                 <include>index.adoc</include>
@@ -205,11 +207,12 @@ https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture
 
                             <!-- Ziel -->
                             <outputDirectory>
-                                ${project.build.directory}/site/asciidoc
+                                ${project.build.directory}/site
                             </outputDirectory>
 
                             <!-- Backend -->
                             <backend>html5</backend>
+
 
                             <!--
                             <includes>
@@ -224,10 +227,13 @@ https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture
                                 <plantuml-format>svg</plantuml-format>
 
                                 <sectnums>true</sectnums>
-                                <plantuml-format>svg</plantuml-format>
-                                <!--
-                                <imagesoutdir>${project.build.directory}/siteAdoc/diagrams</imagesoutdir>
--->
+                                <!-- -->
+                                <imagesoutdir>${project.build.directory}/site/doc/diagrams</imagesoutdir>
+
+                                <revnumber>${project.version}</revnumber>
+                                <revdate>${maven.build.timestamp}</revdate>
+                                <organization>${project.organization.name}</organization>
+
                             </attributes>
 
 
@@ -258,12 +264,12 @@ https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture
 
                         <configuration>
                             <outputDirectory>
-                                ${project.build.directory}/site/raw
+                                ${project.build.directory}/site/doc
                             </outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>
-                                        ${project.basedir}/src/site/raw
+                                        ${project.basedir}/src/site/rawDoc
                                     </directory>
                                 </resource>
                             </resources>

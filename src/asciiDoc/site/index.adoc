@@ -1,0 +1,67 @@
+= Index
+
+
+|===
+|Header 1 |Header 2 |Header 3
+
+|Column 1, row 1
+|Column 2, row 1
+|Column 3, row 1
+
+|Column 1, row 2
+|Column 2, row 2
+|Column 3, row 2
+
+|Column 1, row 3
+|Column 2, row 3
+|Column 3, row 3
+|===
+
+
+|===
+
+3+h|General
+
+|xref:./architecture.adoc[`architecture`]
+|
+|
+
+3+h|Details
+h|Module h|Purpose h|Api
+
+
+|agent
+|xref:./doc/modules/agent/purpose.adoc[`agent`] activates and configures the instrumentation system (JVM agent entry point).]
+|xref:./apidoc/index.html[`apidoc`] link:./apidoc/index.html[`apidoc`]
+
+|collection
+|xref:./doc/modules/collection/purpose.adoc[`collection`] collects and aggregates measurement data.
+|xref:./jacoco/index.html[`jacoco`] xref:./apidoc/index-all.html[`apidoc-all`] link:./jacoco/index.html[`jacoco`] link:./apidoc/index-all.html[`apidoc-all`]
+
+|counter
+|xref:./doc/modules/counter/purpose.adoc[`counter`] implements runtime counters and injects counter logic.
+|
+
+|interfaces
+|xref:./doc/modules/interfaces/purpose.adoc[`interfaces`] defines shared APIs and contracts.
+|
+
+|metrics-cost
+|xref:./doc/modules/metrics-cost/purpose.adoc[`metrics-cost`] implements cost and timing measurement for JPMS modules.
+|
+
+|metrics-cost-unnamed
+|xref:./doc/modules/metrics-cost-unnamed/purpose.adoc[`metrics-cost-unnamed`] cost instrumentation for unnamed/classpath modules.
+|
+
+|example
+|xref:./doc/modules/example/purpose.adoc[`example`] demonstrates how instrumentation behaves in real code.
+|
+
+|tests
+|xref:./doc/modules/tests/purpose.adoc[`tests`] validates correctness and stability of the instrumentation system.
+|
+
+|===
+
+plantuml::./index.puml[]

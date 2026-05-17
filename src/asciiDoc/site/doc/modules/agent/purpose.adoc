@@ -1,0 +1,50 @@
+== Purpose of the `agent` Module
+
+The `agent` module provides the entry point for enabling runtime
+instrumentation inside the JVM. +
+Its responsibilities are limited to:
+
+* registering the project as a Java Instrumentation Agent (`premain` /
+  `agentmain`)
+* initializing the instrumentation framework at JVM startup or
+  attachment time
+* activating and configuring the measurement subsystems provided by
+  other modules
+
+In essence:
+
+[plantuml]
+----
+@startuml
+title Module Overview — Class Instrumentation
+
+'left to right direction
+
+component counter as C
+----
+
+____
+The `agent` module starts and configures the instrumentation system, but
+does not perform any bytecode transformation or measurement itself.
+____
+
+'''''
+
+=== Out of Scope (Handled by Other Modules)
+
+* *Bytecode transformation* +
+  Implemented in: link:../../../metrics-cost/purpose.md[`metrics-cost`],
+  link:../../../metrics-cost-unnamed/purpose.md[`metrics-cost-unnamed`],
+  link:../../../counter/purpose.md[`counter`]
+* *Injection of counters, timers, or cost‑measurement logic* +
+  Implemented in: link:../../../counter/purpose.md[`counter`],
+  link:../../../metrics-cost/purpose.md[`metrics-cost`]
+* *Data collection and aggregation* +
+  Implemented in: link:../../../collection/purpose.md[`collection`]
+* *Instrumentation APIs and shared interfaces* +
+  Implemented in: link:../../../interfaces/purpose.md[`interfaces`]
+* *Instrumentation rules and transformation strategies* +
+  Implemented in: link:../../../metrics-cost/purpose.md[`metrics-cost`],
+  link:../../../counter/purpose.md[`counter`]
+* *Example usage and demonstration code* +
+  Implemented in: link:../../../example/purpose.md[`example`]

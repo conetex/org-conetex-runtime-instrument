@@ -1,0 +1,35 @@
+= Purpose of the `metrics-cost` Module
+
+The `metrics-cost` module implements *cost and timing measurement* for instrumented code. +
+Its responsibilities include:
+
+* defining cost metrics (e.g., execution time, resource usage)
+* injecting measurement logic into bytecode via a transformer
+* producing measurement events consumed by the `collection` module
+
+In essence:
+
+____
+
+The `metrics-cost` module provides the logic and bytecode transformation required to measure execution cost at runtime.
+
+____
+
+'''
+
+== Out of Scope (Handled by Other Modules)
+
+* *Collecting or aggregating cost data* +
+ Implemented in: link:../collection/purpose.md[`collection`]
+
+* *Providing counter‑based instrumentation* +
+ Implemented in: link:../counter/purpose.md[`counter`]
+
+* *Defining shared instrumentation interfaces* +
+ Implemented in: link:../interfaces/purpose.md[`interfaces`]
+
+* *Activating the instrumentation system* +
+ Implemented in: link:../agent/purpose.md[`agent`]
+
+* *Providing example usage* +
+ Implemented in: link:../example/purpose.md[`example`]
