@@ -110,8 +110,8 @@ jobs:
           mkdir -p deploy/${DOCS_VERSION}
           mkdir -p deploy/latest
 
-          cp -r target/site/* deploy/${DOCS_VERSION}/
-          cp -r target/site/* deploy/latest/
+          cp -av target/site/. deploy/${DOCS_VERSION}/
+          cp -av target/site/. deploy/latest/
 
       # ==================================================
       # Deploy GitHub Pages
