@@ -436,121 +436,110 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
 </head>
-<body class="article">
+<body class="article toc2 toc-left">
 <div id="header">
 <h1>Index</h1>
 <div class="details">
 <span id="revnumber">version 0.0.1,</span>
-<span id="revdate">2026-05-17T21:45:00Z</span>
+<span id="revdate">2026-05-23T12:56:55Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_overview">1. Overview</a></li>
+<li><a href="#_details">2. Details</a></li>
+</ul>
 </div>
 </div>
 <div id="content">
+<div class="sect1">
+<h2 id="_overview">1. Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="./architecture.html"><code>architecture</code></a></p>
+</div>
+<div class="paragraph">
+<p><span class="image"><img src="index.svg" alt="Diagram" width="601" height="226"></span></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_details">2. Details</h2>
+<div class="sectionbody">
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Header 1</th>
-<th class="tableblock halign-left valign-top">Header 2</th>
-<th class="tableblock halign-left valign-top">Header 3</th>
+<th class="tableblock halign-left valign-top">Module</th>
+<th class="tableblock halign-left valign-top">Design</th>
+<th class="tableblock halign-left valign-top">Usage</th>
+<th class="tableblock halign-left valign-top">Test</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 1, row 1</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 2, row 1</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 3, row 1</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 1, row 2</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 2, row 2</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 3, row 2</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 1, row 3</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 2, row 3</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Column 3, row 3</p></td>
-</tr>
-</tbody>
-</table>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
-</colgroup>
-<tbody>
-<tr>
-<th class="tableblock halign-left valign-top" colspan="3"><p class="tableblock">General</p></th>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./architecture.html"><code>architecture</code></a></p></td>
-<td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"></td>
-</tr>
-<tr>
-<th class="tableblock halign-left valign-top" colspan="3"><p class="tableblock">Details</p></th>
-</tr>
-<tr>
-<th class="tableblock halign-left valign-top"><p class="tableblock">Module</p></th>
-<th class="tableblock halign-left valign-top"><p class="tableblock">Purpose</p></th>
-<th class="tableblock halign-left valign-top"><p class="tableblock">Api</p></th>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">agent</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./doc/modules/agent/purpose.html"><code>agent</code></a> activates and configures the instrumentation system (JVM agent entry point).]</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/index.html"><code>apidoc</code></a> <a href="./apidoc/index.html"><code>apidoc</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./design/agent/purpose.html"><code>purpose</code></a>: activates and configures the instrumentation system (JVM agent entry point).]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/agent/index.html"><code>apidoc</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/agent/index.html"><code>Coverage Report</code></a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">collection</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./doc/modules/collection/purpose.html"><code>collection</code></a> collects and aggregates measurement data.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/index.html"><code>jacoco</code></a> <a href="./apidoc/index-all.html"><code>apidoc-all</code></a> <a href="./jacoco/index.html"><code>jacoco</code></a> <a href="./apidoc/index-all.html"><code>apidoc-all</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./design/collection/purpose.html"><code>purpose</code></a>: collects and aggregates measurement data.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/collection/index.html"><code>apidoc</code></a>
+ <a href="./apidoc/collection/index.html"><code>xapidoc</code></a> <a href="./jacoco/collection/index.html"><code>xjacoco</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/collection/index.html"><code>Coverage Report</code></a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">counter</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./doc/modules/counter/purpose.html"><code>counter</code></a> implements runtime counters and injects counter logic.</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./design/counter/purpose.html"><code>purpose</code></a>: implements runtime counters and injects counter logic.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/counter/index.html"><code>apidoc</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/counter/index.html"><code>Coverage Report</code></a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">interfaces</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./doc/modules/interfaces/purpose.html"><code>interfaces</code></a> defines shared APIs and contracts.</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./design/interfaces/purpose.html"><code>purpose</code></a>: defines shared APIs and contracts.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/interfaces/index.html"><code>apidoc</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/interfaces/index.html"><code>Coverage Report</code></a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">metrics-cost</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./doc/modules/metrics-cost/purpose.html"><code>metrics-cost</code></a> implements cost and timing measurement for JPMS modules.</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./design/metrics-cost/purpose.html"><code>purpose</code></a>: implements cost and timing measurement for JPMS modules.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/metrics-cost/index.html"><code>apidoc</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/metrics-cost/index.html"><code>Coverage Report</code></a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">metrics-cost-unnamed</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./doc/modules/metrics-cost-unnamed/purpose.html"><code>metrics-cost-unnamed</code></a> cost instrumentation for unnamed/classpath modules.</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./design/metrics-cost-unnamed/purpose.html"><code>purpose</code></a>: cost instrumentation for unnamed/classpath modules.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/metrics-cost-unnamed/index.html"><code>apidoc</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/metrics-cost-unnamed/index.html"><code>Coverage Report</code></a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">example</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./doc/modules/example/purpose.html"><code>example</code></a> demonstrates how instrumentation behaves in real code.</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./design/example/purpose.html"><code>purpose</code></a>: demonstrates how instrumentation behaves in real code.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/example/index.html"><code>apidoc</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/example/index.html"><code>Coverage Report</code></a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">tests</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./doc/modules/tests/purpose.html"><code>tests</code></a> validates correctness and stability of the instrumentation system.</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./design/tests/purpose.html"><code>purpose</code></a>: validates correctness and stability of the instrumentation system.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apidoc/xxx/index.html"><code>apidoc</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/xxx/index.html"><code>Coverage Report</code></a></p></td>
 </tr>
 </tbody>
 </table>
-<div class="imageblock">
-<div class="content">
-<img src="index.svg" alt="Diagram" width="601" height="226">
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1<br>
-Last updated 2026-05-17 21:44:56 UTC
+Last updated 2026-05-23 12:56:52 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
