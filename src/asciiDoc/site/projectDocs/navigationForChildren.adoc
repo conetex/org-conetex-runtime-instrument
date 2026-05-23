@@ -1,2 +1,1 @@
-== navigation
-xref:../index.adoc[.. (navigate up)]
+include::../navigationForChildren.adoc[]

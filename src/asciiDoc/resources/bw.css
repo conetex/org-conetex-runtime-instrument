@@ -1,112 +1,183 @@
-/* ======================================================================= */
-/*  Import official Asciidoctor default stylesheet + fonts                 */
-/* ======================================================================= */
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
 
 @import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
 @import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
 
-/* ======================================================================= */
-/*  Black & White Overrides (neutralize all colors from default)           */
-/* ======================================================================= */
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
 
-/* --- Headings ---------------------------------------------------------- */
-/* Default: h2 is red (#ba3925), h3/h4/h5/h6 are dark gray */
-
-h1, h2, h3, h4, h5, h6 {
-  color: #000 !important;
-  border-bottom-color: #000 !important;
-}
-
-/* --- Links ------------------------------------------------------------- */
-/* Default: #ba3925 (red) */
-
-a {
-  color: #000 !important;
-  text-decoration: underline;
-}
-
-a:hover {
-  text-decoration: none;
-}
-
-/* --- Blockquotes ------------------------------------------------------- */
-/* Default: border-left: #7a2518 (brownish red) */
-
-blockquote {
-  border-left-color: #000 !important;
-  background: #f8f8f8 !important;
+html,
+body {
+  background: #fff !important;
   color: #000 !important;
 }
 
-/* --- Code Blocks ------------------------------------------------------- */
-/* Default: background #f7f7f8, border #e1e1e8 */
-
-pre, code {
-  background: #f5f5f5 !important;
+body,
+body *:not(.hljs):not(.hljs *) {
   color: #000 !important;
   border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
 }
 
-/* --- Inline code ------------------------------------------------------- */
-/* Default: color #6d6e71 (gray) */
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
 
-code {
-  color: #000 !important;
-}
-
-/* --- Tables ------------------------------------------------------------ */
-/* Default: borders #dedede, header background #f7f8f7 */
-
-table, th, td {
-  border-color: #000 !important;
-}
-
-th {
-  background: #eaeaea !important;
-  color: #000 !important;
-}
-
-/* --- Admonitions ------------------------------------------------------- */
-/* Default uses colored icons + tinted backgrounds */
-
-.admonitionblock > table {
-  border-color: #000 !important;
-  background: #f8f8f8 !important;
-}
-
-.admonitionblock td.icon {
-  color: #000 !important;
-}
-
-.admonitionblock td.content {
-  color: #000 !important;
-}
-
-/* --- TOC --------------------------------------------------------------- */
-/* Default: link color #ba3925 */
-
-#toc {
-  border-color: #000 !important;
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
   background: #fff !important;
 }
 
-#toc a {
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
   color: #000 !important;
 }
 
-/* --- Horizontal Rule --------------------------------------------------- */
-/* Default: border-top #dddddf */
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
 
-hr {
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
   border-color: #000 !important;
 }
 
-/* --- Images ------------------------------------------------------------ */
-/* Default: no border, but we add a monochrome frame */
+/* Syntax Highlighting NICHT überschreiben */
 
-img {
-  border: 1px solid #000;
-  padding: 2px;
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
 }
 
-/* ---
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}

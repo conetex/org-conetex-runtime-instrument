@@ -2,7 +2,7 @@
 
 == Overview
 
-Design: xref:./{prjdocFolder}/index.adoc#_architecture_overview[`architecture`]
+Design: xref:./{prjdocFolder}/index.adoc#architecture[`architecture`]
 
 == Details
 
@@ -51,5 +51,3 @@ h|Module h|Design h|Usage h|Test
 |link:./{jacocoFolder}/tests/{jacocoIndexFile}[`Coverage Report`]
 
 |===
-
-plantuml:./{prjdocFolder}/moduleOverview.puml[]

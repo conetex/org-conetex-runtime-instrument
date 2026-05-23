@@ -1,23 +1,21 @@
-[#_architecture_overview]
-= Architecture Overview
+[#architecture]
+= Architecture
 
 include::../navigationForChildren.adoc[]
+
+== Overview
 
 This document provides a high‑level architectural overview of the runtime instrumentation framework. +
 It summarizes the purpose of each module, shows how they interact, and includes diagrams to visualize the system.
 
 For detailed responsibilities and boundaries, each module has its own `purpose` description.
 
-plantuml:./moduleOverview.puml[]
-
-'''
+plantuml::./moduleOverview.puml[]
 
 == 📐 System Architecture
 
 The system is composed of several independent but cooperating modules. +
 Together, they implement a modular Java runtime instrumentation framework based on the JVM Instrumentation API.
-
-'''
 
 == 🧩 Module Responsibilities (Summary)
 
@@ -33,8 +31,6 @@ Together, they implement a modular Java runtime instrumentation framework based 
 |xref:./example/index.adoc#purpose[`example`] |Demonstrates how instrumentation behaves in real code.
 |xref:./tests/index.adoc#purpose[`tests`] |Validates correctness and stability of the instrumentation system.
 |===
-
-'''
 
 == 🔗 Module Dependency Diagram
 
