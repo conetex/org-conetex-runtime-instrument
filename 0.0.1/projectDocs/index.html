@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Architecture</title>
+<style>
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
+@import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+html,
+body {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body,
+body *:not(.hljs):not(.hljs *) {
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
+
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
+  background: #fff !important;
+}
+
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: #000 !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+/* Syntax Highlighting NICHT überschreiben */
+
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body id="architecture" class="article toc2 toc-left">
+<div id="header">
+<h1>Architecture</h1>
+<div class="details">
+<span id="revnumber">version 0.0.1,</span>
+<span id="revdate">2026-05-23T20:56:35Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_navigation">1. navigation</a></li>
+<li><a href="#_overview">2. Overview</a></li>
+<li><a href="#_system_architecture">3. 📐 System Architecture</a></li>
+<li><a href="#_module_responsibilities_summary">4. 🧩 Module Responsibilities (Summary)</a></li>
+<li><a href="#_module_dependency_diagram">5. 🔗 Module Dependency Diagram</a></li>
+<li><a href="#_module_roles_diagram">6. 🧭 Module Roles Diagram</a></li>
+<li><a href="#_class_instrumentation_sequence">7. 🔧 Class Instrumentation Sequence</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_navigation">1. navigation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="../index.html">.. (navigate up)</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_overview">2. Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This document provides a high‑level architectural overview of the runtime instrumentation framework.<br>
+It summarizes the purpose of each module, shows how they interact, and includes diagrams to visualize the system.</p>
+</div>
+<div class="paragraph">
+<p>For detailed responsibilities and boundaries, each module has its own <code>purpose</code> description.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="moduleOverview.svg" alt="Diagram" width="601" height="226">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_system_architecture">3. 📐 System Architecture</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The system is composed of several independent but cooperating modules.<br>
+Together, they implement a modular Java runtime instrumentation framework based on the JVM Instrumentation API.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_module_responsibilities_summary">4. 🧩 Module Responsibilities (Summary)</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Module</th>
+<th class="tableblock halign-left valign-top">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./agent/index.html#purpose"><code>agent</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Activates and configures the instrumentation system (JVM agent entry point).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./collection/index.html#purpose"><code>collection</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Collects and aggregates measurement data.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./counter/index.html#purpose"><code>counter</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Implements runtime counters and injects counter logic.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./interfaces/index.html#purpose"><code>interfaces</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Defines shared APIs and contracts.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./metrics-cost/index.html#purpose"><code>metrics-cost</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Implements cost and timing measurement for JPMS modules.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./metrics-cost-unnamed/index.html#purpose"><code>metrics-cost-unnamed</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cost instrumentation for unnamed/classpath modules.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./example/index.html#purpose"><code>example</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Demonstrates how instrumentation behaves in real code.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./tests/index.html#purpose"><code>tests</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validates correctness and stability of the instrumentation system.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_module_dependency_diagram">5. 🔗 Module Dependency Diagram</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-b8098bc9538472294a76ddb3128acb72.svg" alt="Diagram" width="433" height="347">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_module_roles_diagram">6. 🧭 Module Roles Diagram</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-e3c72f433df3dd87ce2682945184605b.svg" alt="Diagram" width="658" height="278">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_class_instrumentation_sequence">7. 🔧 Class Instrumentation Sequence</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-dede0ca61930f2b3ccc1afd0267d8b64.svg" alt="Diagram" width="1471" height="558">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.0.1<br>
+Last updated 2026-05-23 20:56:30 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>
