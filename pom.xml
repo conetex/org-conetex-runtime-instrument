@@ -149,12 +149,6 @@
                         <!-- in parent only                 -->
                         <inherited>false</inherited>
 
-                        <!--
-                        https://conetex.github.io/org-conetex-runtime-instrument/apidocs/agent/org.conetex.runtime.instrument.agent/org/conetex/runtime/instrument/agent/Instrument.AgentLog.html
-                        https://conetex.github.io/org-conetex-runtime-instrument/jacoco/collection/index.html
-                        https://conetex.github.io/org-conetex-runtime-instrument/asciidoc/
-                        https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture.md
-                        -->
                         <configuration>
                             <requires>
                                 <require>asciidoctor-diagram</require>
@@ -165,14 +159,24 @@
                             <backend>html5</backend>
                             <attributes>
                                 <toc>left</toc>
+                                <toclevels>3</toclevels>
                                 <icons>font</icons>
                                 <source-highlighter>highlightjs</source-highlighter>
                                 <plantuml-format>svg</plantuml-format>
                                 <sectnums>true</sectnums>
-                                <imagesoutdir>${project.build.directory}/site/doc/diagrams</imagesoutdir>
+                                <!--<imagesoutdir>${project.build.directory}/site/asciiDocDiagrams</imagesoutdir> looks like references do not always work if we do this-->
                                 <revnumber>${project.version}</revnumber>
                                 <revdate>${maven.build.timestamp}</revdate>
                                 <organization>${project.organization.name}</organization>
+                                <!-- style                  -->
+                                <stylesheet>bw.css</stylesheet>
+                                <stylesdir>${project.basedir}/src/asciiDoc/resources</stylesdir>
+                                <!-- custom linking         -->
+                                <prjdocFolder>projectDocs</prjdocFolder>
+                                <apidocFolder>apiDoc</apidocFolder>
+                                <apidocIndexFile>index.html</apidocIndexFile>
+                                <jacocoFolder>jacoco</jacocoFolder>
+                                <jacocoIndexFile>index.html</jacocoIndexFile>
                             </attributes>
                         </configuration>
                     </execution>

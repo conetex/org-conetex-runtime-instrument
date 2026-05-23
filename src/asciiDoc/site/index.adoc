@@ -1,56 +1,55 @@
-= Index
+= link:https://github.com/conetex/org-conetex-runtime-instrument/blob/master/readme.md[`org-conetex-runtime-instrument`]
 
 == Overview
 
-xref:./architecture.adoc[`architecture`]
-
-plantuml:./index.puml[]
+Design: xref:./{prjdocFolder}/index.adoc#_architecture_overview[`architecture`]
 
 == Details
 
 |===
 h|Module h|Design h|Usage h|Test
 
-
 |agent
-|xref:./design/agent/purpose.adoc[`purpose`]: activates and configures the instrumentation system (JVM agent entry point).]
-|link:./apidoc/agent/index.html[`apidoc`] 
-|link:./jacoco/agent/index.html[`Coverage Report`]
+|xref:./{prjdocFolder}/agent/index.adoc#purpose[`purpose`]: activates and configures the instrumentation system (JVM agent entry point).]
+|link:./{apidocFolder}/agent/{apidocIndexFile}[`apidoc`] 
+|link:./{jacocoFolder}/agent/{jacocoIndexFile}[`Coverage Report`]
 
 |collection
-|xref:./design/collection/purpose.adoc[`purpose`]: collects and aggregates measurement data.
-|link:./apidoc/collection/index.html[`apidoc`]
- xref:./apidoc/collection/index.html[`xapidoc`] xref:./jacoco/collection/index.html[`xjacoco`]
-|link:./jacoco/collection/index.html[`Coverage Report`]
+|xref:./{prjdocFolder}/collection/index.adoc#purpose[`purpose`]: collects and aggregates measurement data.
+|link:./{apidocFolder}/collection/{apidocIndexFile}[`apidoc`]
+ xref:./{apidocFolder}/collection/{apidocIndexFile}[`xapidoc`] xref:./{jacocoFolder}/collection/{apidocIndexFile}[`xjacoco`]
+|link:./{jacocoFolder}/collection/{jacocoIndexFile}[`Coverage Report`]
 
 |counter
-|xref:./design/counter/purpose.adoc[`purpose`]: implements runtime counters and injects counter logic.
-|link:./apidoc/counter/index.html[`apidoc`]
-|link:./jacoco/counter/index.html[`Coverage Report`]
+|xref:./{prjdocFolder}/counter/index.adoc#purpose[`purpose`]: implements runtime counters and injects counter logic.
+|link:./{apidocFolder}/counter/{apidocIndexFile}[`apidoc`]
+|link:./{jacocoFolder}/counter/{jacocoIndexFile}[`Coverage Report`]
 
 |interfaces
-|xref:./design/interfaces/purpose.adoc[`purpose`]: defines shared APIs and contracts.
-|link:./apidoc/interfaces/index.html[`apidoc`]
-|link:./jacoco/interfaces/index.html[`Coverage Report`]
+|xref:./{prjdocFolder}/interfaces/index.adoc#purpose[`purpose`]: defines shared APIs and contracts.
+|link:./{apidocFolder}/interfaces/{apidocIndexFile}[`apidoc`]
+|link:./{jacocoFolder}/interfaces/{jacocoIndexFile}[`Coverage Report`]
 
 |metrics-cost
-|xref:./design/metrics-cost/purpose.adoc[`purpose`]: implements cost and timing measurement for JPMS modules.
-|link:./apidoc/metrics-cost/index.html[`apidoc`]
-|link:./jacoco/metrics-cost/index.html[`Coverage Report`]
+|xref:./{prjdocFolder}/metrics-cost/index.adoc#purpose[`purpose`]: implements cost and timing measurement for JPMS modules.
+|link:./{apidocFolder}/metrics-cost/{apidocIndexFile}[`apidoc`]
+|link:./{jacocoFolder}/metrics-cost/{jacocoIndexFile}[`Coverage Report`]
 
 |metrics-cost-unnamed
-|xref:./design/metrics-cost-unnamed/purpose.adoc[`purpose`]: cost instrumentation for unnamed/classpath modules.
-|link:./apidoc/metrics-cost-unnamed/index.html[`apidoc`]
-|link:./jacoco/metrics-cost-unnamed/index.html[`Coverage Report`]
+|xref:./{prjdocFolder}/metrics-cost-unnamed/index.adoc#purpose[`purpose`]: cost instrumentation for unnamed/classpath modules.
+|link:./{apidocFolder}/metrics-cost-unnamed/{apidocIndexFile}[`apidoc`]
+|link:./{jacocoFolder}/metrics-cost-unnamed/{jacocoIndexFile}[`Coverage Report`]
 
 |example
-|xref:./design/example/purpose.adoc[`purpose`]: demonstrates how instrumentation behaves in real code.
-|link:./apidoc/example/index.html[`apidoc`]
-|link:./jacoco/example/index.html[`Coverage Report`]
+|xref:./{prjdocFolder}/example/index.adoc#purpose[`purpose`]: demonstrates how instrumentation behaves in real code.
+|link:./{apidocFolder}/example/{apidocIndexFile}[`apidoc`]
+|link:./{jacocoFolder}/example/{jacocoIndexFile}[`Coverage Report`]
 
 |tests
-|xref:./design/tests/purpose.adoc[`purpose`]: validates correctness and stability of the instrumentation system.
-|link:./apidoc/xxx/index.html[`apidoc`]
-|link:./jacoco/xxx/index.html[`Coverage Report`]
+|xref:./{prjdocFolder}/tests/index.adoc#purpose[`purpose`]: validates correctness and stability of the instrumentation system.
+|link:./{apidocFolder}/tests/{apidocIndexFile}[`apidoc`]
+|link:./{jacocoFolder}/tests/{jacocoIndexFile}[`Coverage Report`]
 
 |===
+
+plantuml:./{prjdocFolder}/moduleOverview.puml[]

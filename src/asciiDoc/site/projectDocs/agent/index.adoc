@@ -1,13 +1,18 @@
-== Purpose of the `agent` Module
+= agent
+
+include::../navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
 
 The `agent` module provides the entry point for enabling runtime
 instrumentation inside the JVM. +
 Its responsibilities are limited to:
 
 * registering the project as a Java Instrumentation Agent (`premain` /
-  `agentmain`)
+`agentmain`)
 * initializing the instrumentation framework at JVM startup or
-  attachment time
+attachment time
 * activating and configuring the measurement subsystems provided by
   other modules
 
@@ -33,18 +38,18 @@ ____
 === Out of Scope (Handled by Other Modules)
 
 * *Bytecode transformation* +
-  Implemented in: link:../../../metrics-cost/purpose.md[`metrics-cost`],
-  link:../../../metrics-cost-unnamed/purpose.md[`metrics-cost-unnamed`],
-  link:../../../counter/purpose.md[`counter`]
+  Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`],
+  xref:../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`],
+  xref:../counter/index.adoc#purpose[`counter`]
 * *Injection of counters, timers, or cost‑measurement logic* +
-  Implemented in: link:../../../counter/purpose.md[`counter`],
-  link:../../../metrics-cost/purpose.md[`metrics-cost`]
+  Implemented in: xref:../counter/index.adoc#purpose[`counter`],
+  xref:../metrics-cost/index.adoc#purpose[`metrics-cost`]
 * *Data collection and aggregation* +
-  Implemented in: link:../../../collection/purpose.md[`collection`]
+  Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 * *Instrumentation APIs and shared interfaces* +
-  Implemented in: link:../../../interfaces/purpose.md[`interfaces`]
+  Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
 * *Instrumentation rules and transformation strategies* +
-  Implemented in: link:../../../metrics-cost/purpose.md[`metrics-cost`],
-  link:../../../counter/purpose.md[`counter`]
+  Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`],
+  xref:../counter/index.adoc#purpose[`counter`]
 * *Example usage and demonstration code* +
-  Implemented in: link:../../../example/purpose.md[`example`]
+  Implemented in: xref:../example/index.adoc#purpose[`example`]

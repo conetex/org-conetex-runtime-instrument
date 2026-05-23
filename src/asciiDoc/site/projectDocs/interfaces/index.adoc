@@ -1,4 +1,9 @@
-= Purpose of the `interfaces` Module
+= interfaces
+
+include::../navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
 
 The `interfaces` module defines the *shared APIs and contracts* used across all instrumentation modules. +
 Its responsibilities include:
@@ -17,19 +22,19 @@ ____
 
 '''
 
-== Out of Scope (Handled by Other Modules)
+=== Out of Scope (Handled by Other Modules)
 
 * *Implementing counters or cost metrics* +
- Implemented in: link:../counter/purpose.md[`counter`], link:../../../metrics-cost/purpose.md[`metrics-cost`]
+ Implemented in: xref:../counter/index.adoc#purpose[`counter`], xref:../../../metrics-cost/index.adoc#purpose[`metrics-cost`]
 
 * *Collecting or aggregating measurement data* +
- Implemented in: link:../collection/purpose.md[`collection`]
+ Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 
 * *Performing bytecode transformation* +
- Implemented in: link:../../../metrics-cost/purpose.md[`metrics-cost`], link:../../../metrics-cost-unnamed/purpose.md[`metrics-cost-unnamed`], link:../counter/purpose.md[`counter`]
+ Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`], xref:../../../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`], xref:../counter/index.adoc#purpose[`counter`]
 
 * *Activating the instrumentation system* +
- Implemented in: link:../agent/purpose.md[`agent`]
+ Implemented in: xref:../agent/index.adoc#purpose[`agent`]
 
 * *Providing example usage* +
- Implemented in: link:../example/purpose.md[`example`]
+ Implemented in: xref:../example/index.adoc#purpose[`example`]

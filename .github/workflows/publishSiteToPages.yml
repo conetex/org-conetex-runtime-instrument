@@ -1,5 +1,13 @@
 name: Publish Site to Pages (incl. Jacoco, JavaDoc)
 
+# =======================================================
+#
+# https://conetex.github.io/org-conetex-runtime-instrument/apiDocs/agent/org.conetex.runtime.instrument.agent/org/conetex/runtime/instrument/agent/Instrument.AgentLog.html
+# https://conetex.github.io/org-conetex-runtime-instrument/jacoco/collection/index.html
+# https://conetex.github.io/org-conetex-runtime-instrument/asciidoc/
+# https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture.md
+# =======================================================
+
 on:
   push:
     branches:
@@ -66,11 +74,11 @@ jobs:
             # -------------------------------------------------
           
             if [ -d "$module/target/reports/apidocs" ]; then
-              mkdir -p "target/site/apidoc/$module_name"
+              mkdir -p "target/site/apiDoc/$module_name"
           
               cp -r \
                 "$module/target/reports/apidocs/"* \
-                "target/site/apidoc/$module_name/"
+                "target/site/apiDoc/$module_name/"
             fi
           
             # -------------------------------------------------

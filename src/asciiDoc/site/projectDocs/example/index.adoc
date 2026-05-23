@@ -1,4 +1,9 @@
-= Purpose of the `example` Module
+= example
+
+include::../navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
 
 The `example` module provides *demonstration code* that shows how the instrumentation system behaves in practice. +
 Its responsibilities include:
@@ -17,16 +22,16 @@ ____
 
 '''
 
-== Out of Scope (Handled by Other Modules)
+=== Out of Scope (Handled by Other Modules)
 
 * *Implementing instrumentation logic* +
- Implemented in: link:../counter/purpose.md[`counter`], link:../../../metrics-cost/purpose.md[`metrics-cost`], link:../../../metrics-cost-unnamed/purpose.md[`metrics-cost-unnamed`]
+ Implemented in: xref:../counter/index.adoc#purpose[`counter`], xref:../metrics-cost/index.adoc#purpose[`metrics-cost`], xref:../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`]
 
 * *Collecting or aggregating measurement data* +
- Implemented in: link:../collection/purpose.md[`collection`]
+ Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 
 * *Defining shared instrumentation interfaces* +
- Implemented in: link:../../../interfaces/purpose.md[`interfaces`]
+ Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
 
 * *Activating the instrumentation system* +
- Implemented in: link:../agent/purpose.md[`agent`]
+ Implemented in: xref:../agent/index.adoc#purpose[`agent`]

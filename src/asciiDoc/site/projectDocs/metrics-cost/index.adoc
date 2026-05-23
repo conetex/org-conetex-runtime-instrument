@@ -1,4 +1,9 @@
-= Purpose of the `metrics-cost` Module
+= metrics-cost
+
+include::../navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
 
 The `metrics-cost` module implements *cost and timing measurement* for instrumented code. +
 Its responsibilities include:
@@ -17,19 +22,19 @@ ____
 
 '''
 
-== Out of Scope (Handled by Other Modules)
+=== Out of Scope (Handled by Other Modules)
 
 * *Collecting or aggregating cost data* +
- Implemented in: link:../collection/purpose.md[`collection`]
+ Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 
 * *Providing counter‑based instrumentation* +
- Implemented in: link:../counter/purpose.md[`counter`]
+ Implemented in: xref:../counter/index.adoc#purpose[`counter`]
 
 * *Defining shared instrumentation interfaces* +
- Implemented in: link:../interfaces/purpose.md[`interfaces`]
+ Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
 
 * *Activating the instrumentation system* +
- Implemented in: link:../agent/purpose.md[`agent`]
+ Implemented in: xref:../agent/index.adoc#purpose[`agent`]
 
 * *Providing example usage* +
- Implemented in: link:../example/purpose.md[`example`]
+ Implemented in: xref:../example/index.adoc#purpose[`example`]

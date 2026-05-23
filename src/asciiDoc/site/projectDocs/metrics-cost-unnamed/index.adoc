@@ -1,4 +1,9 @@
-= Purpose of the `metrics-cost-unnamed` Module
+= metrics-cost-unnamed
+
+include::../navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
 
 The `metrics-cost-unnamed` module provides *cost measurement instrumentation for unnamed modules* (i.e., non‑JPMS classpath environments). +
 Its responsibilities include:
@@ -17,22 +22,22 @@ ____
 
 '''
 
-== Out of Scope (Handled by Other Modules)
+=== Out of Scope (Handled by Other Modules)
 
 * *Collecting or aggregating cost data* +
- Implemented in: link:../collection/purpose.md[`collection`]
+ Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 
 * *Instrumentation for named JPMS modules* +
- Implemented in: link:../metrics-cost/purpose.md[`metrics-cost`]
+ Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`]
 
 * *Counter‑based instrumentation* +
- Implemented in: link:../counter/purpose.md[`counter`]
+ Implemented in: xref:../counter/index.adoc#purpose[`counter`]
 
 * *Defining shared instrumentation interfaces* +
- Implemented in: link:../interfaces/purpose.md[`interfaces`]
+ Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
 
 * *Activating the instrumentation system* +
- Implemented in: link:../agent/purpose.md[`agent`]
+ Implemented in: xref:../agent/index.adoc#purpose[`agent`]
 
 * *Providing example usage* +
- Implemented in: link:../example/purpose.md[`example`]
+ Implemented in: xref:../example/index.adoc#purpose[`example`]

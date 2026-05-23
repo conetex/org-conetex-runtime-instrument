@@ -1,37 +1,42 @@
+[#_architecture_overview]
 = Architecture Overview
+
+include::../navigationForChildren.adoc[]
 
 This document provides a high‑level architectural overview of the runtime instrumentation framework. +
 It summarizes the purpose of each module, shows how they interact, and includes diagrams to visualize the system.
 
 For detailed responsibilities and boundaries, each module has its own `purpose` description.
 
+plantuml:./moduleOverview.puml[]
+
 '''
 
-= 📐 System Architecture
+== 📐 System Architecture
 
 The system is composed of several independent but cooperating modules. +
 Together, they implement a modular Java runtime instrumentation framework based on the JVM Instrumentation API.
 
 '''
 
-= 🧩 Module Responsibilities (Summary)
+== 🧩 Module Responsibilities (Summary)
 
 |===
 |Module |Purpose 
 
-|xref:./modules/agent/purpose.adoc[`agent`] |Activates and configures the instrumentation system (JVM agent entry point).
-|xref:./modules/collection/purpose.adoc[`collection`] |Collects and aggregates measurement data.
-|xref:./modules/counter/purpose.adoc[`counter`] |Implements runtime counters and injects counter logic.
-|xref:./modules/interfaces/purpose.adoc[`interfaces`] |Defines shared APIs and contracts.
-|xref:./modules/metrics-cost/purpose.adoc[`metrics-cost`] |Implements cost and timing measurement for JPMS modules.
-|xref:./modules/metrics-cost-unnamed/purpose.adoc[`metrics-cost-unnamed`] |Cost instrumentation for unnamed/classpath modules.
-|xref:./modules/example/purpose.adoc[`example`] |Demonstrates how instrumentation behaves in real code.
-|xref:./modules/tests/purpose.adoc[`tests`] |Validates correctness and stability of the instrumentation system.
+|xref:./agent/index.adoc#purpose[`agent`] |Activates and configures the instrumentation system (JVM agent entry point).
+|xref:./collection/index.adoc#purpose[`collection`] |Collects and aggregates measurement data.
+|xref:./counter/index.adoc#purpose[`counter`] |Implements runtime counters and injects counter logic.
+|xref:./interfaces/index.adoc#purpose[`interfaces`] |Defines shared APIs and contracts.
+|xref:./metrics-cost/index.adoc#purpose[`metrics-cost`] |Implements cost and timing measurement for JPMS modules.
+|xref:./metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`] |Cost instrumentation for unnamed/classpath modules.
+|xref:./example/index.adoc#purpose[`example`] |Demonstrates how instrumentation behaves in real code.
+|xref:./tests/index.adoc#purpose[`tests`] |Validates correctness and stability of the instrumentation system.
 |===
 
 '''
 
-= 🔗 Module Dependency Diagram
+== 🔗 Module Dependency Diagram
 
 [plantuml]
 ----
@@ -73,7 +78,7 @@ E --> C
 @enduml
 ----
 
-= 🧭 Module Roles Diagram
+== 🧭 Module Roles Diagram
 
 [plantuml]
 ----
@@ -115,7 +120,7 @@ E --> F
 @enduml
 ----
 
-= 🔧 Class Instrumentation Sequence
+== 🔧 Class Instrumentation Sequence
 
 [plantuml]
 ----

@@ -1,4 +1,9 @@
-= Purpose of the `counter` Module
+= counter
+
+include::../navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
 
 The `counter` module provides *runtime counters* that can be injected into instrumented code. +
 Its responsibilities include:
@@ -17,19 +22,19 @@ ____
 
 '''
 
-== Out of Scope (Handled by Other Modules)
+=== Out of Scope (Handled by Other Modules)
 
 * *Collecting and aggregating counter results* +
- Implemented in: link:../collection/purpose.md[`collection`]
+ Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 
 * *Activating the instrumentation system* +
- Implemented in: link:../agent/purpose.md[`agent`]
+ Implemented in: xref:../agent/index.adoc#purpose[`agent`]
 
 * *Defining shared instrumentation interfaces* +
- Implemented in: link:../../../interfaces/purpose.md[`interfaces`]
+ Implemented in: xref:../../../interfaces/index.adoc#purpose[`interfaces`]
 
 * *Injecting cost or timing measurements* +
- Implemented in: link:../../../metrics-cost/purpose.md[`metrics-cost`], link:../../../metrics-cost-unnamed/purpose.md[`metrics-cost-unnamed`]
+ Implemented in: xref:../../../metrics-cost/index.adoc#purpose[`metrics-cost`], xref:../../../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`]
 
 * *Providing example usage* +
- Implemented in: link:../../../example/purpose.md[`example`]
+ Implemented in: xref:../../../example/index.adoc#purpose[`example`]
