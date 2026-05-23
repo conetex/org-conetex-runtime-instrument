@@ -1,67 +1,56 @@
 = Index
 
+== Overview
+
+xref:./architecture.adoc[`architecture`]
+
+plantuml:./index.puml[]
+
+== Details
 
 |===
-|Header 1 |Header 2 |Header 3
-
-|Column 1, row 1
-|Column 2, row 1
-|Column 3, row 1
-
-|Column 1, row 2
-|Column 2, row 2
-|Column 3, row 2
-
-|Column 1, row 3
-|Column 2, row 3
-|Column 3, row 3
-|===
-
-
-|===
-
-3+h|General
-
-|xref:./architecture.adoc[`architecture`]
-|
-|
-
-3+h|Details
-h|Module h|Purpose h|Api
+h|Module h|Design h|Usage h|Test
 
 
 |agent
-|xref:./doc/modules/agent/purpose.adoc[`agent`] activates and configures the instrumentation system (JVM agent entry point).]
-|xref:./apidoc/index.html[`apidoc`] link:./apidoc/index.html[`apidoc`]
+|xref:./design/agent/purpose.adoc[`purpose`]: activates and configures the instrumentation system (JVM agent entry point).]
+|link:./apidoc/agent/index.html[`apidoc`] 
+|link:./jacoco/agent/index.html[`Coverage Report`]
 
 |collection
-|xref:./doc/modules/collection/purpose.adoc[`collection`] collects and aggregates measurement data.
-|xref:./jacoco/index.html[`jacoco`] xref:./apidoc/index-all.html[`apidoc-all`] link:./jacoco/index.html[`jacoco`] link:./apidoc/index-all.html[`apidoc-all`]
+|xref:./design/collection/purpose.adoc[`purpose`]: collects and aggregates measurement data.
+|link:./apidoc/collection/index.html[`apidoc`]
+ xref:./apidoc/collection/index.html[`xapidoc`] xref:./jacoco/collection/index.html[`xjacoco`]
+|link:./jacoco/collection/index.html[`Coverage Report`]
 
 |counter
-|xref:./doc/modules/counter/purpose.adoc[`counter`] implements runtime counters and injects counter logic.
-|
+|xref:./design/counter/purpose.adoc[`purpose`]: implements runtime counters and injects counter logic.
+|link:./apidoc/counter/index.html[`apidoc`]
+|link:./jacoco/counter/index.html[`Coverage Report`]
 
 |interfaces
-|xref:./doc/modules/interfaces/purpose.adoc[`interfaces`] defines shared APIs and contracts.
-|
+|xref:./design/interfaces/purpose.adoc[`purpose`]: defines shared APIs and contracts.
+|link:./apidoc/interfaces/index.html[`apidoc`]
+|link:./jacoco/interfaces/index.html[`Coverage Report`]
 
 |metrics-cost
-|xref:./doc/modules/metrics-cost/purpose.adoc[`metrics-cost`] implements cost and timing measurement for JPMS modules.
-|
+|xref:./design/metrics-cost/purpose.adoc[`purpose`]: implements cost and timing measurement for JPMS modules.
+|link:./apidoc/metrics-cost/index.html[`apidoc`]
+|link:./jacoco/metrics-cost/index.html[`Coverage Report`]
 
 |metrics-cost-unnamed
-|xref:./doc/modules/metrics-cost-unnamed/purpose.adoc[`metrics-cost-unnamed`] cost instrumentation for unnamed/classpath modules.
-|
+|xref:./design/metrics-cost-unnamed/purpose.adoc[`purpose`]: cost instrumentation for unnamed/classpath modules.
+|link:./apidoc/metrics-cost-unnamed/index.html[`apidoc`]
+|link:./jacoco/metrics-cost-unnamed/index.html[`Coverage Report`]
 
 |example
-|xref:./doc/modules/example/purpose.adoc[`example`] demonstrates how instrumentation behaves in real code.
-|
+|xref:./design/example/purpose.adoc[`purpose`]: demonstrates how instrumentation behaves in real code.
+|link:./apidoc/example/index.html[`apidoc`]
+|link:./jacoco/example/index.html[`Coverage Report`]
 
 |tests
-|xref:./doc/modules/tests/purpose.adoc[`tests`] validates correctness and stability of the instrumentation system.
-|
+|xref:./design/tests/purpose.adoc[`purpose`]: validates correctness and stability of the instrumentation system.
+|link:./apidoc/xxx/index.html[`apidoc`]
+|link:./jacoco/xxx/index.html[`Coverage Report`]
 
 |===
-
-plantuml::./index.puml[]

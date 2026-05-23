@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: write
-#  pages: write
-#  id-token: write
 
 jobs:
 
@@ -29,16 +27,16 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      #
-      # Maven verify
-      #
-      - name: Build
+      # =======================================================
+      # BUILD DOCUMENTATION - site and reports   (Maven verify)
+      # =======================================================
+      - name: Build Documentation
         run: mvn -B clean verify
 
-      # ==================================================
-      # Copy module JavaDocs + Coverage
-      # ==================================================
-      - name: Collect reports
+      # =======================================================
+      # COLLECT javaDoc, jacoco:     copy MODULE to PARENT site
+      # =======================================================
+      - name: Collect Documentation and Reports
         run: |
           
           modules=(
@@ -63,21 +61,21 @@ jobs:
           
             echo "Processing $module"
           
-            # ------------------------------
+            # -------------------------------------------------
             # JavaDoc
-            # ------------------------------
+            # -------------------------------------------------
           
             if [ -d "$module/target/reports/apidocs" ]; then
-              mkdir -p "target/site/apidocs/$module_name"
+              mkdir -p "target/site/apidoc/$module_name"
           
               cp -r \
                 "$module/target/reports/apidocs/"* \
-                "target/site/apidocs/$module_name/"
+                "target/site/apidoc/$module_name/"
             fi
           
-            # ------------------------------
+            # -------------------------------------------------
             # JaCoCo
-            # ------------------------------
+            # -------------------------------------------------
           
             if [ -d "$module/target/site/jacoco" ]; then
               mkdir -p "target/site/jacoco/$module_name"
@@ -89,10 +87,14 @@ jobs:
           
           done
 
+      # =======================================================
+      # CREATE A VERSIONED DOCUMENTATION SITE
+      # =======================================================
+
       #
       # Maven version
       #
-      - name: Extract Maven version
+      - name: Extract maven version
         run: |
           VERSION=$(mvn help:evaluate \
             -Dexpression=project.version \
@@ -101,10 +103,10 @@ jobs:
 
           echo "DOCS_VERSION=$VERSION" >> $GITHUB_ENV
 
-      # ==================================================
-      # Prepare versioned deployment
-      # ==================================================
-      - name: Prepare deployment structure
+      #
+      # copy site to versioned deploy folder
+      #
+      - name: Copy site to version folder
         run: |
 
           mkdir -p deploy/${DOCS_VERSION}
@@ -112,39 +114,13 @@ jobs:
 
           rsync -av --exclude='*/.*' target/site/ deploy/${DOCS_VERSION}/
           rsync -av --exclude='*/.*' target/site/ deploy/latest/
-      # cp -av target/site/ deploy/${DOCS_VERSION}/
-      # cp -av target/site/ deploy/latest/
 
-      # ==================================================
-      # Deploy GitHub Pages
-      # ==================================================
-      - name: Deploy GitHub Pages
+      #
+      # push deploy folder to branch gh-pages (src of GitHub Pages)
+      #
+      - name: Deploy version folders to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: deploy
           clean: false
-
-      # ==================================================
-      # Upload GitHub Pages artifact
-      # ==================================================
-      #- name: Upload Pages Artifact
-      #  uses: actions/upload-pages-artifact@v3
-      #  with:
-      #    path: target/site
-
-  #deploy:
-  #  needs: build#
-
-  #  runs-on: ubuntu-latest
-
-  #  environment:
-  #    name: github-pages
-  #    url: ${{ steps.deployment.outputs.page_url }}
-
-  #  steps:
-
-      #- name: Deploy to GitHub Pages
-      #  id: deployment
-      #  uses: actions/deploy-pages@v4
-

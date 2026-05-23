@@ -58,7 +58,8 @@
     <build>
         <plugins>
 
-            <!-- JAR (needed for publish) -->
+            <!-- ======== BASICS ========================== -->
+            <!-- JAR (deploy-to-central depends on it)      -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -67,87 +68,54 @@
                     <execution>
                         <id>attach-sources</id>
                         <goals>
-                            <!--<goal>jar</goal>-->
                             <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Javadoc (needed for central-publishing) -->
+            <!-- Javadoc (deploy-to-central depends on it)  -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.12.0</version>
-
                 <executions>
-                    <!-- for central-publishing -->
                     <execution>
                         <id>attach-javadocs</id>
-                        <goals><goal>jar</goal></goals>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Deploy / Publish (central-publishing) -->
-            <plugin>
-                <groupId>org.sonatype.central</groupId>
-                <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.9.0</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <publishingServerId>central</publishingServerId>
-                    <excludeArtifacts>
-
-                        <artifact>example</artifact>
-
-                        <artifact>test-parent</artifact>
-                        <!-- tests modules -->
-                        <artifact>empty</artifact>
-                        <artifact>integration</artifact>
-                        <artifact>jar</artifact>
-                        <artifact>jar-blocked</artifact>
-                        <artifact>jar-module</artifact>
-                        <!-- tests modules -->
-
-                    </excludeArtifacts>
-                </configuration>
-            </plugin>
-
-            <!-- JaCoCo java code coverage -->
+            <!-- ======== GOVERNANCE & REPORTING ========== -->
+            <!-- JaCoCo java code coverage                  -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.14</version>
                 <executions>
-                    <!-- start the jacoco agent before tests -->
+                    <!-- start the jacoco agent before test -->
                     <execution>
                         <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
-
-                    <!-- create HTML-report after tests -->
-                    <execution> <!-- per Module -->
+                    <!-- create HTML-report after tests     -->
+                    <execution>
                         <id>report</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                     </execution>
-
-                    <!-- global <execution>
-                        <id>report-aggregate</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>report-aggregate</goal>
-                        </goals>
-                    </execution>-->
                 </executions>
             </plugin>
 
-            <!-- DOC Asciidoctor -->
+            <!-- ======== DOCUMENTATION (in parent only) == -->
+            <!-- site adoc files via Asciidoctor            -->
             <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
@@ -174,97 +142,60 @@
                 <executions>
                     <execution>
                         <id>generate-docs</id>
-
                         <phase>generate-resources</phase>
-
-                        <inherited>false</inherited>
-
                         <goals>
                             <goal>process-asciidoc</goal>
                         </goals>
-<!--
-https://conetex.github.io/org-conetex-runtime-instrument/apidocs/agent/org.conetex.runtime.instrument.agent/org/conetex/runtime/instrument/agent/Instrument.AgentLog.html
-https://conetex.github.io/org-conetex-runtime-instrument/jacoco/collection/index.html
-https://conetex.github.io/org-conetex-runtime-instrument/asciidoc/
-https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture.md
+                        <!-- in parent only                 -->
+                        <inherited>false</inherited>
 
--->
+                        <!--
+                        https://conetex.github.io/org-conetex-runtime-instrument/apidocs/agent/org.conetex.runtime.instrument.agent/org/conetex/runtime/instrument/agent/Instrument.AgentLog.html
+                        https://conetex.github.io/org-conetex-runtime-instrument/jacoco/collection/index.html
+                        https://conetex.github.io/org-conetex-runtime-instrument/asciidoc/
+                        https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture.md
+                        -->
                         <configuration>
-
                             <requires>
                                 <require>asciidoctor-diagram</require>
                             </requires>
-
-                            <!-- Quelle -->
-                            <sourceDirectory>
-                                ${project.basedir}/src/asciiDoc/site
-                            </sourceDirectory>
-                            <!--<standalone>true</standalone>-->
-                            <!-- Startdatei
-                            <sources>
-                                <include>index.adoc</include>
-                            </sources>-->
+                            <sourceDirectory>${project.basedir}/src/asciiDoc/site</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/site/</outputDirectory>
                             <preserveDirectories>true</preserveDirectories>
-                            <!-- Ziel -->
-                            <outputDirectory>
-                                ${project.build.directory}/site/
-                            </outputDirectory>
-
-                            <!-- Backend -->
                             <backend>html5</backend>
-
-
-                            <!--
-                            <includes>
-                                <include>**/*.adoc</include>
-                            </includes>
-                            -->
-
                             <attributes>
                                 <toc>left</toc>
                                 <icons>font</icons>
                                 <source-highlighter>highlightjs</source-highlighter>
                                 <plantuml-format>svg</plantuml-format>
-
                                 <sectnums>true</sectnums>
-                                <!-- -->
                                 <imagesoutdir>${project.build.directory}/site/doc/diagrams</imagesoutdir>
-
                                 <revnumber>${project.version}</revnumber>
                                 <revdate>${maven.build.timestamp}</revdate>
                                 <organization>${project.organization.name}</organization>
-
                             </attributes>
-
-
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- DOC stuff we do not need to transform or render -->
+            <!-- site raw files (no transform or render)    -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.3.1</version>
-
                 <executions>
-
                     <execution>
                         <id>collect-javadocs</id>
-
-                        <!-- WICHTIG -->
-                        <inherited>false</inherited>
-
-                        <phase>verify</phase>
-
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
-
+                        <phase>verify</phase>
+                        <!-- in parent only -->
+                        <inherited>false</inherited>
                         <configuration>
                             <outputDirectory>
-                                ${project.build.directory}/site/doc2
+                                ${project.build.directory}/site
                             </outputDirectory>
                             <resources>
                                 <resource>
@@ -278,75 +209,42 @@ https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture
                 </executions>
             </plugin>
 
-            <!-- DOC
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>4.0.0-M13</version>
-                <configuration>
-                    <siteDirectory>src/site</siteDirectory>
-                </configuration>
-            </plugin> -->
-
-            <!-- DOC plantuml
-            <plugin>
-                <groupId>com.github.jeluard</groupId>
-                <artifactId>plantuml-maven-plugin</artifactId>
-                <version>1.2</version>
-                <inherited>false</inherited>
-
-                <dependencies>
-                    <dependency>
-                        <groupId>net.sourceforge.plantuml</groupId>
-                        <artifactId>plantuml</artifactId>
-                        <version>1.2025.2</version>
-                    </dependency>
-                </dependencies>
-
-                <executions>
-                    <execution>
-                        <id>generate-plantuml</id>
-
-                        <phase>pre-site</phase>
-
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-
-                <configuration>
-                    <sourceFiles>
-                        <directory>${project.basedir}/src/site/plantuml</directory>
-
-                        <includes>
-                            <include>**/*.puml</include>
-                        </includes>
-                    </sourceFiles>
-
-                    <outputDirectory>
-                        ${project.build.directory}/site/images
-                    </outputDirectory>
-
-                    <format>svg</format>
-                </configuration>
-            </plugin>
--->
-
-
         </plugins>
     </build>
 
-    <!--<reporting>
-        <plugins>
+    <profiles>
+        <!-- ======== DEPLOY TO CENTRAL =================== -->
+        <profile>
+            <id>deploy-to-central</id>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>3.5.0</version>
-            </plugin>
+            <build>
+                <plugins>
 
-        </plugins>
-    </reporting>-->
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.9.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <excludeArtifacts>
+                                <!-- tutorial modules       -->
+                                <artifact>example</artifact>
+                                <!-- tests modules          -->
+                                <artifact>test-parent</artifact>
+                                <artifact>empty</artifact>
+                                <artifact>integration</artifact>
+                                <artifact>jar</artifact>
+                                <artifact>jar-blocked</artifact>
+                                <artifact>jar-module</artifact>
+                            </excludeArtifacts>
+                        </configuration>
+                    </plugin>
+
+                </plugins>
+            </build>
+
+        </profile>
+    </profiles>
 
 </project>
