@@ -1,7 +1,7 @@
 [#architecture]
 = Architecture
 
-include::../navigationForChildren.adoc[]
+include::../_navigationForChildren.adoc[]
 
 == Overview
 

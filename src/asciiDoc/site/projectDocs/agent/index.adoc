@@ -1,6 +1,6 @@
 = agent
 
-include::../navigationForChildren.adoc[]
+include::../_navigationForChildren.adoc[]
 
 [#purpose]
 == Purpose

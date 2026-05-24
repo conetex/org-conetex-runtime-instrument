@@ -156,21 +156,20 @@
                             <sourceDirectory>${project.basedir}/src/asciiDoc/site</sourceDirectory>
                             <outputDirectory>${project.build.directory}/site/</outputDirectory>
                             <preserveDirectories>true</preserveDirectories>
-                            <relativeBaseDir>true</relativeBaseDir>                               <!-- needed to make plantuml:: understand relativ paths -->
+                            <relativeBaseDir>true</relativeBaseDir>                            <!-- needed to make plantuml:: understand relativ paths      -->
                             <backend>html5</backend>
                             <attributes>
                                 <toc>left</toc>
-                                <toclevels>3</toclevels>
+                                <!-- <toclevels>3</toclevels> -->
                                 <icons>font</icons>
                                 <source-highlighter>highlightjs</source-highlighter>
                                 <plantuml-format>svg</plantuml-format>
-                                <sectnums>true</sectnums>
-                                <!-- <imagesoutdir>${project.build.directory}/site/asciiDocDiagrams</imagesoutdir>
-                                looks like references do not always work if we do this-->
+                                <sectnums>false</sectnums>
+                                <!-- <imagesoutdir/>           looks like references do not always work if we do this                                       -->
                                 <revnumber>${project.version}</revnumber>
                                 <revdate>${maven.build.timestamp}</revdate>
                                 <organization>${project.organization.name}</organization>
-                                <baseDirFollowsSourceDir>true</baseDirFollowsSourceDir>           <!-- needed to make plantuml:: understand relativ paths -->
+                                <baseDirFollowsSourceDir>true</baseDirFollowsSourceDir>        <!-- needed to make plantuml:: understand relativ paths      -->
                                 <!-- style                  -->
                                 <stylesheet>bw.css</stylesheet>
                                 <stylesdir>${project.basedir}/src/asciiDoc/resources</stylesdir>

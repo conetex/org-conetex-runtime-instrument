@@ -1,0 +1,33 @@
+= <title of this adr>
+:status: <draft or accepted>
+:date: <a date>
+:deciders: <the deciders>
+
+== Problem
+
+Problem mit munir
+
+=== Decision Drivers
+
+* <decision driver A>
+* <decision driver B>
+
+== Options Evaluation
+
+* <option A>
+* <option B>
+
+== Decision
+
+<Decision for option X>
+
+=== Decision Rationale (optional)
+
+* <decision Rationale A>
+* <decision Rationale B>
+
+=== Consequences
+
+* <Consequence B>
+* <Consequence B>
+

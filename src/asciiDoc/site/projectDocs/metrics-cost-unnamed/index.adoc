@@ -1,6 +1,6 @@
 = metrics-cost-unnamed
 
-include::../navigationForChildren.adoc[]
+include::../_navigationForChildren.adoc[]
 
 [#purpose]
 == Purpose

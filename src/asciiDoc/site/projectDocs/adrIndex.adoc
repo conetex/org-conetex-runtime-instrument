@@ -1,0 +1,47 @@
+
+plantuml::./adrIndex.puml[]
+
+'''
+
+[plantuml]
+----
+@startuml
+
+'left to right direction
+
+!define CONFORMS(from,to) from -[#blue,bold]-> to : "conformsTo"
+!define DEPENDS(from,to,label) from -[#EF6C00,dashed]-> to : label
+
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor Black
+}
+skinparam rectangle<<accepted>> {
+  BackgroundColor Gold
+  BorderColor GoldenRod
+}
+skinparam rectangle<<draft>> {
+  BackgroundColor LightGreen
+}
+skinparam linetype polyline
+skinparam hyperlinkColor blue
+skinparam hyperlinkUnderline true
+
+rectangle "<color:blue><u>ADR-001</u></color>" <<draft>> as 001 [[adr001.html _blank]]
+rectangle "ADR-002" <<accepted>>                         as 002 [[adr002.html {open ADR} _blank]]
+rectangle "ADR-003"                                      as 003 [[xref:./adr003.adoc _blank]]
+rectangle "ADR-004" <<accepted>>                         as 004 [[xref:adr003.adoc {open} _blank]]
+
+001 -[#red]up-> 002 : overrides
+001 -[#orange]down-> 003 : depends_on
+001 -[#green]right-> 004 : implements
+
+002 -[#red,dashed]-> 003 : isException
+002 -[#blue]-> 004 : conforms_to
+CONFORMS(002,004)
+
+003 -[#black]-> 004 : supersedes
+
+@enduml
+----
+
