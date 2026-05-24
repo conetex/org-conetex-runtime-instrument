@@ -1,11 +1,19 @@
+:adrsIndexTitle: ADRs index
+
 = <title of this adr>
+
+Architecture Decision Record
+
+== navigation
+xref:./index.adoc[{adrsIndexTitle}]
+
 :status: <draft or accepted>
 :date: <a date>
 :deciders: <the deciders>
 
 == Problem
 
-Problem mit munir
+<description>
 
 === Decision Drivers
 
@@ -27,6 +35,10 @@ Problem mit munir
 * <decision Rationale B>
 
 === Consequences
+
+Consequences might are reflected by other ADRs. see xref:./index.adoc[{adrsIndexTitle}]
+
+consequences for implementation:
 
 * <Consequence B>
 * <Consequence B>

@@ -8,7 +8,7 @@ include::../_navigationForChildren.adoc[]
 This document provides a high‑level architectural overview of the runtime instrumentation framework. +
 It summarizes the purpose of each module, shows how they interact, and includes diagrams to visualize the system.
 
-For detailed responsibilities and boundaries, each module has its own `purpose` description.
+For detailed responsibilities and boundaries, each module has its own purpose description.
 
 plantuml::./moduleOverview.puml[]
 
@@ -22,14 +22,14 @@ Together, they implement a modular Java runtime instrumentation framework based 
 |===
 |Module |Purpose 
 
-|xref:./agent/index.adoc#purpose[`agent`] |Activates and configures the instrumentation system (JVM agent entry point).
-|xref:./collection/index.adoc#purpose[`collection`] |Collects and aggregates measurement data.
-|xref:./counter/index.adoc#purpose[`counter`] |Implements runtime counters and injects counter logic.
-|xref:./interfaces/index.adoc#purpose[`interfaces`] |Defines shared APIs and contracts.
-|xref:./metrics-cost/index.adoc#purpose[`metrics-cost`] |Implements cost and timing measurement for JPMS modules.
-|xref:./metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`] |Cost instrumentation for unnamed/classpath modules.
-|xref:./example/index.adoc#purpose[`example`] |Demonstrates how instrumentation behaves in real code.
-|xref:./tests/index.adoc#purpose[`tests`] |Validates correctness and stability of the instrumentation system.
+|xref:./moduleAgent/index.adoc#purpose[agent] |Activates and configures the instrumentation system (JVM agent entry point).
+|xref:./moduleCollection/index.adoc#purpose[collection] |Collects and aggregates measurement data.
+|xref:./moduleCounter/index.adoc#purpose[counter] |Implements runtime counters and injects counter logic.
+|xref:./moduleInterfaces/index.adoc#purpose[interfaces] |Defines shared APIs and contracts.
+|xref:./moduleMetrics-cost/index.adoc#purpose[metrics-cost] |Implements cost and timing measurement for JPMS modules.
+|xref:./moduleMetrics-cost-unnamed/index.adoc#purpose[metrics-cost-unnamed] |Cost instrumentation for unnamed/classpath modules.
+|xref:./moduleExample/index.adoc#purpose[example] |Demonstrates how instrumentation behaves in real code.
+|xref:./moduleTests/index.adoc#purpose[tests] |Validates correctness and stability of the instrumentation system.
 |===
 
 == 🔗 Module Dependency Diagram

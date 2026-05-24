@@ -1,0 +1,60 @@
+@startuml
+
+'==============================================================================================
+' SCHEMA
+'==============================================================================================
+'--------------------------------------------------------------
+' ADR
+'--------------------------------------------------------------
+!define adr(id,title) rectangle "<color:blue><u>title</u></color>" as id [[id.html {open id} _blank]]
+'!define adrTyped(id,title,type) rectangle "<color:blue><u>title</u></color>" <<type>> as id [[id.html {open id} _blank]]
+
+'--------------------------------------------------------------
+' RELATIONS
+'--------------------------------------------------------------
+!define consequenceOf(from,to) from -[#green]-> to : "consequenceOf"
+!define exceptionTo(from,to) from -[#red,dashed]-> to : "exceptionTo"
+!define supersedes(from,to) from -[#red,bold]-> to : "supersedes"
+!define dependsOn(from,to) from -[#blue]-> to : "dependsOn"
+'define isCausedBy(from,to) from -[#red]-> to : "isCausedBy"
+'!define conforms(from,to) from -[#blue,bold]-> to : "conforms"
+
+'==============================================================================================
+' FORMAT
+'==============================================================================================
+skinparam rectangle {
+  BackgroundColor Gold
+}
+skinparam rectangle<<accepted>> {
+  BackgroundColor LightGreen
+  BorderColor Green
+}
+skinparam linetype polyline
+skinparam hyperlinkColor blue
+skinparam hyperlinkUnderline true
+'left to right direction
+
+'==============================================================================================
+' MODEL
+'==============================================================================================
+'--------------------------------------------------------------
+' ADR
+'--------------------------------------------------------------
+ adr(                         001, problem of cem                                             )
+ adr(                         002, problem with munir                                         )
+ adr(                         003, problem of matthias                                        )
+ adr(                         004, problem with matthias                                      )
+ adr( moduleMetricsCostUnnamed001, problem with cem                                           )
+
+'--------------------------------------------------------------
+' RELATIONS
+'--------------------------------------------------------------
+   exceptionTo(                         002,                         001 )
+     dependsOn(                         003,                         001 )
+ consequenceOf(                         004,                         001 )
+   exceptionTo(                         003,                         002 )
+ consequenceOf(                         004,                         002 )
+ consequenceOf(                         004, moduleMetricsCostUnnamed001 )
+    supersedes( moduleMetricsCostUnnamed001,                         003 )
+
+@enduml

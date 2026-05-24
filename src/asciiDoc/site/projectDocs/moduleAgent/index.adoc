@@ -38,18 +38,18 @@ ____
 === Out of Scope (Handled by Other Modules)
 
 * *Bytecode transformation* +
-  Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`],
-  xref:../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`],
-  xref:../counter/index.adoc#purpose[`counter`]
+  Implemented in: xref:../moduleMetrics-cost/index.adoc#purpose[`metrics-cost`],
+  xref:../moduleMetrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`],
+  xref:../moduleCounter/index.adoc#purpose[`counter`]
 * *Injection of counters, timers, or cost‑measurement logic* +
-  Implemented in: xref:../counter/index.adoc#purpose[`counter`],
-  xref:../metrics-cost/index.adoc#purpose[`metrics-cost`]
+  Implemented in: xref:../moduleCounter/index.adoc#purpose[`counter`],
+  xref:../moduleMetrics-cost/index.adoc#purpose[`metrics-cost`]
 * *Data collection and aggregation* +
   Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 * *Instrumentation APIs and shared interfaces* +
-  Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
+  Implemented in: xref:../moduleInterfaces/index.adoc#purpose[`interfaces`]
 * *Instrumentation rules and transformation strategies* +
-  Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`],
-  xref:../counter/index.adoc#purpose[`counter`]
+  Implemented in: xref:../moduleMetrics-cost/index.adoc#purpose[`metrics-cost`],
+  xref:../moduleCounter/index.adoc#purpose[`counter`]
 * *Example usage and demonstration code* +
-  Implemented in: xref:../example/index.adoc#purpose[`example`]
+  Implemented in: xref:../moduleExample/index.adoc#purpose[`example`]

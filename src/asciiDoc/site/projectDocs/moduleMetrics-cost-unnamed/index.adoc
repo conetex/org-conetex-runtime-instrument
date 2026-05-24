@@ -28,16 +28,16 @@ ____
  Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 
 * *Instrumentation for named JPMS modules* +
- Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`]
+ Implemented in: xref:../moduleMetrics-cost/index.adoc#purpose[`metrics-cost`]
 
 * *Counter‑based instrumentation* +
- Implemented in: xref:../counter/index.adoc#purpose[`counter`]
+ Implemented in: xref:../moduleCounter/index.adoc#purpose[`counter`]
 
 * *Defining shared instrumentation interfaces* +
- Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
+ Implemented in: xref:../moduleInterfaces/index.adoc#purpose[`interfaces`]
 
 * *Activating the instrumentation system* +
  Implemented in: xref:../agent/index.adoc#purpose[`agent`]
 
 * *Providing example usage* +
- Implemented in: xref:../example/index.adoc#purpose[`example`]
+ Implemented in: xref:../moduleExample/index.adoc#purpose[`example`]

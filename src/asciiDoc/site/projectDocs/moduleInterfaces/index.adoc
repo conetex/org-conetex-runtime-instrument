@@ -25,16 +25,16 @@ ____
 === Out of Scope (Handled by Other Modules)
 
 * *Implementing counters or cost metrics* +
- Implemented in: xref:../counter/index.adoc#purpose[`counter`], xref:../../../metrics-cost/index.adoc#purpose[`metrics-cost`]
+ Implemented in: xref:../moduleCounter/index.adoc#purpose[`counter`], xref:../../../metrics-cost/index.adoc#purpose[`metrics-cost`]
 
 * *Collecting or aggregating measurement data* +
  Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 
 * *Performing bytecode transformation* +
- Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`], xref:../../../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`], xref:../counter/index.adoc#purpose[`counter`]
+ Implemented in: xref:../moduleMetrics-cost/index.adoc#purpose[`metrics-cost`], xref:../../../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`], xref:../moduleCounter/index.adoc#purpose[`counter`]
 
 * *Activating the instrumentation system* +
  Implemented in: xref:../agent/index.adoc#purpose[`agent`]
 
 * *Providing example usage* +
- Implemented in: xref:../example/index.adoc#purpose[`example`]
+ Implemented in: xref:../moduleExample/index.adoc#purpose[`example`]

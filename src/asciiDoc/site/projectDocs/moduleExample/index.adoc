@@ -25,13 +25,13 @@ ____
 === Out of Scope (Handled by Other Modules)
 
 * *Implementing instrumentation logic* +
- Implemented in: xref:../counter/index.adoc#purpose[`counter`], xref:../metrics-cost/index.adoc#purpose[`metrics-cost`], xref:../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`]
+ Implemented in: xref:../moduleCounter/index.adoc#purpose[`counter`], xref:../moduleMetrics-cost/index.adoc#purpose[`metrics-cost`], xref:../moduleMetrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`]
 
 * *Collecting or aggregating measurement data* +
  Implemented in: xref:../collection/index.adoc#purpose[`collection`]
 
 * *Defining shared instrumentation interfaces* +
- Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
+ Implemented in: xref:../moduleInterfaces/index.adoc#purpose[`interfaces`]
 
 * *Activating the instrumentation system* +
  Implemented in: xref:../agent/index.adoc#purpose[`agent`]

@@ -25,16 +25,16 @@ ____
 === Out of Scope (Handled by Other Modules)
 
 * *Bytecode transformation* +
- Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`], xref:../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`], xref:../counter/index.adoc#purpose[`counter`]
+ Implemented in: xref:../moduleMetrics-cost/index.adoc#purpose[`metrics-cost`], xref:../moduleMetrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`], xref:../moduleCounter/index.adoc#purpose[`counter`]
 
 * *Generating measurement events (counters, timings, cost data)* +
- Implemented in: xref:../counter/index.adoc#purpose[`counter`], xref:../metrics-cost/index.adoc#purpose[`metrics-cost`]
+ Implemented in: xref:../moduleCounter/index.adoc#purpose[`counter`], xref:../moduleMetrics-cost/index.adoc#purpose[`metrics-cost`]
 
 * *Defining instrumentation interfaces* +
- Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
+ Implemented in: xref:../moduleInterfaces/index.adoc#purpose[`interfaces`]
 
 * *Activating or configuring the instrumentation system* +
  Implemented in: xref:../agent/index.adoc#purpose[`agent`]
 
 * *Providing example usage* +
- Implemented in: xref:../example/index.adoc#purpose[`example`]
+ Implemented in: xref:../moduleExample/index.adoc#purpose[`example`]

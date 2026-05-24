@@ -179,6 +179,8 @@
                                 <apidocIndexFile>index.html</apidocIndexFile>
                                 <jacocoFolder>jacoco</jacocoFolder>
                                 <jacocoIndexFile>index.html</jacocoIndexFile>
+                                <renderedPlantUml>svg</renderedPlantUml>
+                                <srcBasePath>https://github.com/conetex/org-conetex-runtime-instrument/blob/master</srcBasePath>
                             </attributes>
                         </configuration>
                     </execution>

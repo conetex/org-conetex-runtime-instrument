@@ -3,3 +3,5 @@
 :apidocIndexFile: index.adoc
 :jacocoFolder: projectDocs
 :jacocoIndexFile: index.adoc
+:renderedPlantUml: puml
+:srcBasePath: https://github.com/conetex/org-conetex-runtime-instrument/blob/master
