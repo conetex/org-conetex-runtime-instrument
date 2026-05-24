@@ -199,7 +199,7 @@ svg *,
 <h1>Architecture</h1>
 <div class="details">
 <span id="revnumber">version 0.0.1,</span>
-<span id="revdate">2026-05-24T09:37:23Z</span>
+<span id="revdate">2026-05-24T15:40:54Z</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -231,7 +231,7 @@ svg *,
 It summarizes the purpose of each module, shows how they interact, and includes diagrams to visualize the system.</p>
 </div>
 <div class="paragraph">
-<p>For detailed responsibilities and boundaries, each module has its own <code>purpose</code> description.</p>
+<p>For detailed responsibilities and boundaries, each module has its own purpose description.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -265,35 +265,35 @@ Together, they implement a modular Java runtime instrumentation framework based 
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./agent/index.html#purpose"><code>agent</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleAgent/index.html#purpose">agent</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Activates and configures the instrumentation system (JVM agent entry point).</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./collection/index.html#purpose"><code>collection</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleCollection/index.html#purpose">collection</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Collects and aggregates measurement data.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./counter/index.html#purpose"><code>counter</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleCounter/index.html#purpose">counter</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Implements runtime counters and injects counter logic.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./interfaces/index.html#purpose"><code>interfaces</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleInterfaces/index.html#purpose">interfaces</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Defines shared APIs and contracts.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./metrics-cost/index.html#purpose"><code>metrics-cost</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleMetrics-cost/index.html#purpose">metrics-cost</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Implements cost and timing measurement for JPMS modules.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./metrics-cost-unnamed/index.html#purpose"><code>metrics-cost-unnamed</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleMetrics-cost-unnamed/index.html#purpose">metrics-cost-unnamed</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Cost instrumentation for unnamed/classpath modules.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./example/index.html#purpose"><code>example</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleExample/index.html#purpose">example</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Demonstrates how instrumentation behaves in real code.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./tests/index.html#purpose"><code>tests</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleTests/index.html#purpose">tests</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Validates correctness and stability of the instrumentation system.</p></td>
 </tr>
 </tbody>
@@ -334,7 +334,7 @@ Together, they implement a modular Java runtime instrumentation framework based 
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1<br>
-Last updated 2026-05-24 09:37:19 UTC
+Last updated 2026-05-24 15:40:49 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

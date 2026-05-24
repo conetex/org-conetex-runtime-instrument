@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>tests</title>
+<style>
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
+@import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+html,
+body {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body,
+body *:not(.hljs):not(.hljs *) {
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
+
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
+  background: #fff !important;
+}
+
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: #000 !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+/* Syntax Highlighting NICHT überschreiben */
+
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>tests</h1>
+<div class="details">
+<span id="revnumber">version 0.0.1,</span>
+<span id="revdate">2026-05-24T15:40:54Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_navigation">navigation</a></li>
+<li><a href="#purpose">Purpose</a>
+<ul class="sectlevel2">
+<li><a href="#_out_of_scope_handled_by_other_modules">Out of Scope (Handled by Other Modules)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_navigation">navigation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="../index.html">.. (navigate up)</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="purpose">Purpose</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>tests</code> module contains <strong>test cases</strong> for validating the behavior of the instrumentation framework.<br>
+Its responsibilities include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>verifying correct operation of counters, cost metrics, and data collection</p>
+</li>
+<li>
+<p>ensuring that bytecode transformations behave as expected</p>
+</li>
+<li>
+<p>providing regression coverage for the instrumentation modules</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In essence:</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p>The <code>tests</code> module ensures the correctness and stability of the instrumentation system.</p>
+</div>
+</blockquote>
+</div>
+<hr>
+<div class="sect2">
+<h3 id="_out_of_scope_handled_by_other_modules">Out of Scope (Handled by Other Modules)</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Implementing instrumentation logic</strong><br>
+Implemented in: <a href="../moduleCounter/index.html#purpose"><code>counter</code></a>, <a href="../moduleMetrics-cost/index.html#purpose"><code>metrics-cost</code></a>, <a href="../moduleMetrics-cost-unnamed/index.html#purpose"><code>metrics-cost-unnamed</code></a></p>
+</li>
+<li>
+<p><strong>Collecting or aggregating measurement data</strong><br>
+Implemented in: <a href="../collection/index.html#purpose"><code>collection</code></a></p>
+</li>
+<li>
+<p><strong>Defining shared instrumentation interfaces</strong><br>
+Implemented in: <a href="../moduleInterfaces/index.html#purpose"><code>interfaces</code></a></p>
+</li>
+<li>
+<p><strong>Activating the instrumentation system</strong><br>
+Implemented in: <a href="../agent/index.html#purpose"><code>agent</code></a></p>
+</li>
+<li>
+<p><strong>Providing example usage</strong><br>
+Implemented in: <a href="../moduleExample/index.html#purpose"><code>example</code></a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.0.1<br>
+Last updated 2026-05-24 15:40:49 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>
