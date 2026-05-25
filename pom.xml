@@ -171,7 +171,7 @@
                                 <organization>${project.organization.name}</organization>
                                 <baseDirFollowsSourceDir>true</baseDirFollowsSourceDir>        <!-- needed to make plantuml:: understand relativ paths      -->
                                 <!-- style                  -->
-                                <stylesheet>bw.css</stylesheet>
+                                <stylesheet>blackWhite.css</stylesheet>
                                 <stylesdir>${project.basedir}/src/asciiDoc/resources</stylesdir>
                                 <!-- custom linking         -->
                                 <prjdocFolder>projectDocs</prjdocFolder>

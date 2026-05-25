@@ -1,0 +1,44 @@
+:catalog: core
+:module: parent
+
+= <title of this adr>
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}]
+
+:date: <a date>
+:deciders: <the deciders>
+
+== Problem
+
+<description>
+
+=== Decision Drivers
+
+* <decision driver A>
+* <decision driver B>
+
+== Options Evaluation
+
+* <option A>
+* <option B>
+
+== Decision
+
+<Decision for option X>
+
+=== Decision Rationale (optional)
+
+* <decision Rationale A>
+* <decision Rationale B>
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* <Consequence B>
+* <Consequence B>
+

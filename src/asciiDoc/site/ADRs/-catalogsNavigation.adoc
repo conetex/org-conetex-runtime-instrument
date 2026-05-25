@@ -1,0 +1,7 @@
+:pathToIndexes: ../
+:pathToCatalogs: ./
+
+== Navigation
+include::../-indexes.adoc[]
+|
+include::./-catalogs.adoc[]

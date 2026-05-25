@@ -1,0 +1,55 @@
+= agent module
+
+include::../-navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
+
+The `agent` module provides the entry point for enabling runtime
+instrumentation inside the JVM. +
+Its responsibilities are limited to:
+
+* registering the project as a Java Instrumentation Agent (`premain` /
+`agentmain`)
+* initializing the instrumentation framework at JVM startup or
+attachment time
+* activating and configuring the measurement subsystems provided by
+  other modules
+
+In essence:
+
+[plantuml]
+----
+@startuml
+title Module Overview — Class Instrumentation
+
+'left to right direction
+
+component counter as C
+----
+
+____
+The `agent` module starts and configures the instrumentation system, but
+does not perform any bytecode transformation or measurement itself.
+____
+
+'''''
+
+=== Out of Scope (Handled by Other Modules)
+
+* *Bytecode transformation* +
+  Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`],
+  xref:../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`],
+  xref:../counter/index.adoc#purpose[`counter`]
+* *Injection of counters, timers, or cost‑measurement logic* +
+  Implemented in: xref:../counter/index.adoc#purpose[`counter`],
+  xref:../metrics-cost/index.adoc#purpose[`metrics-cost`]
+* *Data collection and aggregation* +
+  Implemented in: xref:../collection/index.adoc#purpose[`collection`]
+* *Instrumentation APIs and shared interfaces* +
+  Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
+* *Instrumentation rules and transformation strategies* +
+  Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`],
+  xref:../counter/index.adoc#purpose[`counter`]
+* *Example usage and demonstration code* +
+  Implemented in: xref:../example/index.adoc#purpose[`example`]

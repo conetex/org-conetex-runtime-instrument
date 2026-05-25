@@ -1,0 +1,127 @@
+:catalog: tec-Stack
+:module: parent
+
+= Centralized Documentation Build in Parent Module
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}], xref:./coreCatalog.adoc[core]
+
+:date: 2026-05-25
+:deciders: Matthias Franke
+
+== Problem
+
+The project uses a multi-module Maven build and provides technical documentation
+containing:
+
+* Markdown
+* AsciiDoc
+* PlantUML
+* Mermaid
+* D2
+
+The generated documentation is aggregated into a single Maven site and published
+via GitHub Pages.
+
+During implementation it became apparent that distributing documentation generation
+across individual Maven modules introduces substantial complexity:
+
+* site aggregation becomes fragile
+* generated resources must be copied between modules
+* relative links between modules become difficult to maintain
+* PlantUML and D2 outputs must be coordinated centrally
+* Maven Site lifecycle execution becomes hard to control in a multi-module reactor
+* some plugins require `<inherited>false</inherited>` to avoid duplicate executions
+
+Especially problematic was the fact that documentation tooling operates partly
+at build-time (PlantUML, D2) and partly at runtime (Mermaid), while Maven Site
+itself has limited support for modern documentation templating and script injection.
+
+=== Decision Drivers
+
+* stable CI/CD execution on GitHub Actions
+* deterministic documentation generation
+* avoidance of duplicated Maven plugin executions
+* simplified site aggregation
+* consistent relative linking between generated pages and diagrams
+* minimization of Maven Site lifecycle complexity
+* reduction of cross-module coupling in documentation generation
+* support for multiple documentation technologies simultaneously
+* elimination of per-module documentation build orchestration
+
+== Options Evaluation
+
+* Distributed documentation generation per Maven module
+* Centralized documentation generation in parent module
+
+== Decision
+
+Centralize all project documentation in the parent module and generate the complete
+documentation site exclusively from the parent build.
+
+Documentation assets such as:
+
+* Markdown
+* AsciiDoc
+* PlantUML
+* Mermaid
+* D2
+
+are stored and rendered only within the parent module.
+
+Documentation-related Maven plugin executions are configured in the parent module
+and selectively marked with `<inherited>false</inherited>` where necessary to
+prevent duplicate execution in child modules.
+
+=== Decision Rationale (optional)
+
+* Maven Site aggregation behaves significantly more predictably when documentation
+generation occurs only once in the reactor build.
+
+* PlantUML and D2 generate shared site artifacts (`svg`) that are easier to manage
+centrally than across multiple module output directories.
+
+* Relative links inside generated HTML and Markdown remain stable when all content
+originates from a single site root.
+
+* Mermaid integration requires client-side JavaScript injection, which is easier
+to maintain globally than per-module.
+
+* Maven Site plugin descriptors (`site.xml`) have limited support for modern
+templating and script injection, making decentralized customization error-prone.
+
+* Multi-module documentation generation caused repeated execution of diagram
+generators and duplicate processing of shared resources.
+
+* Centralized documentation avoids Maven lifecycle coordination issues between:
+
+- `pre-site`
+- `site`
+- generated resources
+- site aggregation
+
+* GitHub Pages deployment becomes simpler because only a single aggregated
+`target/site` output must be published.
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* documentation source structure is maintained exclusively in the parent module
+
+* child modules do not own independent site generation
+
+* documentation-related Maven plugins are configured centrally
+
+* generated diagrams are emitted into a shared site output structure
+
+* cross-module documentation references must be maintained manually at the parent level
+
+* documentation ownership becomes organizational rather than module-local
+
+* module isolation for documentation is reduced in favor of build stability
+
+* GitHub Actions pipelines become simpler because only one documentation site is generated

@@ -1,0 +1,19 @@
+:linkattrs:
+
+:catalogName: core
+
+= {catalogName} Catalog of Architecture Decision Records
+
+include::./-catalogsNavigation.adoc[]
+
+== Diagram
+
+if links below are not working: try link:./{catalogName}Catalog.{renderedPlantUml}[open diagram^]
+
+//plantuml::./coreIndex.puml[] does not create links. so:
+++++
+<object data="coreCatalog.svg"
+        type="image/svg+xml"
+        width="100%">
+</object>
+++++

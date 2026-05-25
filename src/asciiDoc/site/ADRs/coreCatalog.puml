@@ -1,0 +1,33 @@
+@startuml
+
+!include -inclCatalogSchema.puml
+
+'==============================================================================================
+' MODEL
+'==============================================================================================
+'--------------------------------------------------------------
+' ADR
+'--------------------------------------------------------------
+adr(                         007, ADR State via Git Workflow                                  )
+adr(                         006, ADR as Code                                                 )
+adr(                         004, tec-Stack, Centralize Doc in Parent Module                  )
+adr(                         003, Documentation as Code                                       )
+'adr(                         002, problem with munir                                          )
+'adr(                         001, problem of cem                                              )
+'adr( moduleMetricsCostUnnamed001, problem with cem                                            )
+
+'--------------------------------------------------------------
+' RELATIONS
+'--------------------------------------------------------------
+consequenceOf(                                    007,                                    006 )
+     conforms(                                    006,                                    003 )
+     conforms(                                    004,                                    003 )
+'  exceptionTo(                                    002,                                    001 )
+' simplifiedBy(                                   x004,                                    001 )
+'consequenceOf(                                   x003,                                    001 )
+'  exceptionTo(                                   x004,                                    002 )
+'consequenceOf(                                   x003,                                    002 )
+'consequenceOf(                                   x003,            moduleMetricsCostUnnamed001 )
+'   supersedes(            moduleMetricsCostUnnamed001,                                   x004 )
+
+@enduml

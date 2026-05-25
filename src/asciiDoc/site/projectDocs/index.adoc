@@ -1,7 +1,7 @@
 [#architecture]
-= Architecture
+= parent module - overall Architecture
 
-include::../_navigationForChildren.adoc[]
+include::./-navigation.adoc[]
 
 == Overview
 
@@ -12,27 +12,27 @@ For detailed responsibilities and boundaries, each module has its own purpose de
 
 plantuml::./moduleOverview.puml[]
 
-== 📐 System Architecture
+== System Architecture
 
 The system is composed of several independent but cooperating modules. +
 Together, they implement a modular Java runtime instrumentation framework based on the JVM Instrumentation API.
 
-== 🧩 Module Responsibilities (Summary)
+== Module Responsibilities (Summary)
 
 |===
 |Module |Purpose 
 
-|xref:./moduleAgent/index.adoc#purpose[agent] |Activates and configures the instrumentation system (JVM agent entry point).
-|xref:./moduleCollection/index.adoc#purpose[collection] |Collects and aggregates measurement data.
-|xref:./moduleCounter/index.adoc#purpose[counter] |Implements runtime counters and injects counter logic.
-|xref:./moduleInterfaces/index.adoc#purpose[interfaces] |Defines shared APIs and contracts.
-|xref:./moduleMetrics-cost/index.adoc#purpose[metrics-cost] |Implements cost and timing measurement for JPMS modules.
-|xref:./moduleMetrics-cost-unnamed/index.adoc#purpose[metrics-cost-unnamed] |Cost instrumentation for unnamed/classpath modules.
-|xref:./moduleExample/index.adoc#purpose[example] |Demonstrates how instrumentation behaves in real code.
-|xref:./moduleTests/index.adoc#purpose[tests] |Validates correctness and stability of the instrumentation system.
+|xref:./agent/index.adoc#purpose[agent] |Activates and configures the instrumentation system (JVM agent entry point).
+|xref:./collection/index.adoc#purpose[collection] |Collects and aggregates measurement data.
+|xref:./counter/index.adoc#purpose[counter] |Implements runtime counters and injects counter logic.
+|xref:./interfaces/index.adoc#purpose[interfaces] |Defines shared APIs and contracts.
+|xref:./metrics-cost/index.adoc#purpose[metrics-cost] |Implements cost and timing measurement for JPMS modules.
+|xref:./metrics-cost-unnamed/index.adoc#purpose[metrics-cost-unnamed] |Cost instrumentation for unnamed/classpath modules.
+|xref:./example/index.adoc#purpose[example] |Demonstrates how instrumentation behaves in real code.
+|xref:./tests/index.adoc#purpose[tests] |Validates correctness and stability of the instrumentation system.
 |===
 
-== 🔗 Module Dependency Diagram
+== Module Dependency Diagram
 
 [plantuml]
 ----
@@ -74,7 +74,7 @@ E --> C
 @enduml
 ----
 
-== 🧭 Module Roles Diagram
+== Module Roles Diagram
 
 [plantuml]
 ----
@@ -116,7 +116,7 @@ E --> F
 @enduml
 ----
 
-== 🔧 Class Instrumentation Sequence
+== Class Instrumentation Sequence
 
 [plantuml]
 ----

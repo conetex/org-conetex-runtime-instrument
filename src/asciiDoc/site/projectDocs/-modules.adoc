@@ -1,0 +1,10 @@
+modules:
+xref:{pathToModules}index.adoc[parent] |
+xref:{pathToModules}agent/index.adoc[agent] |
+xref:{pathToModules}collection/index.adoc[collection] |
+xref:{pathToModules}counter/index.adoc[counter] |
+xref:{pathToModules}example/index.adoc[example] |
+xref:{pathToModules}interfaces/index.adoc[interfaces] |
+xref:{pathToModules}metrics-cost/index.adoc[metrics-cost] |
+xref:{pathToModules}metrics-cost-unnamed/index.adoc[metrics-cost-unnamed] |
+xref:{pathToModules}tests/index.adoc[test]

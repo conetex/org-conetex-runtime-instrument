@@ -1,0 +1,93 @@
+:catalog: tec-Stack
+:module: parent
+
+= Standardize Documentation Stack on AsciiDoc and PlantUML
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}]
+
+:date: 2026-05-25
+:deciders: Matthias Franke
+
+== Problem
+
+The project requires a documentation approach that integrates cleanly with a multi-module Maven build, GitHub Pages publishing, architecture diagrams, JavaDoc references, and long-term maintainability.
+
+The previous evaluation included multiple competing technologies and approaches:
+
+* Markdown vs AsciiDoc
+* Mermaid vs PlantUML
+* runtime-rendered documentation vs prebuilt static HTML
+* Maven site lifecycle vs custom CI assembly
+
+The chosen documentation approach must support:
+
+* technical architecture documentation
+* maintainable diagrams
+* versioned static publishing
+* integration into CI/CD
+* IDE support
+* documentation-as-code workflows
+
+=== Decision Drivers
+
+* Strong support for software architecture documentation
+* Native integration into Maven build pipelines
+* Stable static site generation
+* High-quality diagram capabilities
+* Compatibility with GitHub Pages
+* Good IntelliJ support
+* Long-term maintainability
+* Avoidance of complex runtime rendering infrastructure
+* Separation of source files and generated artifacts
+* Support for large multi-module projects
+
+== Options Evaluation
+
+* Markdown + Mermaid
+* Markdown + PlantUML
+* AsciiDoc + Mermaid
+* AsciiDoc + PlantUML
+
+== Decision
+
+Use AsciiDoc as the documentation format and PlantUML as the standard diagram technology for the complete project documentation stack.
+
+Mermaid diagrams are not used as a primary architecture documentation technology.
+
+Documentation is generated during Maven builds and published as static HTML via GitHub Actions and GitHub Pages.
+
+
+=== Decision Rationale
+
+
+* AsciiDoc provides significantly stronger technical documentation capabilities than Markdown
+* AsciiDoc integrates naturally into Maven and Java ecosystems
+* PlantUML supports substantially more advanced software architecture modeling than Mermaid
+* PlantUML supports sequence, component, deployment, activity, state, and C4-style diagrams
+* PlantUML source files can be maintained independently from documentation pages
+* AsciiDoc cross references (`xref`) provide stable documentation linking
+* Static HTML generation avoids runtime rendering dependencies
+* GitHub Pages can host generated static content without additional infrastructure
+* The chosen approach scales well for multi-module projects
+* IntelliJ provides strong support for both AsciiDoc and PlantUML
+* Generated artifacts can be isolated into Maven `target/` directories
+* The approach aligns with modern Docs-as-Code practices
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* Documentation sources are stored as `.adoc` files
+* Architecture diagrams are stored as external `.puml` files
+* Documentation HTML is generated during Maven builds
+* GitHub Actions assembles and publishes the final documentation site
+* GitHub Pages is used only as static hosting
+* Mermaid is not used for primary architecture documentation
+* Maven site lifecycle aggregation is avoided
+* JavaDoc and JaCoCo reports are collected during CI assembly
+* Documentation versioning is implemented using version folders on the `gh-pages` branch
+

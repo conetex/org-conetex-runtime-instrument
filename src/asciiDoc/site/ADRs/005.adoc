@@ -1,0 +1,57 @@
+:catalog: tec-Stack
+:module: parent
+
+= Aggregate module Javadoc and JaCoCo via GitHub Actions
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}]
+
+:date: 2026-05-25
+:deciders: Matthias Franke
+
+== Problem
+
+We need a reliable, repeatable CI step that collects Javadoc and JaCoCo reports from each module in our multi-module build and merges those outputs with the parent module's documentation site. Attempts to perform this aggregation inside Maven (using aggregator plugins or a large parent POM) have failed to meet our requirements because of ordering constraints, limitations of the javadoc/jacoco aggregator plugins, and unacceptable POM complexity.
+
+=== Decision Drivers
+
+* Produce a single, consistent documentation site that includes module Javadoc and coverage reports.
+* Ensure deterministic ordering and merging of artifacts produced by module builds.
+* Keep the parent POM small and maintainable.
+* Publish the combined documentation automatically as part of the release pipeline (GitHub Pages).
+* Use a CI step that is lightweight, easy to reason about, and integrates with our hosting choice.
+
+== Options Evaluation
+
+* **Option A — Use Maven aggregator plugins in the parent POM**: relies on `javadoc:aggregate` and `jacoco:report-aggregate` or similar. In practice this fails because aggregator plugins do not produce the exact merged outputs we need, ordering of module execution and artifact availability is fragile, and the parent POM becomes large and hard to maintain.
+* **Option B — Add custom Maven modules or scripts inside the build**: requires more build-time orchestration, increases build complexity, and still suffers from ordering and packaging edge cases.
+* **Option C — Use GitHub Actions CI step to collect per-module Javadoc and JaCoCo outputs and merge them into the parent documentation, then publish to GitHub Pages**: keeps the build POMs small, gives explicit control over ordering and merging, and fits naturally with GitHub Pages hosting.
+
+== Decision
+
+We choose **Option C — Use a small GitHub Actions workflow step** to gather Javadoc and JaCoCo artifacts from each module after module builds, merge them with the parent documentation, and publish the combined site to GitHub Pages.
+
+=== Decision Rationale
+
+* **Deterministic ordering and control**: A CI step can explicitly run module builds in the required order, collect generated artifacts from known locations, and perform merging steps (copy, transform, or re-generate) with full control over ordering and conflict resolution.
+* **Aggregator plugin limitations**: The Maven aggregator plugins for Javadoc and JaCoCo do not produce the merged outputs we require in our layout and do not handle some cross-module edge cases (resource merging, custom doc structure, or coverage aggregation with our reporting needs). Relying on them led to inconsistent results.
+* **Avoid POM bloat**: Embedding complex aggregation logic into the parent POM makes the POM large and harder to maintain; moving orchestration into a small CI action keeps build configuration focused and minimal.
+* **Natural fit with GitHub Pages**: Since we publish the documentation to GitHub Pages, GitHub Actions is a natural CI choice — it can build, merge, and push the final site directly to the Pages branch. This reduces friction and removes the need for external deployment tooling.
+* **Small, auditable action**: The aggregation step is intentionally small and focused (collect artifacts, merge, run any doc-site build, run link/format checks, publish). This keeps the workflow easy to review and maintain in PRs.
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* **Add a GitHub Actions workflow**: create a compact workflow that runs after module builds, collects `target/site/apidocs` (or configured javadoc output) and JaCoCo `.exec`/HTML reports from each module, merges them into the parent docs directory, and triggers the site build.
+* **Standardize artifact locations**: require each module to write Javadoc and JaCoCo outputs to agreed paths so the action can reliably find and collect them.
+* **Merge strategy and tooling**: implement merging scripts (shell, Node, or small Java tool) to combine Javadoc trees and coverage reports into the parent site layout; include conflict resolution rules for overlapping packages or resources.
+* **CI checks**: add link checking and basic validation in the action to catch broken references introduced by merging.
+* **Publish to GitHub Pages**: configure the workflow to push the built site to the Pages branch (or use the actions/pages integration) so documentation is published automatically after successful builds.
+* **Keep POMs minimal**: remove or simplify any previously added aggregator configuration from the parent POM; keep module POMs focused on producing their own artifacts.
+* **Documentation and training**: document the new workflow and artifact conventions so contributors know how to produce module docs that the CI step will collect.
+* **Fallback and debugging**: provide a debug mode in the action to upload intermediate artifacts for troubleshooting when merges fail.
+
