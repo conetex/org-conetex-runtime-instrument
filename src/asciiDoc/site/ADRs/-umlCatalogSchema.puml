@@ -3,17 +3,18 @@
 hide stereotype
 
 '==============================================================================================
-' SCHEMA
+' MODEL SCHEMA
 '==============================================================================================
 '--------------------------------------------------------------
-' ADR
+' NODES (VERTICES)                                          ADR
 '--------------------------------------------------------------
+!define vertex(id,title) rectangle "title" as id
 !define adr(id,title) rectangle "id:\n<color:blue><u>title</u></color>" as id [[id.html {open id} _blank]]
 !define adr(id,alienCatalog,title) rectangle "id (alienCatalog):\n<color:blue><u>title</u></color>" <<alien>> as id [[id.html {open id} _blank]]
 '!define adrTyped(id,title,type) rectangle "<color:blue><u>title</u></color>" <<type>> as id [[id.html {open id} _blank]]
 
 '--------------------------------------------------------------
-' RELATIONS
+' EDGES / ARCS                                        RELATIONS
 '--------------------------------------------------------------
 !define consequenceOf(src,trg) src -[#green]-> trg :  implements /\nconsequence of
 !define conforms(src,trg) src <-[#green,dashed]-> trg : conforms\nto
