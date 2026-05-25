@@ -59,7 +59,7 @@ h|Module h|Design h|Usage h|Test
 
 |tests
 |xref:./{prjdocFolder}/tests/index.adoc#purpose[purpose]: validates correctness and stability of the instrumentation system.
-|link:./{apidocFolder}/tests/{apidocIndexFile}[apidoc]
+|
 |
 
 |===
