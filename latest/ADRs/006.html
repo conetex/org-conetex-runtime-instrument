@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>ADR as Code: Store Architecture Decision Records in Version Control</title>
+<style>
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
+@import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+html,
+body {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body,
+body *:not(.hljs):not(.hljs *) {
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
+
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
+  background: #fff !important;
+}
+
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: #000 !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+/* Syntax Highlighting NICHT überschreiben */
+
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>ADR as Code: Store Architecture Decision Records in Version Control</h1>
+<div class="details">
+<span id="revnumber">version 0.0.1,</span>
+<span id="revdate">2026-05-25T18:10:46Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_problem">Problem</a>
+<ul class="sectlevel2">
+<li><a href="#_decision_drivers">Decision Drivers</a></li>
+</ul>
+</li>
+<li><a href="#_options_evaluation">Options Evaluation</a></li>
+<li><a href="#_decision">Decision</a>
+<ul class="sectlevel2">
+<li><a href="#_decision_rationale">Decision Rationale</a></li>
+<li><a href="#_consequences">Consequences</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Architecture Decision Record</p>
+</div>
+<div class="paragraph">
+<p>cataloged in: <a href="./coreCatalog.html">core</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_problem">Problem</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>ADR documents are currently scattered across documents, tickets, and personal notes. This fragmentation makes decisions hard to discover, review, and link to code changes or releases. We need a consistent, auditable way to author, review, version, and publish ADRs so they remain part of the product lifecycle.</p>
+</div>
+<div class="sect2">
+<h3 id="_decision_drivers">Decision Drivers</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Make architectural decisions discoverable and versioned alongside code.</p>
+</li>
+<li>
+<p>Enable review and approval of ADRs through the same PR workflow as code.</p>
+</li>
+<li>
+<p>Ensure ADRs can be packaged and published with releases.</p>
+</li>
+<li>
+<p>Provide traceability from code changes to the decisions that motivated them.</p>
+</li>
+<li>
+<p>Reduce duplication and drift between design intent and implementation.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options_evaluation">Options Evaluation</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Option A — Keep ADRs in separate documentation systems or tickets</strong>: low friction initially but leads to fragmentation, poor discoverability, and weak traceability to code and releases.</p>
+</li>
+<li>
+<p><strong>Option B — Centralized wiki or CMS</strong>: improves discoverability but often lacks tight versioning with code branches and complicates release packaging.</p>
+</li>
+<li>
+<p><strong>Option C — ADR as Code (store ADRs as plain-text files in the repository, authored in AsciiDoc/Markdown, reviewed via PRs, built and published by CI)</strong>: integrates ADRs with code, enables PR-based review, supports automated validation and release packaging.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_decision">Decision</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We choose <strong>Option C — ADR as Code</strong>: store ADRs as plain-text files in the repository (AsciiDoc), require ADR changes via pull requests, validate ADR metadata in CI, and publish ADRs together with the release documentation.</p>
+</div>
+<div class="sect2">
+<h3 id="_decision_rationale">Decision Rationale</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Version parity</strong>: ADRs in the same repository and branches as code are versioned with the features and releases they affect.</p>
+</li>
+<li>
+<p><strong>Single review workflow</strong>: Using PRs for ADRs aligns decision review with code review, improving stakeholder visibility and accountability.</p>
+</li>
+<li>
+<p><strong>Release integration</strong>: ADR files can be included in the documentation site and packaged with release artifacts, making decisions a first-class part of each release.</p>
+</li>
+<li>
+<p><strong>Automation and validation</strong>: CI can enforce ADR templates, metadata (date, deciders, status), link checks, and cross-references to related ADRs or code.</p>
+</li>
+<li>
+<p><strong>Traceability</strong>: Commits and PRs provide a direct link between code changes and the ADRs that justify them, aiding audits and future maintenance.</p>
+</li>
+<li>
+<p><strong>Low tooling overhead</strong>: Plain-text AsciiDoc files are easy to edit, diff, and render; they work well with existing static site generators and GitHub Pages.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_consequences">Consequences</h3>
+<div class="paragraph">
+<p>Consequences might are reflected by other ADRs. see <a href="./coreCatalog.html">core</a></p>
+</div>
+<div class="paragraph">
+<p>consequences for implementation:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Repository layout</strong>: create a dedicated <code>docs/adr</code> directory (or similar) in the parent repository; add the ADR Catalog entry for new ADRs.</p>
+</li>
+<li>
+<p><strong>ADR template and metadata</strong>: adopt a standard AsciiDoc template (title, date, deciders, status, problem, drivers, options, decision, rationale, consequences, related ADRs).</p>
+</li>
+<li>
+<p><strong>CI validation</strong>: add a small CI job to validate ADR front-matter, enforce filename conventions, check cross-references, and optionally render a preview.</p>
+</li>
+<li>
+<p><strong>PR process</strong>: require ADR changes to go through the same PR review process as code; include required reviewers (architecture, docs owner, product).</p>
+</li>
+<li>
+<p><strong>Linking and traceability</strong>: require PRs that implement an ADR to reference the ADR ID in the commit/PR and vice versa.</p>
+</li>
+<li>
+<p><strong>Publishing</strong>: include ADRs in the documentation site build and publish them with the release (e.g., via GitHub Pages).</p>
+</li>
+<li>
+<p><strong>Governance</strong>: define ADR lifecycle states (proposed, accepted, superseded, deprecated) and a process for updating or superseding ADRs.</p>
+</li>
+<li>
+<p><strong>Search and discoverability</strong>: add ADR index pages, tags, and cross-reference links in the Catalog to make decisions easy to find.</p>
+</li>
+<li>
+<p><strong>Training and templates</strong>: provide contributor guidance and examples so teams can write concise, decision-focused ADRs.</p>
+</li>
+<li>
+<p><strong>Small CI footprint</strong>: keep ADR-related CI checks minimal and fast to avoid slowing developer workflows.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.0.1<br>
+Last updated 2026-05-25 18:10:44 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>

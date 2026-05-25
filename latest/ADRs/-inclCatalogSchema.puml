@@ -1,0 +1,44 @@
+@startuml
+
+hide stereotype
+
+'==============================================================================================
+' SCHEMA
+'==============================================================================================
+'--------------------------------------------------------------
+' ADR
+'--------------------------------------------------------------
+!define adr(id,title) rectangle "id:\n<color:blue><u>title</u></color>" as id [[id.html {open id} _blank]]
+!define adr(id,alienCatalog,title) rectangle "id (alienCatalog):\n<color:blue><u>title</u></color>" <<alien>> as id [[id.html {open id} _blank]]
+'!define adrTyped(id,title,type) rectangle "<color:blue><u>title</u></color>" <<type>> as id [[id.html {open id} _blank]]
+
+'--------------------------------------------------------------
+' RELATIONS
+'--------------------------------------------------------------
+!define consequenceOf(src,trg) src -[#green]-> trg :  implements /\nconsequence of
+!define conforms(src,trg) src <-[#green,dashed]-> trg : conforms\nto
+!define simplifiedBy(from,to) from -[#blue,dashed]-> to : simplified\nby
+
+!define exceptionTo(src,trg) src -[#red,dashed]-> trg : exception\nto
+!define supersedes(src,trg) src -[#red,bold]-> trg : supersedes
+'define isCausedBy(from,to) from -[#red]-> to : "isCausedBy"
+
+'==============================================================================================
+' FORMAT
+'==============================================================================================
+skinparam rectangle {
+  BackgroundColor lightYellow
+  BorderColor Black
+}
+skinparam rectangle<<alien>> {
+  BackgroundColor White
+  hyperlinkColor Red
+  BorderColor Black
+  LineStyle dashed
+}
+skinparam linetype polyline
+skinparam hyperlinkColor blue
+skinparam hyperlinkUnderline true
+'left to right direction
+
+@enduml

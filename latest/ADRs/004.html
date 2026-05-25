@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Centralized Documentation Build in Parent Module</title>
+<style>
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
+@import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+html,
+body {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body,
+body *:not(.hljs):not(.hljs *) {
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
+
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
+  background: #fff !important;
+}
+
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: #000 !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+/* Syntax Highlighting NICHT überschreiben */
+
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Centralized Documentation Build in Parent Module</h1>
+<div class="details">
+<span id="revnumber">version 0.0.1,</span>
+<span id="revdate">2026-05-25T18:10:46Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_problem">Problem</a>
+<ul class="sectlevel2">
+<li><a href="#_decision_drivers">Decision Drivers</a></li>
+</ul>
+</li>
+<li><a href="#_options_evaluation">Options Evaluation</a></li>
+<li><a href="#_decision">Decision</a>
+<ul class="sectlevel2">
+<li><a href="#_decision_rationale_optional">Decision Rationale (optional)</a></li>
+<li><a href="#_consequences">Consequences</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Architecture Decision Record</p>
+</div>
+<div class="paragraph">
+<p>cataloged in: <a href="./tec-StackCatalog.html">tec-Stack</a>, <a href="./coreCatalog.html">core</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_problem">Problem</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The project uses a multi-module Maven build and provides technical documentation
+containing:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Markdown</p>
+</li>
+<li>
+<p>AsciiDoc</p>
+</li>
+<li>
+<p>PlantUML</p>
+</li>
+<li>
+<p>Mermaid</p>
+</li>
+<li>
+<p>D2</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The generated documentation is aggregated into a single Maven site and published
+via GitHub Pages.</p>
+</div>
+<div class="paragraph">
+<p>During implementation it became apparent that distributing documentation generation
+across individual Maven modules introduces substantial complexity:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>site aggregation becomes fragile</p>
+</li>
+<li>
+<p>generated resources must be copied between modules</p>
+</li>
+<li>
+<p>relative links between modules become difficult to maintain</p>
+</li>
+<li>
+<p>PlantUML and D2 outputs must be coordinated centrally</p>
+</li>
+<li>
+<p>Maven Site lifecycle execution becomes hard to control in a multi-module reactor</p>
+</li>
+<li>
+<p>some plugins require <code>&lt;inherited&gt;false&lt;/inherited&gt;</code> to avoid duplicate executions</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Especially problematic was the fact that documentation tooling operates partly
+at build-time (PlantUML, D2) and partly at runtime (Mermaid), while Maven Site
+itself has limited support for modern documentation templating and script injection.</p>
+</div>
+<div class="sect2">
+<h3 id="_decision_drivers">Decision Drivers</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>stable CI/CD execution on GitHub Actions</p>
+</li>
+<li>
+<p>deterministic documentation generation</p>
+</li>
+<li>
+<p>avoidance of duplicated Maven plugin executions</p>
+</li>
+<li>
+<p>simplified site aggregation</p>
+</li>
+<li>
+<p>consistent relative linking between generated pages and diagrams</p>
+</li>
+<li>
+<p>minimization of Maven Site lifecycle complexity</p>
+</li>
+<li>
+<p>reduction of cross-module coupling in documentation generation</p>
+</li>
+<li>
+<p>support for multiple documentation technologies simultaneously</p>
+</li>
+<li>
+<p>elimination of per-module documentation build orchestration</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options_evaluation">Options Evaluation</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Distributed documentation generation per Maven module</p>
+</li>
+<li>
+<p>Centralized documentation generation in parent module</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_decision">Decision</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Centralize all project documentation in the parent module and generate the complete
+documentation site exclusively from the parent build.</p>
+</div>
+<div class="paragraph">
+<p>Documentation assets such as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Markdown</p>
+</li>
+<li>
+<p>AsciiDoc</p>
+</li>
+<li>
+<p>PlantUML</p>
+</li>
+<li>
+<p>Mermaid</p>
+</li>
+<li>
+<p>D2</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>are stored and rendered only within the parent module.</p>
+</div>
+<div class="paragraph">
+<p>Documentation-related Maven plugin executions are configured in the parent module
+and selectively marked with <code>&lt;inherited&gt;false&lt;/inherited&gt;</code> where necessary to
+prevent duplicate execution in child modules.</p>
+</div>
+<div class="sect2">
+<h3 id="_decision_rationale_optional">Decision Rationale (optional)</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Maven Site aggregation behaves significantly more predictably when documentation
+generation occurs only once in the reactor build.</p>
+</li>
+<li>
+<p>PlantUML and D2 generate shared site artifacts (<code>svg</code>) that are easier to manage
+centrally than across multiple module output directories.</p>
+</li>
+<li>
+<p>Relative links inside generated HTML and Markdown remain stable when all content
+originates from a single site root.</p>
+</li>
+<li>
+<p>Mermaid integration requires client-side JavaScript injection, which is easier
+to maintain globally than per-module.</p>
+</li>
+<li>
+<p>Maven Site plugin descriptors (<code>site.xml</code>) have limited support for modern
+templating and script injection, making decentralized customization error-prone.</p>
+</li>
+<li>
+<p>Multi-module documentation generation caused repeated execution of diagram
+generators and duplicate processing of shared resources.</p>
+</li>
+<li>
+<p>Centralized documentation avoids Maven lifecycle coordination issues between:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>pre-site</code></p>
+</li>
+<li>
+<p><code>site</code></p>
+</li>
+<li>
+<p>generated resources</p>
+</li>
+<li>
+<p>site aggregation</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>GitHub Pages deployment becomes simpler because only a single aggregated
+<code>target/site</code> output must be published.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_consequences">Consequences</h3>
+<div class="paragraph">
+<p>Consequences might are reflected by other ADRs. see <a href="./tec-StackCatalog.html">tec-Stack</a></p>
+</div>
+<div class="paragraph">
+<p>consequences for implementation:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>documentation source structure is maintained exclusively in the parent module</p>
+</li>
+<li>
+<p>child modules do not own independent site generation</p>
+</li>
+<li>
+<p>documentation-related Maven plugins are configured centrally</p>
+</li>
+<li>
+<p>generated diagrams are emitted into a shared site output structure</p>
+</li>
+<li>
+<p>cross-module documentation references must be maintained manually at the parent level</p>
+</li>
+<li>
+<p>documentation ownership becomes organizational rather than module-local</p>
+</li>
+<li>
+<p>module isolation for documentation is reduced in favor of build stability</p>
+</li>
+<li>
+<p>GitHub Actions pipelines become simpler because only one documentation site is generated</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.0.1<br>
+Last updated 2026-05-25 18:10:44 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+@startuml
+
+!include -inclCatalogSchema.puml
+
+'==============================================================================================
+' MODEL
+'==============================================================================================
+'--------------------------------------------------------------
+' ADR
+'--------------------------------------------------------------
+adr(                         005, Aggregate Javadoc and JaCoCo via GitHub Actions             )
+adr(                         003, core, Documentation as Code                                 )
+adr(                         004, Centralized Doc in Parent Module                            )
+adr(                         002, AsciiDoc and PlantUML only for Documentation                )
+adr(                         001, Restrict Build Toolchain to Java + Maven-Managed            )
+'adr( moduleMetricsCostUnnamed001, problem with cem                                            )
+
+'--------------------------------------------------------------
+' RELATIONS
+'--------------------------------------------------------------
+     conforms(                                    002,                                    001 )
+consequenceOf(                                    004,                                    002 )
+     conforms(                                    004,                                    003 )
+consequenceOf(                                    005,                                    001 )
+ simplifiedBy(                                    005,                                    004 )
+'  exceptionTo(                                    004,                                    002 )
+'consequenceOf(                                    003,                                    002 )
+'consequenceOf(                                    003,            moduleMetricsCostUnnamed001 )
+'   supersedes(            moduleMetricsCostUnnamed001,                                    004 )
+
+@enduml

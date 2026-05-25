@@ -199,13 +199,18 @@ svg *,
 <h1><a href="https://github.com/conetex/org-conetex-runtime-instrument/blob/master/readme.md" target="_blank" rel="noopener">org-conetex-runtime-instrument</a></h1>
 <div class="details">
 <span id="revnumber">version 0.0.1,</span>
-<span id="revdate">2026-05-24T15:40:54Z</span>
+<span id="revdate">2026-05-25T18:10:46Z</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_overview">Overview</a></li>
-<li><a href="#_module_details">Module Details</a></li>
+<li><a href="#_modules">Modules</a>
+<ul class="sectlevel2">
+<li><a href="#_index">Index</a></li>
+<li><a href="#_detail">Detail</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -219,18 +224,38 @@ svg *,
 <p>Source: <a href="https://github.com/conetex/org-conetex-runtime-instrument/blob/master/readme.md" target="_blank" rel="noopener">github</a></p>
 </li>
 <li>
-<p>Design: <a href="./projectDocs/index.html#architecture">architecture</a></p>
+<p>Design: <a href="./projectDocs/index.html#architecture">parent module - overall Architecture</a></p>
 </li>
 <li>
-<p>Architecture Decision Record: <a href="./projectDocs/ADRs/index.html">ADRs index</a></p>
+<p>&#8594;
+ADR Catalogs:
+<a href="./ADRs/coreCatalog.html">core</a> |
+<a href="./ADRs/tec-StackCatalog.html">tec-Stack</a></p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_module_details">Module Details</h2>
+<h2 id="_modules">Modules</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_index">Index</h3>
+<div class="paragraph">
+<p>modules:
+<a href="./projectDocs/index.html">parent</a> |
+<a href="./projectDocs/agent/index.html">agent</a> |
+<a href="./projectDocs/collection/index.html">collection</a> |
+<a href="./projectDocs/counter/index.html">counter</a> |
+<a href="./projectDocs/example/index.html">example</a> |
+<a href="./projectDocs/interfaces/index.html">interfaces</a> |
+<a href="./projectDocs/metrics-cost/index.html">metrics-cost</a> |
+<a href="./projectDocs/metrics-cost-unnamed/index.html">metrics-cost-unnamed</a> |
+<a href="./projectDocs/tests/index.html">test</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_detail">Detail</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -249,50 +274,50 @@ svg *,
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">agent</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/moduleAgent/index.html#purpose">purpose</a>: activates and configures the instrumentation system (JVM agent entry point).]</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/moduleAgent/index.html">apidoc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/agent/index.html#purpose">purpose</a>: activates and configures the instrumentation system (JVM agent entry point).]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/agent/index.html">apidoc</a></p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">collection</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/moduleCollection/index.html#purpose">purpose</a>: collects and aggregates measurement data.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/moduleCollection/index.html">apidoc</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/moduleCollection/index.html">Coverage Report</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/collection/index.html#purpose">purpose</a>: collects and aggregates measurement data.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/collection/index.html">apidoc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/collection/index.html">Coverage Report</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">counter</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/moduleCounter/index.html#purpose">purpose</a>: implements runtime counters and injects counter logic.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/moduleCounter/index.html">apidoc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/counter/index.html#purpose">purpose</a>: implements runtime counters and injects counter logic.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/counter/index.html">apidoc</a></p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">interfaces</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/moduleInterfaces/index.html#purpose">purpose</a>: defines shared APIs and contracts.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/moduleInterfaces/index.html">apidoc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/interfaces/index.html#purpose">purpose</a>: defines shared APIs and contracts.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/interfaces/index.html">apidoc</a></p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">metrics-cost</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/moduleMetrics-cost/index.html#purpose">purpose</a>: implements cost and timing measurement for JPMS modules.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/moduleMetrics-cost/index.html">apidoc</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/moduleMetrics-cost/index.html">Coverage Report</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/metrics-cost/index.html#purpose">purpose</a>: implements cost and timing measurement for JPMS modules.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/metrics-cost/index.html">apidoc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./jacoco/metrics-cost/index.html">Coverage Report</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">metrics-cost-unnamed</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/moduleMetrics-cost-unnamed/index.html#purpose">purpose</a>: cost instrumentation for unnamed/classpath modules.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/moduleMetrics-cost-unnamed/index.html">apidoc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/metrics-cost-unnamed/index.html#purpose">purpose</a>: cost instrumentation for unnamed/classpath modules.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/metrics-cost-unnamed/index.html">apidoc</a></p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">example</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/moduleExample/index.html#purpose">purpose</a>: demonstrates how instrumentation behaves in real code.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/moduleExample/index.html">apidoc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/example/index.html#purpose">purpose</a>: demonstrates how instrumentation behaves in real code.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/example/index.html">apidoc</a></p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">tests</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/moduleTests/index.html#purpose">purpose</a>: validates correctness and stability of the instrumentation system.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/moduleTests/index.html">apidoc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./projectDocs/tests/index.html#purpose">purpose</a>: validates correctness and stability of the instrumentation system.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./apiDoc/tests/index.html">apidoc</a></p></td>
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 </tbody>
@@ -300,10 +325,11 @@ svg *,
 </div>
 </div>
 </div>
+</div>
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1<br>
-Last updated 2026-05-24 15:40:49 UTC
+Last updated 2026-05-25 18:10:44 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

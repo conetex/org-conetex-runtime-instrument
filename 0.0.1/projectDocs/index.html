@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<title>Architecture</title>
+<title>parent module - overall Architecture</title>
 <style>
 /*
  * Pure Black & White Override Theme for Asciidoctor
@@ -196,30 +196,41 @@ svg *,
 </head>
 <body id="architecture" class="article toc2 toc-left">
 <div id="header">
-<h1>Architecture</h1>
+<h1>parent module - overall Architecture</h1>
 <div class="details">
 <span id="revnumber">version 0.0.1,</span>
-<span id="revdate">2026-05-24T15:40:54Z</span>
+<span id="revdate">2026-05-25T18:10:46Z</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_navigation">navigation</a></li>
+<li><a href="#_navigation">Navigation</a></li>
 <li><a href="#_overview">Overview</a></li>
-<li><a href="#_system_architecture">📐 System Architecture</a></li>
-<li><a href="#_module_responsibilities_summary">🧩 Module Responsibilities (Summary)</a></li>
-<li><a href="#_module_dependency_diagram">🔗 Module Dependency Diagram</a></li>
-<li><a href="#_module_roles_diagram">🧭 Module Roles Diagram</a></li>
-<li><a href="#_class_instrumentation_sequence">🔧 Class Instrumentation Sequence</a></li>
+<li><a href="#_system_architecture">System Architecture</a></li>
+<li><a href="#_module_responsibilities_summary">Module Responsibilities (Summary)</a></li>
+<li><a href="#_module_dependency_diagram">Module Dependency Diagram</a></li>
+<li><a href="#_module_roles_diagram">Module Roles Diagram</a></li>
+<li><a href="#_class_instrumentation_sequence">Class Instrumentation Sequence</a></li>
 </ul>
 </div>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_navigation">navigation</h2>
+<h2 id="_navigation">Navigation</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="../index.html">.. (navigate up)</a></p>
+<p><a href="../index.html">../index</a>
+|
+modules:
+<a href="./index.html">parent</a> |
+<a href="./agent/index.html">agent</a> |
+<a href="./collection/index.html">collection</a> |
+<a href="./counter/index.html">counter</a> |
+<a href="./example/index.html">example</a> |
+<a href="./interfaces/index.html">interfaces</a> |
+<a href="./metrics-cost/index.html">metrics-cost</a> |
+<a href="./metrics-cost-unnamed/index.html">metrics-cost-unnamed</a> |
+<a href="./tests/index.html">test</a></p>
 </div>
 </div>
 </div>
@@ -241,7 +252,7 @@ It summarizes the purpose of each module, shows how they interact, and includes 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_system_architecture">📐 System Architecture</h2>
+<h2 id="_system_architecture">System Architecture</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The system is composed of several independent but cooperating modules.<br>
@@ -250,7 +261,7 @@ Together, they implement a modular Java runtime instrumentation framework based 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_module_responsibilities_summary">🧩 Module Responsibilities (Summary)</h2>
+<h2 id="_module_responsibilities_summary">Module Responsibilities (Summary)</h2>
 <div class="sectionbody">
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -265,35 +276,35 @@ Together, they implement a modular Java runtime instrumentation framework based 
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleAgent/index.html#purpose">agent</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./agent/index.html#purpose">agent</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Activates and configures the instrumentation system (JVM agent entry point).</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleCollection/index.html#purpose">collection</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./collection/index.html#purpose">collection</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Collects and aggregates measurement data.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleCounter/index.html#purpose">counter</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./counter/index.html#purpose">counter</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Implements runtime counters and injects counter logic.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleInterfaces/index.html#purpose">interfaces</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./interfaces/index.html#purpose">interfaces</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Defines shared APIs and contracts.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleMetrics-cost/index.html#purpose">metrics-cost</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./metrics-cost/index.html#purpose">metrics-cost</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Implements cost and timing measurement for JPMS modules.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleMetrics-cost-unnamed/index.html#purpose">metrics-cost-unnamed</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./metrics-cost-unnamed/index.html#purpose">metrics-cost-unnamed</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Cost instrumentation for unnamed/classpath modules.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleExample/index.html#purpose">example</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./example/index.html#purpose">example</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Demonstrates how instrumentation behaves in real code.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./moduleTests/index.html#purpose">tests</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./tests/index.html#purpose">tests</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Validates correctness and stability of the instrumentation system.</p></td>
 </tr>
 </tbody>
@@ -301,7 +312,7 @@ Together, they implement a modular Java runtime instrumentation framework based 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_module_dependency_diagram">🔗 Module Dependency Diagram</h2>
+<h2 id="_module_dependency_diagram">Module Dependency Diagram</h2>
 <div class="sectionbody">
 <div class="imageblock">
 <div class="content">
@@ -311,7 +322,7 @@ Together, they implement a modular Java runtime instrumentation framework based 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_module_roles_diagram">🧭 Module Roles Diagram</h2>
+<h2 id="_module_roles_diagram">Module Roles Diagram</h2>
 <div class="sectionbody">
 <div class="imageblock">
 <div class="content">
@@ -321,7 +332,7 @@ Together, they implement a modular Java runtime instrumentation framework based 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_class_instrumentation_sequence">🔧 Class Instrumentation Sequence</h2>
+<h2 id="_class_instrumentation_sequence">Class Instrumentation Sequence</h2>
 <div class="sectionbody">
 <div class="imageblock">
 <div class="content">
@@ -334,7 +345,7 @@ Together, they implement a modular Java runtime instrumentation framework based 
 <div id="footer">
 <div id="footer-text">
 Version 0.0.1<br>
-Last updated 2026-05-24 15:40:49 UTC
+Last updated 2026-05-25 18:10:44 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
