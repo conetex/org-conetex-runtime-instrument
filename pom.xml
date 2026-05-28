@@ -6,7 +6,7 @@
 
     <groupId>org.conetex.runtime.instrument</groupId>
     <artifactId>parent</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
 
     <name>org.conetex.runtime.instrument</name>
     <description>org.conetex.runtime.instrument</description>
@@ -23,6 +23,8 @@
     </properties>
 
     <modules>
+        <!-- dependencies between modules are managed
+             here in dependencyManagement                   -->
         <module>interfaces</module>
         <module>counter</module>
         <module>collection</module>
@@ -32,28 +34,6 @@
         <module>tests</module>
         <module>example</module>
     </modules>
-
-    <url>https://github.com/conetex/org-conetex-runtime-instrument</url>
-
-    <licenses>
-        <license>
-            <name>Apache License 2.0</name>
-            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
-        </license>
-    </licenses>
-
-    <scm>
-        <url>https://github.com/conetex/org-conetex-runtime-instrument</url>
-        <connection>scm:git:https://github.com/conetex/org-conetex-runtime-instrument.git</connection>
-        <developerConnection>scm:git:git@github.com/conetex/org-conetex-runtime-instrument.git</developerConnection>
-    </scm>
-
-    <developers>
-        <developer>
-            <id>matthias-franke</id>
-            <name>Matthias Franke</name>
-        </developer>
-    </developers>
 
     <build>
         <plugins>
@@ -130,7 +110,7 @@
                     <dependency>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctorj-diagram</artifactId>
-                        <version>3.0.1</version>
+                        <version>2.3.2</version>
                     </dependency>
                     <dependency>
                         <groupId>org.asciidoctor</groupId>
@@ -254,5 +234,79 @@
 
         </profile>
     </profiles>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>interfaces</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>counter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>collection</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>metrics-cost</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>metrics-cost-unnamed</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>agent</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>tests</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>example</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <url>https://conetex.github.io/org-conetex-runtime-instrument/latest/</url>
+
+    <scm>
+        <url>https://github.com/conetex/org-conetex-runtime-instrument</url>
+        <connection>scm:git:https://github.com/conetex/org-conetex-runtime-instrument.git</connection>
+        <developerConnection>scm:git:git@github.com/conetex/org-conetex-runtime-instrument.git</developerConnection>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>matthias-franke</id>
+            <name>Matthias Franke</name>
+        </developer>
+    </developers>
 
 </project>

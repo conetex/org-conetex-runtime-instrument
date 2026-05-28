@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.conetex.runtime.instrument</groupId>
         <artifactId>parent</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.2-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -32,17 +32,14 @@
         <dependency>
             <groupId>org.conetex.runtime.instrument</groupId>
             <artifactId>interfaces</artifactId>
-            <version>0.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.conetex.runtime.instrument</groupId>
             <artifactId>counter</artifactId>
-            <version>0.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.conetex.runtime.instrument</groupId>
             <artifactId>collection</artifactId>
-            <version>0.0.1</version>
         </dependency>
 
         <dependency>
