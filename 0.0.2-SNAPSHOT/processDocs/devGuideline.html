@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>dev guideline</title>
+<style>
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
+@import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+html,
+body {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body,
+body *:not(.hljs):not(.hljs *) {
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
+
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
+  background: #fff !important;
+}
+
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: #000 !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+/* Syntax Highlighting NICHT überschreiben */
+
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>dev guideline</h1>
+<div class="details">
+<span id="revnumber">version 0.0.2-SNAPSHOT,</span>
+<span id="revdate">2026-05-28T12:25:48Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_release_process_regarding_mvn_version">Release Process regarding mvn version</a>
+<ul class="sectlevel2">
+<li><a href="#_before_the_release">Before the Release</a></li>
+<li><a href="#_release">Release</a></li>
+<li><a href="#_after_the_release">After the Release</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_release_process_regarding_mvn_version">Release Process regarding mvn version</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_before_the_release">Before the Release</h3>
+<div class="paragraph">
+<p>All steps in this section are performed in your <strong>feature branch</strong> that will be released.</p>
+</div>
+<div class="sect3">
+<h4 id="_remove_the_snapshot_suffix">Remove the <code>-SNAPSHOT</code> suffix</h4>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Determine the new release version, for example <code>1.2.3</code>.</p>
+</li>
+<li>
+<p>In your feature branch, update the version in <code>pom.xml</code> by removing the <code>-SNAPSHOT</code> suffix using Maven:</p>
+<div class="literalblock">
+<div class="content">
+<pre>   ```bash
+   mvn versions:set -DnewVersion=NEW_VERSION
+Replace NEW_VERSION with the target release version, e.g.:</pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>copy
+mvn versions:set -DnewVersion=1.2.3
+=== 1.2 Verify all submodule POMs and clean up backups</p>
+</div>
+<div class="paragraph">
+<p>Verify that all submodule pom.xml files have the correct parent version (the version you just set).</p>
+</div>
+<div class="paragraph">
+<p>After verification, remove the backup POM files created by the versions plugin:</p>
+</div>
+<div class="paragraph">
+<p>copy
+mvn versions:commit</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_release">Release</h3>
+<div class="paragraph">
+<p>Push your feature branch to the remote repository.
+Create a merge request / pull request and merge your feature branch into master/main.
+Build the project from master/main to ensure the release version builds correctly.
+Tag the release commit with the release version (for example v1.2.3 or 1.2.3), using your usual Git tagging conventions.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_after_the_release">After the Release</h3>
+<div class="paragraph">
+<p>All steps in this section are performed in your next feature branch that will later be merged into master/main.</p>
+</div>
+<div class="sect3">
+<h4 id="_bump_the_version_and_set_a_new_snapshot_version">Bump the version and set a new -SNAPSHOT version</h4>
+<div class="paragraph">
+<p>Check the current version in master/main (for example 1.2.3).</p>
+</div>
+<div class="paragraph">
+<p>Increment the version by one patch level (for example to 1.2.4).</p>
+</div>
+<div class="paragraph">
+<p>Append the -SNAPSHOT suffix (for example 1.2.4-SNAPSHOT).</p>
+</div>
+<div class="paragraph">
+<p>In your new feature branch, set this SNAPSHOT version in the pom.xml:</p>
+</div>
+<div class="paragraph">
+<p><code>mvn versions:set -DnewVersion=1.2.4-SNAPSHOT
+mvn versions:commit</code></p>
+</div>
+<div class="paragraph">
+<p>Commit the changed pom.xml files to your feature branch.</p>
+</div>
+<div class="paragraph">
+<p>Optionally, you can use the updateVersion script to help with incrementing the version.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The process described here is still partly manual and therefore not fully robust. Mistakes can occur, especially when setting or incrementing versions. Please double-check the versions in all pom.xml files and in Git tags.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.0.2-SNAPSHOT<br>
+Last updated 2026-05-28 12:25:43 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>
