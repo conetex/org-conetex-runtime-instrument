@@ -1,0 +1,60 @@
+:catalog: core
+:module: parent
+
+= ADR as Code: Store Architecture Decision Records in Version Control
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}]
+
+:date: 2026-05-25
+:deciders: Matthias Franke
+
+== Problem
+
+ADR documents are currently scattered across documents, tickets, and personal notes. This fragmentation makes decisions hard to discover, review, and link to code changes or releases. We need a consistent, auditable way to author, review, version, and publish ADRs so they remain part of the product lifecycle.
+
+=== Decision Drivers
+
+* Make architectural decisions discoverable and versioned alongside code.
+* Enable review and approval of ADRs through the same PR workflow as code.
+* Ensure ADRs can be packaged and published with releases.
+* Provide traceability from code changes to the decisions that motivated them.
+* Reduce duplication and drift between design intent and implementation.
+
+== Options Evaluation
+
+* **Option A — Keep ADRs in separate documentation systems or tickets**: low friction initially but leads to fragmentation, poor discoverability, and weak traceability to code and releases.
+* **Option B — Centralized wiki or CMS**: improves discoverability but often lacks tight versioning with code branches and complicates release packaging.
+* **Option C — ADR as Code (store ADRs as plain-text files in the repository, authored in AsciiDoc/Markdown, reviewed via PRs, built and published by CI)**: integrates ADRs with code, enables PR-based review, supports automated validation and release packaging.
+
+== Decision
+
+We choose **Option C — ADR as Code**: store ADRs as plain-text files in the repository (AsciiDoc), require ADR changes via pull requests, validate ADR metadata in CI, and publish ADRs together with the release documentation.
+
+=== Decision Rationale
+
+* **Version parity**: ADRs in the same repository and branches as code are versioned with the features and releases they affect.
+* **Single review workflow**: Using PRs for ADRs aligns decision review with code review, improving stakeholder visibility and accountability.
+* **Release integration**: ADR files can be included in the documentation site and packaged with release artifacts, making decisions a first-class part of each release.
+* **Automation and validation**: CI can enforce ADR templates, metadata (date, deciders, status), link checks, and cross-references to related ADRs or code.
+* **Traceability**: Commits and PRs provide a direct link between code changes and the ADRs that justify them, aiding audits and future maintenance.
+* **Low tooling overhead**: Plain-text AsciiDoc files are easy to edit, diff, and render; they work well with existing static site generators and GitHub Pages.
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* **Repository layout**: create a dedicated `docs/adr` directory (or similar) in the parent repository; add the ADR Catalog entry for new ADRs.
+* **ADR template and metadata**: adopt a standard AsciiDoc template (title, date, deciders, status, problem, drivers, options, decision, rationale, consequences, related ADRs).
+* **CI validation**: add a small CI job to validate ADR front-matter, enforce filename conventions, check cross-references, and optionally render a preview.
+* **PR process**: require ADR changes to go through the same PR review process as code; include required reviewers (architecture, docs owner, product).
+* **Linking and traceability**: require PRs that implement an ADR to reference the ADR ID in the commit/PR and vice versa.
+* **Publishing**: include ADRs in the documentation site build and publish them with the release (e.g., via GitHub Pages).
+* **Governance**: define ADR lifecycle states (proposed, accepted, superseded, deprecated) and a process for updating or superseding ADRs.
+* **Search and discoverability**: add ADR index pages, tags, and cross-reference links in the Catalog to make decisions easy to find.
+* **Training and templates**: provide contributor guidance and examples so teams can write concise, decision-focused ADRs.
+* **Small CI footprint**: keep ADR-related CI checks minimal and fast to avoid slowing developer workflows.
+

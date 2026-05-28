@@ -1,0 +1,58 @@
+:catalog: tec-Stack
+:module: parent
+
+= Avoid Proprietary Infrastructure and Dependencies
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}]
+
+:date: 2026-05-25
+:deciders: Matthias Franke
+
+== Problem
+
+Our build and documentation pipeline should remain fully reproducible, portable, and independent of external infrastructure.  We need a solution that keeps the entire toolchain self-contained, platform-neutral, and vendor-independent.
+
+Introducing non‑Java tooling (for example Python-based documentation generators) or relying on proprietary CI platforms (for example GitHub Actions) would create avoidable dependencies, and reduce portability. "can't build everywhere" contradicts the “run everywhere” mindset that Java was originally designed for.
+
+**Use external runtimes or proprietary CI** (Python-based doc tools, GitHub Actions workflows) introduces additional runtime dependencies, requires installing non-Java tooling on build servers, and ties the project to a specific CI vendor. Reduces portability and increases long-term maintenance risk.
+
+=== Decision Drivers
+
+* Maintain a **pure Java toolchain** without requiring Python, Node, Ruby, or other runtimes on build servers.
+* Preserve **vendor independence** and avoid lock-in to proprietary CI platforms.
+* Ensure **reproducibility**: the project must build identically on any machine with a JVM.
+* Keep the build pipeline **portable**, allowing migration to any CI system without rewriting workflows.
+* Align with the Java philosophy of **“write once, run anywhere”**.
+
+== Options Evaluation
+
+* **Keep the entire toolchain Java-based and CI-agnostic**
+All documentation generation, validation, and build steps run on the JVM. CI logic remains minimal and portable, allowing execution on any CI platform (self-hosted, GitLab CI, Jenkins, Azure DevOps, etc.) without modification.
+
+== Decision
+
+**Use a fully Java-based toolchain and avoid proprietary CI dependencies.**
+All documentation and build steps must run on the JVM, and CI workflows must remain portable and vendor-neutral.
+
+=== Decision Rationale
+
+* **No foreign runtimes**: Installing Python or other runtimes on build servers contradicts our goal of a clean, minimal, Java-only environment.
+* **Portability**: A Java-only toolchain runs identically on any CI system—local, on-prem, cloud, or containerized.
+* **Vendor independence**: Avoiding GitHub Actions-specific workflows prevents lock-in and ensures we can migrate CI providers without rewriting pipelines.
+* **Reproducibility**: A single JVM-based toolchain guarantees deterministic builds across environments.
+* **Mindset alignment**: Java was built for portability; our build and documentation pipeline should follow the same principle.
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* **Documentation tooling must be Java-based** (for example AsciiDoctorJ, Flexmark, custom Java tools).
+* **CI scripts must remain minimal and portable**, avoiding vendor-specific features or proprietary workflow syntax.
+* **No Python, Node, or Ruby runtimes** may be required on build servers.
+* **Migration between CI systems becomes trivial**, since the build logic is not tied to any provider.
+* **Local builds match CI builds exactly**, because both rely solely on the JVM.
+* **Future tooling decisions must respect the Java-only constraint**, ensuring long-term consistency and maintainability.

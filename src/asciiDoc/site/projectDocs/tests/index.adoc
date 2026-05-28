@@ -1,0 +1,40 @@
+= tests module
+
+include::../-navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
+
+The `tests` module contains *test cases* for validating the behavior of the instrumentation framework. +
+Its responsibilities include:
+
+* verifying correct operation of counters, cost metrics, and data collection
+* ensuring that bytecode transformations behave as expected
+* providing regression coverage for the instrumentation modules
+
+In essence:
+
+____
+
+The `tests` module ensures the correctness and stability of the instrumentation system.
+
+____
+
+'''
+
+=== Out of Scope (Handled by Other Modules)
+
+* *Implementing instrumentation logic* +
+ Implemented in: xref:../counter/index.adoc#purpose[`counter`], xref:../metrics-cost/index.adoc#purpose[`metrics-cost`], xref:../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`]
+
+* *Collecting or aggregating measurement data* +
+ Implemented in: xref:../collection/index.adoc#purpose[`collection`]
+
+* *Defining shared instrumentation interfaces* +
+ Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
+
+* *Activating the instrumentation system* +
+ Implemented in: xref:../agent/index.adoc#purpose[`agent`]
+
+* *Providing example usage* +
+ Implemented in: xref:../example/index.adoc#purpose[`example`]

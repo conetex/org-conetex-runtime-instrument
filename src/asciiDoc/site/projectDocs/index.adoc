@@ -1,0 +1,165 @@
+[#architecture]
+= parent module - overall Architecture
+
+include::./-navigation.adoc[]
+
+== Overview
+
+This document provides a high‑level architectural overview of the runtime instrumentation framework. +
+It summarizes the purpose of each module, shows how they interact, and includes diagrams to visualize the system.
+
+For detailed responsibilities and boundaries, each module has its own purpose description.
+
+plantuml::./moduleOverview.puml[]
+
+== System Architecture
+
+The system is composed of several independent but cooperating modules. +
+Together, they implement a modular Java runtime instrumentation framework based on the JVM Instrumentation API.
+
+== Module Responsibilities (Summary)
+
+|===
+|Module |Purpose 
+
+|xref:./agent/index.adoc#purpose[agent] |Activates and configures the instrumentation system (JVM agent entry point).
+|xref:./collection/index.adoc#purpose[collection] |Collects and aggregates measurement data.
+|xref:./counter/index.adoc#purpose[counter] |Implements runtime counters and injects counter logic.
+|xref:./interfaces/index.adoc#purpose[interfaces] |Defines shared APIs and contracts.
+|xref:./metrics-cost/index.adoc#purpose[metrics-cost] |Implements cost and timing measurement for JPMS modules.
+|xref:./metrics-cost-unnamed/index.adoc#purpose[metrics-cost-unnamed] |Cost instrumentation for unnamed/classpath modules.
+|xref:./example/index.adoc#purpose[example] |Demonstrates how instrumentation behaves in real code.
+|xref:./tests/index.adoc#purpose[tests] |Validates correctness and stability of the instrumentation system.
+|===
+
+== Module Dependency Diagram
+
+[plantuml]
+----
+@startuml
+title Module Overview — Class Instrumentation
+
+'left to right direction
+
+component counter as C
+component agent as A
+component interfaces as B
+component "metrics-cost" as D
+component "metrics-cost-unnamed" as E
+component collection as F
+
+' Core modules
+A --> B
+A --> C
+A --> D
+A --> E
+A --> F
+
+' Instrumentation logic
+C --> B
+' Data flow
+C --> F
+
+' Instrumentation logic
+D --> B
+' Data flow
+D --> C
+
+' Instrumentation logic
+E --> B
+' Data flow
+E --> C
+
+
+@enduml
+----
+
+== Module Roles Diagram
+
+[plantuml]
+----
+@startuml
+
+top to bottom direction
+
+component "agent\nActivation Layer" as A
+component "interfaces\nShared API" as B
+component "counter\nCounters" as C
+component "metrics-cost\nCost Metrics" as D
+component "metrics-cost-unnamed\nCost Metrics Unnamed" as E
+component "collection\nData Collection" as F
+rectangle "example\nDemonstration" as G
+rectangle "tests\nValidation" as H
+
+A --> B
+A --> C
+A --> D
+A --> E
+A --> F
+
+C --> F
+D --> F
+E --> F
+
+'G --> A
+'G --> C
+'G --> D
+'G --> E
+'G --> F
+
+'H --> A
+'H --> C
+'H --> D
+'H --> E
+'H --> F
+
+@enduml
+----
+
+== Class Instrumentation Sequence
+
+[plantuml]
+----
+@startuml
+
+autonumber
+
+participant "JVM ClassLoader" as JVM
+participant "agent\npremain/agentmain" as Agent
+participant "Instrumentation\nTransformer Registry" as Trans
+participant "metrics-cost\nBytecode Transformer" as MC
+participant "counter\nData Collector" as Co
+participant "Application Class" as App
+
+JVM -> Agent: Start JVM with -javaagent or attach at runtime
+
+Agent -> Trans: Register ClassFileTransformer(s)
+
+note right of Agent
+agent does NOT transform bytecode
+only registers and configures
+end note
+
+JVM -> Trans: load / reload Classes not transformed yet (e.g. "Application Class")
+
+note right of Trans
+metrics-cost / counter
+modify bytecode
+end note
+
+Trans -> MC: delegate transform(classBytes)
+
+MC --> Trans:
+return transformedClassBytes
+
+Trans --> JVM:
+return transformedClassBytes
+
+JVM -> App: redefineClass("Application Class")
+
+App -> Co: emit measurement events (increase counters)
+
+Co -> Co: calculate metrics
+
+@enduml
+----

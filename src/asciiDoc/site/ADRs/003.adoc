@@ -1,0 +1,48 @@
+:catalog: core
+:module: parent
+
+= Documentation as Code for Release Integration
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}], xref:./tec-StackCatalog.adoc[tec-Stack]
+
+:date: 2026-05-25
+:deciders: Matthias Franke
+
+== Problem
+
+Documentation is currently produced in separate tools and workflows, causing version drift, late publication, and missed alignment with software releases. We need documentation to be reliably built, validated, and shipped together with product releases.
+
+=== Decision Drivers
+
+* Ensure docs match shipped product versions.
+* Automate validation and packaging of docs into release artifacts.
+* Reduce handoffs and delays between engineering and writing.
+* Enable traceable review and history for documentation changes.
+
+== Options Evaluation
+
+* **Option A — Continue with separate authoring tools** (Word, CMS, manual publishing): low integration with CI/CD; high risk of outdated docs.
+* **Option B — Adopt Docs as Code** (AsciiDoc/Markdown in Git, CI builds, release packaging): integrates with version control, enables automated checks, and can be included in release pipelines.
+
+== Decision
+
+We choose **Option B — Adopt Docs as Code** and make documentation artifacts part of the release process.
+
+=== Decision Rationale
+
+* **Version control parity**: Storing docs in the same repository and branches as code ensures docs are versioned with features and releases.
+* **Automated validation and packaging**: CI can build, test links, and produce a release artifact (site or packaged docs) that is deployed with the software.
+* **Faster feedback and ownership**: Developers and writers collaborate via the same PR/review workflows, reducing bottlenecks and improving accuracy.
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* **Repository layout and branching policy**: move docs into product repo; require docs updates in feature branches.
+* **CI pipeline changes**: add doc build, link checks, and packaging steps to release pipeline.
+* **Tooling and training**: adopt AsciiDoc toolchain and train writers on Git workflows.
+* **Release gating**: enforce that a release branch includes built docs artifact before tagging.

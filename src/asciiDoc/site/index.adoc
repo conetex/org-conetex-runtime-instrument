@@ -1,0 +1,67 @@
+:linkattrs:
+
+= link:{srcBasePath}/readme.md[org-conetex-runtime-instrument^]
+
+== Overview
+
+:pathToCatalogs: ./ADRs/
+
+* Source: link:{srcBasePath}/readme.md[github^]
+* Design: xref:./{prjdocFolder}/index.adoc#architecture[parent module - overall Architecture]
+* ->
+include::{pathToCatalogs}-catalogs.adoc[]
+* Guidelines:
+    ** xref:./processDocs/devGuideline.adoc[Development]
+
+== Modules
+
+=== Index
+:pathToModules: ./projectDocs/
+include::{pathToModules}-modules.adoc[]
+
+=== Detail
+
+|===
+h|Module h|Design h|Usage h|Test
+
+|agent
+|xref:./{prjdocFolder}/agent/index.adoc#purpose[purpose]: activates and configures the instrumentation system (JVM agent entry point).]
+|link:./{apidocFolder}/agent/{apidocIndexFile}[apidoc]
+|
+
+|collection
+|xref:./{prjdocFolder}/collection/index.adoc#purpose[purpose]: collects and aggregates measurement data.
+|link:./{apidocFolder}/collection/{apidocIndexFile}[apidoc]
+|link:./{jacocoFolder}/collection/{jacocoIndexFile}[Coverage Report]
+
+|counter
+|xref:./{prjdocFolder}/counter/index.adoc#purpose[purpose]: implements runtime counters and injects counter logic.
+|link:./{apidocFolder}/counter/{apidocIndexFile}[apidoc]
+|
+
+|interfaces
+|xref:./{prjdocFolder}/interfaces/index.adoc#purpose[purpose]: defines shared APIs and contracts.
+|link:./{apidocFolder}/interfaces/{apidocIndexFile}[apidoc]
+|
+
+|metrics-cost
+|xref:./{prjdocFolder}/metrics-cost/index.adoc#purpose[purpose]: implements cost and timing measurement for JPMS modules.
+|link:./{apidocFolder}/metrics-cost/{apidocIndexFile}[apidoc]
+|link:./{jacocoFolder}/metrics-cost/{jacocoIndexFile}[Coverage Report]
+
+|metrics-cost-unnamed
+|xref:./{prjdocFolder}/metrics-cost-unnamed/index.adoc#purpose[purpose]: cost instrumentation for unnamed/classpath modules.
+|link:./{apidocFolder}/metrics-cost-unnamed/{apidocIndexFile}[apidoc]
+|
+
+|example
+|xref:./{prjdocFolder}/example/index.adoc#purpose[purpose]: demonstrates how instrumentation behaves in real code.
+|link:./{apidocFolder}/example/{apidocIndexFile}[apidoc]
+|
+
+|tests
+|xref:./{prjdocFolder}/tests/index.adoc#purpose[purpose]: validates correctness and stability of the instrumentation system.
+|
+|
+
+|===

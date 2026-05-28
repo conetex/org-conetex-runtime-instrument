@@ -1,0 +1,3 @@
+ADR Catalogs:
+xref:{pathToCatalogs}coreCatalog.adoc[core] |
+xref:{pathToCatalogs}tec-StackCatalog.adoc[tec-Stack]

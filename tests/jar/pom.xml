@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.conetex.runtime.instrument.tests</groupId>
+        <artifactId>test-parent</artifactId>
+        <version>0.0.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>jar</artifactId>
+
+    <name>test jar</name>
+    <description>test jar</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.conetex.runtime.instrument</groupId>
+            <artifactId>metrics-cost</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <test.pathToTransformerJar>
+            pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
+        </test.pathToTransformerJar>
+        <testA.agentArgs>
+            transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA;${test.pathToTransformerJar}
+        </testA.agentArgs>
+        <testB.agentArgs>
+            transformerArgs:reportFile=reportB.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesB;${test.pathToTransformerJar}
+        </testB.agentArgs>
+
+        <testBlocked.agentArgs>
+            ${test.pathToTransformerJar}
+        </testBlocked.agentArgs>
+
+    </properties>
+
+    <build>
+        <plugins>
+            <!-- use maven-surefire-plugin to run tests with integrated agent and instrument on not finally build jar -->
+            <!--             since ${project.basedir} is <projectRoot>/test/jar and agent is located in <projectRoot>/agent the argLine is:
+                        -javaagent:${project.basedir}/../../agent/target/agent-${project.version}-fat.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                 optional -Xbootclasspath/a:metrics-cost/target/metrics-cost-0.0.1-SNAPSHOT-fat.jar
+
+                transformerArgs options:
+                    visit_mv_static
+                    visit_mv_dynamic
+                    visit_mv_static_count_opcodes
+
+            -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <executions>
+
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testMain</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=transformerArgs:visit_mv_static;pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
+                            </argLine>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testCountOpcodesA</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                                -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testA.agentArgs}
+                            </argLine>
+                            <includes>
+                                <include>**/*CountOpcodesTestA.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testCountOpcodesB</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                                -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testB.agentArgs}
+                            </argLine>
+                            <includes>
+                                <include>**/*CountOpcodesTestB.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <!--<execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testBlocked</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                                -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testBlocked.agentArgs}
+                                -cp jar org.conetex.runtime.instrument.test.jar.blocked.MainJarBlocked
+                            </argLine>
+                            <includes>
+                                <include>**/*CountOpcodesTestB.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>-->
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

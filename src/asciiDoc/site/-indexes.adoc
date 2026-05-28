@@ -1,0 +1,1 @@
+xref:{pathToIndexes}index.adoc[{pathToIndexes}index]

@@ -1,0 +1,62 @@
+= dev guideline
+
+== Release Process regarding mvn version
+:toc:
+:toclevels: 2
+
+=== Before the Release
+
+All steps in this section are performed in your *feature branch* that will be released.
+
+==== Remove the `-SNAPSHOT` suffix
+
+1. Determine the new release version, for example `1.2.3`.
+2. In your feature branch, update the version in `pom.xml` by removing the `-SNAPSHOT` suffix using Maven:
+
+   ```bash
+   mvn versions:set -DnewVersion=NEW_VERSION
+Replace NEW_VERSION with the target release version, e.g.:
+
+
+copy
+mvn versions:set -DnewVersion=1.2.3
+=== 1.2 Verify all submodule POMs and clean up backups
+
+Verify that all submodule pom.xml files have the correct parent version (the version you just set).
+
+After verification, remove the backup POM files created by the versions plugin:
+
+
+copy
+mvn versions:commit
+
+=== Release
+
+Push your feature branch to the remote repository.
+Create a merge request / pull request and merge your feature branch into master/main.
+Build the project from master/main to ensure the release version builds correctly.
+Tag the release commit with the release version (for example v1.2.3 or 1.2.3), using your usual Git tagging conventions.
+
+=== After the Release
+
+All steps in this section are performed in your next feature branch that will later be merged into master/main.
+
+==== Bump the version and set a new -SNAPSHOT version
+
+Check the current version in master/main (for example 1.2.3).
+
+Increment the version by one patch level (for example to 1.2.4).
+
+Append the -SNAPSHOT suffix (for example 1.2.4-SNAPSHOT).
+
+In your new feature branch, set this SNAPSHOT version in the pom.xml:
+
+`mvn versions:set -DnewVersion=1.2.4-SNAPSHOT
+mvn versions:commit`
+
+Commit the changed pom.xml files to your feature branch.
+
+Optionally, you can use the updateVersion script to help with incrementing the version.
+
+[IMPORTANT]
+The process described here is still partly manual and therefore not fully robust. Mistakes can occur, especially when setting or incrementing versions. Please double-check the versions in all pom.xml files and in Git tags.

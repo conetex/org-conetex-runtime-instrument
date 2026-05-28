@@ -1,0 +1,57 @@
+:catalog: core
+:module: parent
+
+= Represent ADR State via Git Workflow
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}]
+
+:date: 2026-05-25
+:deciders: Matthias Franke
+
+== Problem
+
+The ADR template currently includes an explicit **state** field (for example: proposed, accepted, superseded). When ADRs are stored and managed in the code repository, this duplicated state metadata can diverge from the repository history and requires manual updates. We need a single, authoritative mechanism to represent ADR lifecycle state that is reliable, discoverable, and fits our existing developer workflows.
+
+=== Decision Drivers
+
+* Avoid duplicated or conflicting state information between ADR files and repository history.
+* Keep ADR files minimal and focused on the decision content.
+* Use existing, well-understood tools and workflows (Git, branches, PRs, tags) for lifecycle management.
+* Ensure traceability between ADRs and code changes, releases, and reviews.
+* Make ADR status discoverable without extra manual updates to ADR files.
+
+== Options Evaluation
+
+* **Option A — Keep explicit state field in ADR template**: requires manual updates to ADR files when status changes; increases risk of divergence between file state and repository history.
+* **Option B — Track ADR state in a separate metadata system or CMS**: introduces additional tooling and a second source of truth; complicates traceability and increases maintenance overhead.
+* **Option C — Represent ADR state through Git workflow and repository metadata (branches, PRs, merge commits, tags)**: leverages existing VCS features, aligns ADR lifecycle with code review and release processes, and removes the need for a state field in each ADR file.
+
+== Decision
+
+We choose **Option C**: remove the explicit **state** field from the ADR template and represent ADR lifecycle state through the Git workflow (branch names, PR status, merge commits, tags, and release branches).
+
+=== Decision Rationale
+
+* **Single source of truth**: Git history and PR metadata are authoritative and immutable; they show when an ADR was proposed, reviewed, accepted (merged), superseded (new ADR merged), or archived.
+* **Reduced maintenance**: Authors do not need to remember to update a state field inside the ADR file; the repository workflow captures transitions automatically.
+* **Natural review process**: ADR proposals are created and discussed in feature branches and PRs; acceptance is recorded by merging into the main branch, mirroring how code and other artifacts are approved.
+* **Traceability to implementation**: PRs that implement an ADR can reference the ADR file and include the ADR ID in commit messages, creating bidirectional links between decision and implementation.
+* **Searchable and auditable**: Git history, PR timelines, and tags provide searchable evidence of decision timing, reviewers, and rationale without extra fields in the ADR text.
+* **Simplicity of ADR files**: Removing the state field keeps ADRs focused on problem, options, decision, rationale, and consequences—easier to read and maintain.
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* **Template change**: update the ADR template to remove the `state` field and add a short note in the header explaining that lifecycle state is represented by Git workflow.
+* **Workflow conventions**: define and document conventions for ADR branches and PRs (for example: `adr/<id>-proposal` for proposals, required reviewers, and labels like `adr-proposed`, `adr-accepted`, `adr-superseded`).
+* **PR and commit linking**: require implementation PRs to reference the ADR ID and require ADR PRs to reference related implementation work when applicable.
+* **Catalog and index generation**: generate ADR index pages from repository state (for example: infer status from whether the ADR file exists on `main`, whether a superseding ADR exists, or whether a deprecation ADR was merged).
+* **Superseding and deprecation**: treat a new ADR that supersedes an earlier one as the authoritative update; link both ADRs and rely on merge history to show the transition.
+* **CI checks (optional)**: add a lightweight CI job that enforces branch/PR naming conventions and that ADR PRs include required reviewers or labels.
+* **Contributor guidance**: publish clear instructions and examples showing how to propose, review, accept, supersede, and archive ADRs using the Git workflow.
+* **Discovery UX**: add a small script or site-generator step that reads ADR files and repository metadata to present inferred states (proposed, accepted, superseded) on the ADR catalog pages so readers can quickly see status without inspecting Git history manually.

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.conetex.runtime.instrument.tests</groupId>
+        <artifactId>test-parent</artifactId>
+        <version>0.0.2-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>count-opcodes</artifactId>
+
+    <name>test count opcodes</name>
+    <description>test count opcodes description</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <test.pathToTransformerJar>
+            pathToTransformerJar:../../metrics-cost/target/metrics-cost-${project.version}-fat.jar,../../metrics-cost-unnamed/target/metrics-cost-unnamed-${project.version}.jar
+        </test.pathToTransformerJar>
+        <testA.agentArgs>
+            transformerArgs:reportFile=reportA.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesA;${test.pathToTransformerJar}
+        </testA.agentArgs>
+        <testB.agentArgs>
+            transformerArgs:reportFile=reportB.txt,visit_mv_static_count_opcodes,countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/CountOpcodesB;${test.pathToTransformerJar}
+        </testB.agentArgs>
+    </properties>
+
+    <!-- transformerArgs:countOpcodesTrgClass=org/conetex/runtime/test/instrument/count/opcodes/MainCountOpcodesvisit_mv_statXic_count_opcodes; -->
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <executions>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testA</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                                -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testA.agentArgs}
+                            </argLine>
+                            <includes>
+                                <include>**/*CountOpcodesTestA.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <id>testB</id>
+                        <configuration>
+                            <argLine>
+                                -Xbootclasspath/a:${project.basedir}/../../metrics-cost/target/metrics-cost-${project.version}-fat.jar
+                                -javaagent:${project.basedir}/../../agent/target/agent-${project.version}.jar=${testB.agentArgs}
+                            </argLine>
+                            <includes>
+                                <include>**/*CountOpcodesTestB.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

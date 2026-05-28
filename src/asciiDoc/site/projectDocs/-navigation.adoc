@@ -1,0 +1,7 @@
+:pathToIndexes: ../
+:pathToModules: ./
+
+== Navigation
+include::../-indexes.adoc[]
+|
+include::./-modules.adoc[]

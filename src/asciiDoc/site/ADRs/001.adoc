@@ -1,0 +1,93 @@
+:catalog: tec-Stack
+:module: parent
+
+= Restrict Build Toolchain to Java and Maven-Managed Dependencies
+
+Architecture Decision Record
+
+cataloged in: xref:./{catalog}Catalog.adoc[{catalog}]
+
+:date: 2026-05-25
+:deciders: Project Maintainers
+
+== Problem
+
+The project requires a stable, reproducible, and low-maintenance build environment for local development, CI/CD pipelines, and long-term project sustainability.
+
+Modern documentation and frontend-oriented tooling ecosystems often introduce additional runtime dependencies such as:
+
+* Node.js
+* npm
+* Python
+* Ruby
+* external diagram servers
+* globally installed CLI tools
+
+Additional required tooling increases:
+
+* onboarding complexity
+* CI complexity
+* operating system dependencies
+* maintenance overhead
+* security and update surface
+* risk of version incompatibilities
+
+The project requires a build approach that remains portable and executable using only standard Java tooling.
+
+=== Decision Drivers
+
+* Reproducible builds
+* Minimal developer onboarding
+* Minimal CI complexity
+* Platform independence
+* Long-term maintainability
+* Reduced dependency surface
+* Avoidance of globally installed tools
+* Maven-centric build architecture
+* Compatibility with GitHub Actions runners
+* Stable documentation generation
+
+== Options Evaluation
+
+* Allow additional globally installed tooling where convenient
+* Use Node.js-based documentation tooling
+* Use mixed-language build pipelines
+* Restrict build requirements to Java and Maven-managed dependencies only
+
+== Decision
+
+The project standardizes on a Java-only build environment.
+
+No additional globally installed software beyond a Java runtime and Maven is required to build, test, generate documentation, or publish the project.
+
+All required tooling must be executed through Maven plugins or Maven-managed Java dependencies.
+
+=== Decision Rationale (optional)
+
+* Maven already provides a complete dependency and plugin ecosystem
+* Java-based tooling integrates naturally into Maven lifecycles
+* Eliminating Node.js and similar ecosystems reduces operational complexity
+* CI pipelines become substantially simpler and more reproducible
+* Developers can build the project immediately after installing Java and Maven
+* GitHub Actions runners already provide suitable Java environments
+* Java-based documentation tooling is sufficient for the project's requirements
+* PlantUML and AsciiDoctor integrate directly into Maven builds
+* Avoiding external runtime dependencies improves long-term sustainability
+* The approach reduces hidden environment assumptions
+* The approach simplifies enterprise adoption and restricted environments
+
+=== Consequences
+
+Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+
+consequences for implementation:
+
+* Documentation generation must use Java-based tooling
+* Node.js-based site generators are avoided
+* Documentation rendering is performed during Maven builds
+* PlantUML rendering is performed using Java libraries or Maven plugins
+* GitHub Actions only installs Java
+* No global CLI tools are required for contributors
+* Build instructions remain platform-independent
+* Maven plugins become the primary extension mechanism
+* Build reproducibility is improved across environments

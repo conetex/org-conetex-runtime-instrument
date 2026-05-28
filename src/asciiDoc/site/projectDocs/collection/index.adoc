@@ -1,0 +1,40 @@
+= collection module
+
+include::../-navigationForChildren.adoc[]
+
+[#purpose]
+== Purpose
+
+The `collection` module is responsible for *gathering, storing, and aggregating measurement data* produced by the instrumentation system. +
+Its tasks include:
+
+* receiving measurement events (counters, cost metrics, timings)
+* maintaining in‑memory data structures for collected metrics
+* providing access to aggregated results for reporting or analysis
+
+In essence:
+
+____
+
+The `collection` module acts as the data sink and aggregation layer for all runtime measurements.
+
+____
+
+'''
+
+=== Out of Scope (Handled by Other Modules)
+
+* *Bytecode transformation* +
+ Implemented in: xref:../metrics-cost/index.adoc#purpose[`metrics-cost`], xref:../metrics-cost-unnamed/index.adoc#purpose[`metrics-cost-unnamed`], xref:../counter/index.adoc#purpose[`counter`]
+
+* *Generating measurement events (counters, timings, cost data)* +
+ Implemented in: xref:../counter/index.adoc#purpose[`counter`], xref:../metrics-cost/index.adoc#purpose[`metrics-cost`]
+
+* *Defining instrumentation interfaces* +
+ Implemented in: xref:../interfaces/index.adoc#purpose[`interfaces`]
+
+* *Activating or configuring the instrumentation system* +
+ Implemented in: xref:../agent/index.adoc#purpose[`agent`]
+
+* *Providing example usage* +
+ Implemented in: xref:../example/index.adoc#purpose[`example`]

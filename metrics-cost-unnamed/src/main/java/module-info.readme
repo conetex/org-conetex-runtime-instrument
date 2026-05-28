@@ -1,0 +1,3 @@
+since the classes of this package must be loaded by the BootstrapClassLoader
+we have to keep this package in the unnamed module.
+therefore we have to avoid providing module-info.java
