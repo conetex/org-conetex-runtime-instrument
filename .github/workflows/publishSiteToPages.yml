@@ -13,8 +13,10 @@ on:
   push:
     branches:
       - main
-      - '**site**'
       - '**Site**'
+      - '**site**'
+    paths:
+      - 'src/**'
 
 permissions:
   contents: write
