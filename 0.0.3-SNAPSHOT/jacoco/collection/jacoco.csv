@@ -1,0 +1,25 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.AbstractNodeChange,0,19,0,0,0,6,0,1,0,1
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.NodeChangeToNull,0,8,0,0,0,3,0,2,0,2
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.ReverseMapIterator,7,0,0,0,3,0,2,0,2,0
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.NodeIterator,2,39,1,3,1,12,1,4,0,3
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.MapNodeChange,23,0,0,0,4,0,2,0,2,0
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.ReverseSetIterator,0,10,0,0,0,4,0,2,0,2
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.SetNode,0,39,0,0,0,10,0,8,0,8
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.SetLeafNode,2,20,0,0,2,5,2,4,2,4
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.NodeChangeToExisting,0,12,0,0,0,4,0,2,0,2
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.AbstractTree,45,164,9,19,15,50,8,16,2,8
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.AbstractNodeIterator,0,10,0,2,0,2,0,3,0,2
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.MapIterator,7,0,0,0,3,0,2,0,2,0
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.SetNodeChange,0,18,0,0,0,3,0,2,0,2
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.Map,55,0,4,0,15,0,12,0,10,0
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.AbstractNode,0,3,0,0,0,1,0,1,0,1
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.LinkedListEntry,0,9,0,0,0,1,0,1,0,1
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.MapLeafNode,38,0,0,0,10,0,6,0,6,0
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.AbstractBalancedNode,184,556,37,65,35,128,30,39,5,13
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.Set,4,39,0,2,2,9,2,8,2,7
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.AbstractLeafNode,18,57,4,4,6,15,4,8,1,7
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.MapNode,60,0,0,0,14,0,8,0,8,0
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.SetIterator,0,10,0,0,0,4,0,2,0,2
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.AbstractBalancedNode.new AvlTree.AbstractNodeChange() {...},0,13,0,0,0,2,0,2,0,2
+collection for instrument,org.conetex.runtime.instrument.collection,AvlTree.ReverseNodeIterator,2,39,1,3,1,12,1,4,0,3

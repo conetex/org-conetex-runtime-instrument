@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"org.conetex.runtime.instrument.counter","l":"Arithmetics"},{"p":"org.conetex.runtime.instrument.counter","l":"Counter"},{"p":"org.conetex.runtime.instrument.counter","l":"CountersWeighted"},{"p":"org.conetex.runtime.instrument.counter","l":"LongLimits"}];updateSearchResults();

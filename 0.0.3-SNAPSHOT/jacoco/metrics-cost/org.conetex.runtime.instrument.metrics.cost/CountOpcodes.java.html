@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CountOpcodes.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">metrics-cost</a> &gt; <a href="index.source.html" class="el_package">org.conetex.runtime.instrument.metrics.cost</a> &gt; <span class="el_source">CountOpcodes.java</span></div><h1>CountOpcodes.java</h1><pre class="source lang-java linenums">package org.conetex.runtime.instrument.metrics.cost;
+
+import org.conetex.runtime.instrument.collection.AvlTree;
+import org.conetex.runtime.instrument.counter.Counter;
+import org.conetex.runtime.instrument.counter.LongLimits;
+
+<span class="nc" id="L7">public class CountOpcodes {</span>
+
+<span class="nc" id="L9">    public static final AvlTree.Map&lt;String, Counter&gt; COUNTERS = new AvlTree.Map&lt;&gt;();</span>
+
+<span class="nc" id="L11">    private final static LongLimits CONFIG_MIN_MAX = new LongLimits(0L, Long.MAX_VALUE);</span>
+
+    public static void consume(String counterName, int opcode) {
+        //System.out.println(&quot;consumed &quot; + counterName + &quot; &quot; + opcode);
+<span class="nc" id="L15">        COUNTERS.insertIntoTree(</span>
+                counterName + &quot;;&quot; + opcode,
+                ()-&gt;{
+<span class="nc" id="L18">                    Counter newCounter = new Counter(CONFIG_MIN_MAX, false);</span>
+<span class="nc" id="L19">                    newCounter.increment();</span>
+<span class="nc" id="L20">                    return newCounter;</span>
+                },
+                (Counter existingCounter)-&gt;{
+<span class="nc" id="L23">                    existingCounter.increment();</span>
+<span class="nc" id="L24">                    return existingCounter;</span>
+                }
+        );
+<span class="nc" id="L27">        COUNTERS.findInTree(counterName + &quot;;&quot; + opcode);</span>
+<span class="nc" id="L28">    }</span>
+
+    public static void reset() {
+<span class="nc bnc" id="L31" title="All 2 branches missed.">        for(AvlTree.Entry&lt;String, Counter&gt; counterOfOpcode : COUNTERS){</span>
+<span class="nc" id="L32">            counterOfOpcode.value().reset();</span>
+<span class="nc" id="L33">        }</span>
+<span class="nc" id="L34">    }</span>
+
+    public static void blockIncrement(boolean incrementationBlocked) {
+<span class="nc bnc" id="L37" title="All 2 branches missed.">        for(AvlTree.Entry&lt;String, Counter&gt; counterOfOpcode : COUNTERS){</span>
+<span class="nc" id="L38">            counterOfOpcode.value().blockIncrement(incrementationBlocked);</span>
+<span class="nc" id="L39">        }</span>
+<span class="nc" id="L40">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -1,0 +1,1292 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AvlTree.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">collection for instrument</a> &gt; <a href="index.source.html" class="el_package">org.conetex.runtime.instrument.collection</a> &gt; <span class="el_source">AvlTree.java</span></div><h1>AvlTree.java</h1><pre class="source lang-java linenums">package org.conetex.runtime.instrument.collection;
+
+import java.util.Iterator;
+
+/**
+ * A utility container class that provides an in-memory, self-balancing AVL tree
+ * implementation and related types.  This class groups the tree node
+ * abstractions and two concrete public data structures:
+ * {@link AvlTree.Set} (a set of keys) and {@link AvlTree.Map} (a key/value map),
+ * together with iterators and entry types used to traverse and access stored
+ * elements.
+ *
+ * &lt;p&gt;&lt;b&gt;Behavior&lt;/b&gt;
+ * &lt;ul&gt;
+ *   &lt;li&gt;Elements are ordered by their natural ordering (keys must implement {@code Comparable}).&lt;/li&gt;
+ *   &lt;li&gt;Insert operations replace existing entries with equal keys rather than creating duplicates.&lt;/li&gt;
+ *   &lt;li&gt;Null keys are ignored by the public insert/delete/find entry points (no {@code NullPointerException} is thrown by those methods).&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;&lt;b&gt;Threading&lt;/b&gt;
+ * &lt;p&gt;The implementation uses internal synchronization at the tree and node level
+ * to coordinate concurrent modifications.  Typical operations (insert, delete,
+ * find, and iteration via the provided iterators) are implemented with
+ * synchronization to allow safe concurrent use in common scenarios; however,
+ * callers should not rely on external atomicity across multiple method calls
+ * (for example, a separate check-then-act sequence) without their own
+ * synchronization.
+ *
+ * &lt;p&gt;&lt;b&gt;Performance&lt;/b&gt;
+ * &lt;p&gt;Operations maintain AVL balance invariants; expected time complexity for
+ * single-key operations (insert, delete, find) is O(log n) where n is the
+ * number of elements in the tree.
+ *
+ * &lt;p&gt;&lt;b&gt;Usage&lt;/b&gt;
+ * &lt;pre&gt;
+ *   AvlTree.Set&amp;lt;Integer&amp;gt; set = new AvlTree.Set&amp;lt;&amp;gt;();
+ *   set.insertIntoTree(42);
+ *
+ *   AvlTree.Map&amp;lt;String, Integer&amp;gt; map = new AvlTree.Map&amp;lt;&amp;gt;();
+ *   map.insertIntoTree(&quot;key&quot;, 123);
+ * &lt;/pre&gt;
+ *
+ * @see AvlTree.Set
+ * @see AvlTree.Map
+ * @see AvlTree.Entry
+ */
+public class AvlTree {
+
+    public interface ValueFactory&lt;V&gt; {
+        V create();
+    }
+
+    public interface ValueUpdate&lt;V&gt; {
+        V update(V existingValue);
+    }
+
+    private AvlTree(){}
+
+    /**
+     * Represents a key/value pair stored in the AVL tree.
+     *
+     * @param &lt;K&gt; the key type, must be Comparable
+     * @param &lt;V&gt; the value type
+     */
+    public interface Entry&lt;K extends Comparable&lt;K&gt;, V&gt; {
+
+        /**
+         * Returns the key associated with this entry.
+         *
+         * @return the key of this entry
+         */
+        K key();
+
+        /**
+         * Returns the value associated with this entry.
+         *
+         * @return the value of this entry
+         */
+        V value();
+
+    }
+
+<span class="fc" id="L83">    static abstract class AbstractNode&lt;K extends Comparable&lt;K&gt;, V&gt; implements Entry&lt;K, V&gt;</span>
+    {
+
+        abstract int height();
+
+        abstract AbstractNode&lt;K,V&gt; left();
+
+        abstract AbstractNode&lt;K,V&gt; right();
+
+        abstract AbstractNodeChange&lt;K,V&gt; insert(K keyToInsert, ValueFactory&lt;V&gt; v, ValueUpdate&lt;V&gt; u);
+
+        abstract AbstractNode&lt;K,V&gt; find(K keyToFind);
+
+        abstract AbstractNodeChange&lt;K,V&gt; delete(K keyToDelete);
+
+        abstract AbstractNodeChange&lt;K,V&gt; change(AbstractNode&lt;K,V&gt; left, AbstractNode&lt;K,V&gt; right);
+
+        abstract AbstractLeafNode&lt;K,V&gt; createLeaf(K keyToInsert, ValueFactory&lt;V&gt; valueFactory);
+
+        abstract void updateValue(ValueUpdate&lt;V&gt; valueUpdater);
+
+        abstract void setValue(V value);
+
+    }
+
+    private static abstract class AbstractNodeChange&lt;K extends Comparable&lt;K&gt;, V&gt; {
+
+        private AbstractNode&lt;K,V&gt; left;
+
+        private AbstractNode&lt;K,V&gt; right;
+
+        private final K key;
+
+        private int height;
+
+<span class="fc" id="L118">        AbstractNodeChange(AbstractNode&lt;K,V&gt; left, K key, AbstractNode&lt;K,V&gt; right) {</span>
+<span class="fc" id="L119">            this.left = left;</span>
+<span class="fc" id="L120">            this.right = right;</span>
+<span class="fc" id="L121">            this.key = key;</span>
+<span class="fc" id="L122">            this.height = AbstractBalancedNode.calculateHeight(this.left, this.right);</span>
+<span class="fc" id="L123">        }</span>
+
+        abstract AbstractNode&lt;K,V&gt; implement();
+
+    }
+
+    private static abstract class AbstractBalancedNode&lt;K extends Comparable&lt;K&gt;, V&gt; extends AbstractNode&lt;K,V&gt;{
+        private AbstractNode&lt;K,V&gt; left;
+        private AbstractNode&lt;K,V&gt; right;
+        private K key;
+        private int height;
+
+<span class="fc" id="L135">        private AbstractBalancedNode(AbstractNode&lt;K,V&gt; left, K key, AbstractNode&lt;K,V&gt; right) {</span>
+<span class="fc" id="L136">            this.left = left;</span>
+<span class="fc" id="L137">            this.right = right;</span>
+<span class="fc" id="L138">            this.key = key;</span>
+<span class="fc" id="L139">            this.height = AbstractBalancedNode.calculateHeight(this.left, this.right);</span>
+<span class="fc" id="L140">        }</span>
+
+<span class="fc" id="L142">        private AbstractBalancedNode(AbstractNode&lt;K,V&gt; left, K key, AbstractNode&lt;K,V&gt; right, int height) {</span>
+<span class="fc" id="L143">            this.left = left;</span>
+<span class="fc" id="L144">            this.right = right;</span>
+<span class="fc" id="L145">            this.key = key;</span>
+<span class="fc" id="L146">            this.height = height;</span>
+<span class="fc" id="L147">        }</span>
+
+        @Override
+        final int height() {
+<span class="fc" id="L151">            return this.height;</span>
+        }
+
+        static int calculateHeight(AbstractNode&lt;?,?&gt; left, AbstractNode&lt;?,?&gt; right) {
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            if(left == null){</span>
+<span class="fc bfc" id="L156" title="All 2 branches covered.">                if(right == null){</span>
+<span class="fc" id="L157">                    return 1;</span>
+                }
+                else{
+<span class="fc" id="L160">                    return 1 + right.height();</span>
+                }
+            }
+            else{
+<span class="fc bfc" id="L164" title="All 2 branches covered.">                if(right == null){</span>
+<span class="fc" id="L165">                    return 1 + left.height();</span>
+                }
+                else{
+<span class="fc" id="L168">                    int leftHeight = left.height();</span>
+<span class="fc" id="L169">                    int rightHeight = right.height();</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                    if(leftHeight &gt; rightHeight){</span>
+<span class="nc" id="L171">                        return 1 + leftHeight;</span>
+                    }
+                    else{
+<span class="fc" id="L174">                        return 1 + rightHeight;</span>
+                    }
+                }
+            }
+        }
+
+        /**
+         * Returns the key stored in this balanced node.
+         *
+         * @return the node key
+         */
+        @Override
+        public K key() {
+<span class="fc" id="L187">            return this.key;</span>
+        }
+
+        @Override
+        AbstractNode&lt;K,V&gt; left() {
+<span class="fc" id="L192">            return this.left;</span>
+        }
+
+        @Override
+        AbstractNode&lt;K,V&gt; right() {
+<span class="fc" id="L197">            return this.right;</span>
+        }
+
+        @Override
+        AbstractNode&lt;K,V&gt; find(K keyToFind) {
+<span class="nc" id="L202">            int cmp = keyToFind.compareTo(this.key);</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            if (cmp &lt; 0) {</span>
+                // go left
+<span class="nc bnc" id="L205" title="All 2 branches missed.">                if (this.left == null) {</span>
+<span class="nc" id="L206">                    return null;</span>
+                }
+                else{
+<span class="nc" id="L209">                    return this.left.find(keyToFind);</span>
+                }
+            }
+<span class="nc bnc" id="L212" title="All 2 branches missed.">            if (cmp &gt; 0) {</span>
+                // go right
+<span class="nc bnc" id="L214" title="All 2 branches missed.">                if (this.right == null) {</span>
+<span class="nc" id="L215">                    return null;</span>
+                }
+                else{
+<span class="nc" id="L218">                    return this.right.find(keyToFind);</span>
+                }
+            }
+<span class="nc" id="L221">            return this;</span>
+        }
+
+        @Override
+        AbstractNodeChange&lt;K,V&gt; delete(K valueToRemove) {
+<span class="fc" id="L226">            int cmp = valueToRemove.compareTo(this.key);</span>
+
+<span class="fc bfc" id="L228" title="All 2 branches covered.">            if (cmp &lt; 0) {</span>
+                // go left
+                AbstractNode&lt;K,V&gt; oldLeft;
+                while(true) {
+<span class="fc" id="L232">                    synchronized (this) {</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">                        if (this.left == null) {</span>
+<span class="nc" id="L234">                            return null;</span>
+                        }
+<span class="fc" id="L236">                        oldLeft = this.left;</span>
+<span class="fc" id="L237">                    }</span>
+<span class="fc" id="L238">                    AbstractNodeChange&lt;K,V&gt; newLeft = oldLeft.delete(valueToRemove);</span>
+<span class="fc" id="L239">                    synchronized (this) {</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">                        if (this.left == oldLeft) {</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">                            if(newLeft == null){</span>
+<span class="fc" id="L242">                                return null;</span>
+                            }
+<span class="fc" id="L244">                            this.left = newLeft.implement();</span>
+<span class="pc bpc" id="L245" title="2 of 6 branches missed.">                            if (this.right != null &amp;&amp; this.right instanceof AvlTree.AbstractBalancedNode&lt;K,V&gt; rightA &amp;&amp; rightA.height &gt; newLeft.height + 1) {</span>
+                                // right heavy
+<span class="nc bnc" id="L247" title="All 6 branches missed.">                                if (this.right.left() == null || (this.right.right() != null &amp;&amp; this.right.left().height() &lt;= this.right.right().height())) {</span>
+                                    // RR
+                                    //return rightA.callRotateLeft(this);
+<span class="nc" id="L250">                                    return this.rotateLeftNew(rightA);</span>
+                                } else {
+                                    // RL
+                                    //return rightA.callRotateRightLeft(this);
+<span class="nc" id="L254">                                    return this.rotateRightLeftNew(rightA);</span>
+                                }
+                            }
+<span class="fc" id="L257">                            this.height = AbstractBalancedNode.calculateHeight(this.left, this.right);</span>
+<span class="fc" id="L258">                            return null;</span>
+                        }
+<span class="nc" id="L260">                    }</span>
+<span class="nc" id="L261">                }</span>
+            }
+
+<span class="fc bfc" id="L264" title="All 2 branches covered.">            if (cmp == 0) {</span>
+                // found node
+<span class="fc" id="L266">                synchronized (this) {</span>
+<span class="fc bfc" id="L267" title="All 4 branches covered.">                    if (this.left == null &amp;&amp; this.right == null) {</span>
+                        // delete this node - successor not needed
+<span class="fc" id="L269">                        return new NodeChangeToNull&lt;&gt;();</span>
+                    }
+<span class="fc bfc" id="L271" title="All 2 branches covered.">                    if (this.left == null) {</span>
+                        // delete this node - successor is right
+<span class="fc" id="L273">                        return new AbstractNodeChange&lt;&gt;(null, null, null){</span>
+                            @Override
+                            AbstractNode&lt;K,V&gt; implement() {
+<span class="fc" id="L276">                                return AbstractBalancedNode.this.right;</span>
+                            }
+                        };
+                    }
+<span class="fc bfc" id="L280" title="All 2 branches covered.">                    if (this.right == null) {</span>
+                        // delete this node - successor is left
+<span class="fc" id="L282">                        return new NodeChangeToExisting&lt;&gt;(this.left);</span>
+                    }
+                    // delete this node - new value is smallest (left) at right
+<span class="fc" id="L285">                    AbstractNode&lt;K,V&gt; newValueNode = this.right;</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">                    while (newValueNode.left() != null) {</span>
+<span class="fc" id="L287">                        newValueNode = newValueNode.left();</span>
+                    }
+                    // copy data from successor to this
+<span class="fc" id="L290">                    this.key = newValueNode.key();</span>
+<span class="fc" id="L291">                    this.setValue(newValueNode.value());</span>
+                    // remove successor
+<span class="fc" id="L293">                    valueToRemove = newValueNode.key();</span>
+<span class="fc" id="L294">                }</span>
+            }
+
+            // go right
+            AbstractNode&lt;K,V&gt; oldRight;
+            while(true) {
+<span class="fc" id="L300">                synchronized (this) {</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">                    if (this.right == null) {</span>
+<span class="fc" id="L302">                        return null;</span>
+                    }
+<span class="fc" id="L304">                    oldRight = this.right;</span>
+<span class="fc" id="L305">                }</span>
+<span class="fc" id="L306">                AbstractNodeChange&lt;K,V&gt; newRight = oldRight.delete(valueToRemove);</span>
+<span class="fc" id="L307">                synchronized (this) {</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">                    if (this.right == oldRight) {</span>
+<span class="fc bfc" id="L309" title="All 2 branches covered.">                        if(newRight == null){</span>
+<span class="fc" id="L310">                            return null;</span>
+                        }
+<span class="fc" id="L312">                        this.right = newRight.implement();</span>
+<span class="pc bpc" id="L313" title="3 of 6 branches missed.">                        if (this.left != null &amp;&amp; this.left instanceof AvlTree.AbstractBalancedNode&lt;K,V&gt; leftA &amp;&amp; leftA.height &gt; newRight.height + 1) {</span>
+                            // left heavy
+<span class="nc bnc" id="L315" title="All 6 branches missed.">                            if ( leftA.right() == null || (leftA.left() != null &amp;&amp; leftA.left().height() &gt;= leftA.right().height()) ) {</span>
+                                // LL
+                                //return leftA.callRotateRight(this);
+<span class="nc" id="L318">                                return this.rotateRightNew(leftA);</span>
+                            } else {
+                                // LR
+                                //return leftA.callRotateLeftRight(this);
+<span class="nc" id="L322">                                return this.rotateLeftRightNew(leftA);</span>
+                            }
+                        }
+<span class="fc" id="L325">                        this.height = AbstractBalancedNode.calculateHeight(this.left, this.right);</span>
+<span class="fc" id="L326">                        return null;</span>
+                    }
+<span class="nc" id="L328">                }</span>
+<span class="nc" id="L329">            }</span>
+
+        }
+
+        @Override
+        abstract AbstractNodeChange&lt;K,V&gt; change(AbstractNode&lt;K,V&gt; left, AbstractNode&lt;K,V&gt; right);
+
+        abstract AbstractBalancedNode&lt;K,V&gt; create(AbstractNode&lt;K,V&gt; left, AbstractNode&lt;K,V&gt; right);
+
+        // Insert a key into the AVL tree and return the new root of the subtree
+        @Override
+        AbstractNodeChange&lt;K,V&gt; insert(K keyToInsert, ValueFactory&lt;V&gt; v, ValueUpdate&lt;V&gt; u) {
+<span class="fc" id="L341">            int cmp = keyToInsert.compareTo(this.key);</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">            if (cmp &lt; 0){</span>
+                AbstractNode&lt;K,V&gt; oldLeft;
+                while(true) {
+<span class="fc" id="L345">                    synchronized (this) {</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">                        if (this.left == null) {</span>
+                            //return new SetNodeFactoryN&lt;&gt;(nodeToInsert, this.key, this.right);
+<span class="fc" id="L348">                            return this.change(this.createLeaf(keyToInsert, v), this.right);</span>
+                        }
+<span class="fc" id="L350">                        oldLeft = this.left;</span>
+<span class="fc" id="L351">                    }</span>
+<span class="fc" id="L352">                    AbstractNodeChange&lt;K,V&gt; newLeft = oldLeft.insert(keyToInsert, v, u);</span>
+<span class="fc" id="L353">                    synchronized (this) {</span>
+<span class="pc bpc" id="L354" title="1 of 2 branches missed.">                        if (this.left != oldLeft) {</span>
+                            // another thread changed this.left ==&gt; retry
+<span class="nc" id="L356">                            continue;</span>
+                        }
+                        // no other thread changed this.left in between
+<span class="fc bfc" id="L359" title="All 2 branches covered.">                        if(newLeft == null){</span>
+<span class="fc" id="L360">                            return null;</span>
+                        }
+<span class="fc" id="L362">                        if ( //newLeft instanceof AvlTree.AbstractBalancedNode&lt;K,K&gt; newLeftA &amp;&amp;</span>
+<span class="fc bfc" id="L363" title="All 4 branches covered.">                                newLeft.height - 1 &gt; (this.right == null ? 0 : this.right.height())) {</span>
+                            // left heavy
+<span class="pc bpc" id="L365" title="3 of 6 branches missed.">                            if (newLeft.right == null || (newLeft.left != null &amp;&amp; newLeft.left.height() &gt;= newLeft.right.height())) {</span>
+                                // LL
+<span class="fc" id="L367">                                return this.rotateRightNew(newLeft);</span>
+                            }
+                            // left.right HIGHER ==&gt; LR
+<span class="fc" id="L370">                            return this.rotateLeftRightNew(newLeft);</span>
+                        }
+<span class="fc" id="L372">                        this.left = newLeft.implement();</span>
+<span class="fc" id="L373">                        return null;</span>
+                        //return new SetNodeFactoryN&lt;&gt;(newLeft, this.key, this.right);
+                    }
+                }
+            }
+<span class="fc bfc" id="L378" title="All 2 branches covered.">            if (cmp &gt; 0){</span>
+                AbstractNode&lt;K,V&gt; oldRight;
+                while(true) {
+<span class="fc" id="L381">                    synchronized (this) {</span>
+<span class="fc bfc" id="L382" title="All 2 branches covered.">                        if (this.right == null) {</span>
+<span class="fc" id="L383">                            return this.change(this.left, this.createLeaf(keyToInsert, v));</span>
+                        }
+<span class="fc" id="L385">                        oldRight = this.right;</span>
+<span class="fc" id="L386">                    }</span>
+<span class="fc" id="L387">                    AbstractNodeChange&lt;K,V&gt; newRight = oldRight.insert(keyToInsert, v, u);</span>
+<span class="fc" id="L388">                    synchronized (this) {</span>
+<span class="pc bpc" id="L389" title="1 of 2 branches missed.">                        if (this.right == oldRight) {</span>
+                            // no other thread changed this.right in between
+<span class="fc bfc" id="L391" title="All 2 branches covered.">                            if(newRight == null){</span>
+<span class="fc" id="L392">                                return null;</span>
+                            }
+<span class="fc" id="L394">                            if (//newRight instanceof AvlTree.AbstractBalancedNode&lt;K,K&gt; newRightA &amp;&amp;</span>
+<span class="fc bfc" id="L395" title="All 4 branches covered.">                                    newRight.height - 1 &gt; (this.left == null ? 0 : this.left.height())){</span>
+                                // right heavy
+<span class="pc bpc" id="L397" title="3 of 6 branches missed.">                                if (newRight.left == null || (newRight.right != null &amp;&amp; newRight.left.height() &lt;= newRight.right.height())) {</span>
+                                    // RR
+<span class="fc" id="L399">                                    return this.rotateLeftNew(newRight);</span>
+                                }
+                                // right.left HIGHER ==&gt; RL
+<span class="fc" id="L402">                                return this.rotateRightLeftNew(newRight);</span>
+                            }
+<span class="fc" id="L404">                            this.right = newRight.implement();</span>
+<span class="fc" id="L405">                            return null;</span>
+                        }   // else: another thread changed this.left ==&gt; retry
+<span class="nc" id="L407">                    }</span>
+<span class="nc" id="L408">                }</span>
+            }
+            // insert in this node ==&gt; replace data
+<span class="fc" id="L411">            synchronized (this) {</span>
+<span class="fc" id="L412">                this.updateValue( u );</span>
+<span class="fc" id="L413">                return null;//new SetNodeFactory&lt;&gt;(this.left, this.key, this.right);</span>
+            }
+
+        }
+
+        abstract void updateValue(ValueUpdate&lt;V&gt; valueUpdater);
+
+        abstract void setValue(V newValue);
+
+        // LL
+        private AbstractNodeChange&lt;K,V&gt; rotateRightNew(AbstractNodeChange&lt;K,V&gt; newRoot) {
+            // Perform rotation
+            // newRoot is new ==&gt; we can change it
+<span class="fc" id="L426">            newRoot.right = this.create(newRoot.right, this.right);</span>
+            // Update heights
+<span class="fc" id="L428">            newRoot.height = AbstractBalancedNode.calculateHeight(newRoot.left, newRoot.right);</span>
+<span class="fc" id="L429">            return newRoot;</span>
+        }
+
+        // LL
+        private AbstractNodeChange&lt;K,V&gt; rotateRightNew(AbstractBalancedNode&lt;K,V&gt; newRoot) {
+            // Perform rotation
+<span class="nc" id="L435">            AbstractBalancedNode&lt;K,V&gt; newThis = this.create(newRoot.right, this.right);</span>
+            // newRoot is not new ==&gt; make it new
+<span class="nc" id="L437">            return newRoot.change(newRoot.left, newThis);</span>
+        }
+
+        // RR
+        private AbstractNodeChange&lt;K,V&gt; rotateLeftNew(AbstractNodeChange&lt;K,V&gt; newRoot) {
+            // newRoot is new ==&gt; we can change it
+            // Perform rotation
+<span class="fc" id="L444">            newRoot.left = this.create(this.left, newRoot.left);</span>
+<span class="fc" id="L445">            newRoot.height = AbstractBalancedNode.calculateHeight(newRoot.left, newRoot.right);</span>
+<span class="fc" id="L446">            return newRoot;</span>
+        }
+
+        // RR
+        private AbstractNodeChange&lt;K,V&gt; rotateLeftNew(AbstractBalancedNode&lt;K,V&gt; newRoot) {
+            // Perform rotation
+<span class="nc" id="L452">            AbstractBalancedNode&lt;K,V&gt; newThis = this.create(this.left, newRoot.left);</span>
+            // newRoot is not new ==&gt; make it new
+<span class="nc" id="L454">            return newRoot.change(newThis, newRoot.right);</span>
+        }
+
+        // LR
+        private AbstractNodeChange&lt;K,V&gt; rotateLeftRightNew(AbstractNodeChange&lt;K,V&gt; newLeft) {
+            // newLeft is new ==&gt; update it
+<span class="fc" id="L460">            AbstractNode&lt;K,V&gt; newLeftRight = newLeft.right; // but remember data before update</span>
+<span class="fc" id="L461">            newLeft.right = newLeft.right.left();</span>
+<span class="fc" id="L462">            newLeft.height = AbstractBalancedNode.calculateHeight(newLeft.left, newLeft.right);</span>
+<span class="fc" id="L463">            return newLeftRight.change(</span>
+<span class="fc" id="L464">                    newLeft.implement(),</span>
+<span class="fc" id="L465">                    this.create(newLeftRight.right(), this.right)</span>
+            );
+        }
+
+        // LR
+        private AbstractNodeChange&lt;K,V&gt; rotateLeftRightNew(AbstractBalancedNode&lt;K,V&gt; newLeft) {
+            // newLeft is not new ==&gt; make it new
+<span class="nc" id="L472">            return newLeft.right.change(</span>
+<span class="nc" id="L473">                    newLeft.create(newLeft.left, newLeft.right.left()),</span>
+<span class="nc" id="L474">                    this.create(newLeft.right.right(), this.right)</span>
+            );
+        }
+
+        // RL
+        private AbstractNodeChange&lt;K,V&gt; rotateRightLeftNew(AbstractNodeChange&lt;K,V&gt; newRight) {
+            // newRight is new ==&gt; update it
+<span class="fc" id="L481">            AbstractNode&lt;K,V&gt; newRightLeft = newRight.left; // but remember data before update</span>
+<span class="fc" id="L482">            newRight.left = newRight.left.right();</span>
+<span class="fc" id="L483">            newRight.height = AbstractBalancedNode.calculateHeight(newRight.left, newRight.right);</span>
+<span class="fc" id="L484">            return newRightLeft.change(</span>
+<span class="fc" id="L485">                    this.create(this.left, newRightLeft.left()),</span>
+<span class="fc" id="L486">                    newRight.implement()</span>
+            );
+        }
+
+        // RL
+        private AbstractNodeChange&lt;K,V&gt; rotateRightLeftNew(AbstractBalancedNode&lt;K,V&gt; newRight) {
+            // newRight is not new ==&gt; make it new
+<span class="nc" id="L493">            return newRight.left.change(</span>
+<span class="nc" id="L494">                    this.create(this.left, newRight.left.left()),</span>
+<span class="nc" id="L495">                    newRight.create(newRight.left.right(), newRight.right)</span>
+            );
+        }
+
+    }
+
+    private static abstract class AbstractLeafNode&lt;K extends Comparable&lt;K&gt;, V&gt; extends AbstractNode&lt;K,V&gt; {
+
+        private K key;
+        //protected int height;
+
+<span class="fc" id="L506">        AbstractLeafNode(K key) {</span>
+<span class="fc" id="L507">            this.key = key;</span>
+<span class="fc" id="L508">        }</span>
+
+        @Override
+        // Insert a key into the AVL tree and return the new root of the subtree
+        AbstractNodeChange&lt;K,V&gt; insert(K keyToInsert, ValueFactory&lt;V&gt; v, ValueUpdate&lt;V&gt; u) {
+<span class="fc" id="L513">            synchronized (this) {</span>
+<span class="fc" id="L514">                int cmp = keyToInsert.compareTo(this.key);</span>
+<span class="fc bfc" id="L515" title="All 2 branches covered.">                if (cmp &lt; 0){</span>
+<span class="fc" id="L516">                    return this.change(this.createLeaf(keyToInsert, v), null);</span>
+                }
+<span class="pc bpc" id="L518" title="1 of 2 branches missed.">                if (cmp &gt; 0){</span>
+<span class="fc" id="L519">                    return this.change(null, this.createLeaf(keyToInsert, v));</span>
+                }
+                // replace data
+<span class="nc" id="L522">                this.updateValue( u );</span>
+<span class="nc" id="L523">                return null;</span>
+            }
+        }
+
+        /**
+         * Returns the value stored in this leaf node.
+         *
+         * @return the leaf node value
+         */
+        @Override
+        public abstract V value();
+
+        abstract void updateValue(ValueUpdate&lt;V&gt; valueUpdater);
+
+        abstract void setValue(V v);
+
+        @Override
+        AbstractNode&lt;K,V&gt; find(K keyToFind) {
+<span class="nc bnc" id="L541" title="All 2 branches missed.">            if (keyToFind.compareTo(this.key) == 0) {</span>
+<span class="nc" id="L542">                return this;</span>
+            }
+<span class="nc" id="L544">            return null;</span>
+        }
+
+        @Override
+        AbstractNodeChange&lt;K,V&gt; delete(K keyToDelete) {
+<span class="pc bpc" id="L549" title="1 of 2 branches missed.">            if (keyToDelete.compareTo(this.key) == 0) {</span>
+                // delete this
+<span class="fc" id="L551">                return new NodeChangeToNull&lt;&gt;();</span>
+            }
+            // nothing to do because keyToDelete was not found
+<span class="nc" id="L554">            return null;</span>
+        }
+
+        @Override
+        AbstractNode&lt;K,V&gt; left() {
+<span class="fc" id="L559">            return null;</span>
+        }
+
+        @Override
+        AbstractNode&lt;K,V&gt; right() {
+<span class="fc" id="L564">            return null;</span>
+        }
+
+        @Override
+        int height() {
+<span class="fc" id="L569">            return 1;</span>
+        }
+
+        @Override
+        public K key() {
+<span class="fc" id="L574">            return this.key;</span>
+        }
+
+    }
+
+<span class="fc" id="L579">    private static abstract class AbstractTree&lt;K extends Comparable&lt;K&gt;, V&gt; {</span>
+
+<span class="fc" id="L581">        private AbstractNode&lt;K,V&gt; root = null;</span>
+
+        AbstractNode&lt;K,V&gt; getRoot(){
+<span class="fc" id="L584">            return this.root;</span>
+        }
+
+        abstract AbstractLeafNode&lt;K,V&gt; create(K keyToInsert, ValueFactory&lt;V&gt; valueFactory);
+
+        void insert(K keyToInsert, ValueFactory&lt;V&gt; v, ValueUpdate&lt;V&gt; u) {
+
+            while(true) {
+                AbstractNode&lt;K,V&gt; theRoot;
+<span class="fc" id="L593">                synchronized(this) {</span>
+<span class="fc bfc" id="L594" title="All 2 branches covered.">                    if(this.root == null){</span>
+<span class="fc" id="L595">                        this.root = this.create(keyToInsert, v);</span>
+<span class="fc" id="L596">                        return;</span>
+                    }
+<span class="fc" id="L598">                    theRoot = this.root;</span>
+<span class="fc" id="L599">                }</span>
+<span class="fc" id="L600">                AbstractNodeChange&lt;K,V&gt; newRoot = theRoot.insert(keyToInsert, v, u);</span>
+<span class="fc" id="L601">                synchronized (this) {</span>
+<span class="pc bpc" id="L602" title="1 of 2 branches missed.">                    if (this.root != theRoot) {</span>
+                        // another thread changed this.root ==&gt; retry
+<span class="nc" id="L604">                        continue;</span>
+                    }
+                    // no other thread changed this.root in between
+<span class="fc bfc" id="L607" title="All 2 branches covered.">                    if(newRoot == null){</span>
+<span class="fc" id="L608">                        return;</span>
+                    }
+<span class="fc" id="L610">                    this.root = newRoot.implement();</span>
+<span class="fc" id="L611">                    return;</span>
+                }
+            }
+
+        }
+
+        void deleteFromTree(K keyToDelete) {
+<span class="fc bfc" id="L618" title="All 2 branches covered.">            if(keyToDelete == null){</span>
+                //throw new NullPointerException(&quot;can not delete null&quot;);
+<span class="fc" id="L620">                return;</span>
+            }
+            while(true) {
+                AbstractNode&lt;K,V&gt; theRoot;
+<span class="fc" id="L624">                synchronized (this) {</span>
+<span class="pc bpc" id="L625" title="1 of 2 branches missed.">                    if (this.root == null) {</span>
+<span class="nc" id="L626">                        return;</span>
+                    }
+<span class="fc" id="L628">                    theRoot = this.root;</span>
+<span class="fc" id="L629">                }</span>
+
+<span class="fc" id="L631">                AbstractNodeChange&lt;K,V&gt; newRoot = theRoot.delete(keyToDelete);</span>
+<span class="fc" id="L632">                synchronized (this) {</span>
+<span class="pc bpc" id="L633" title="1 of 2 branches missed.">                    if (this.root != theRoot) {</span>
+                        // another thread changed this.root ==&gt; retry
+<span class="nc" id="L635">                        continue;</span>
+                    }
+<span class="fc" id="L637">                }</span>
+                // no other thread changed this.root in between
+<span class="fc bfc" id="L639" title="All 2 branches covered.">                if(newRoot == null){</span>
+<span class="fc" id="L640">                    return;</span>
+                }
+<span class="fc" id="L642">                this.root = newRoot.implement();</span>
+<span class="fc" id="L643">                return;</span>
+            }
+        }
+
+        //abstract AbstractLeafNode&lt;K,V&gt; createNewLeaf(K key, V value);
+
+        private AbstractNode&lt;K,V&gt; find(K keyToFind) {
+<span class="nc bnc" id="L650" title="All 2 branches missed.">            if(keyToFind == null){</span>
+                //throw new NullPointerException(&quot;can not find null&quot;);
+<span class="nc" id="L652">                return null;</span>
+            }
+
+            AbstractNode&lt;K,V&gt; theRoot;
+<span class="nc" id="L656">            synchronized(this) {</span>
+<span class="nc bnc" id="L657" title="All 2 branches missed.">                if(this.root == null){</span>
+<span class="nc" id="L658">                    return null;</span>
+                }
+<span class="nc" id="L660">                theRoot = this.root;</span>
+<span class="nc" id="L661">            }</span>
+
+<span class="nc" id="L663">            return theRoot.find(keyToFind);</span>
+        }
+
+        public V findInTree(K keyToFind) {
+<span class="nc" id="L667">            AbstractNode&lt;K,V&gt; result = this.find(keyToFind);</span>
+<span class="nc bnc" id="L668" title="All 2 branches missed.">            if(result == null){</span>
+<span class="nc" id="L669">                return null;</span>
+            }
+<span class="nc" id="L671">            return result.value();</span>
+        }
+
+        // Utility functions for traversal
+        void preOrder(AbstractNode&lt;K,V&gt; node) {
+<span class="fc bfc" id="L676" title="All 2 branches covered.">            if (node != null) {</span>
+<span class="fc" id="L677">                System.out.print(node.key() + &quot; &quot;);</span>
+<span class="fc" id="L678">                preOrder(node.left());</span>
+<span class="fc" id="L679">                preOrder(node.right());</span>
+            }
+<span class="fc" id="L681">        }</span>
+
+        void inOrder(AbstractNode&lt;K,V&gt; node) {
+<span class="fc bfc" id="L684" title="All 2 branches covered.">            if (node != null) {</span>
+<span class="fc" id="L685">                inOrder(node.left());</span>
+<span class="fc" id="L686">                System.out.print(node.key() + &quot; &quot;);</span>
+<span class="fc" id="L687">                inOrder(node.right());</span>
+            }
+<span class="fc" id="L689">        }</span>
+
+        void reverseOrder(AbstractNode&lt;K,V&gt; node) {
+<span class="fc bfc" id="L692" title="All 2 branches covered.">            if (node != null) {</span>
+<span class="fc" id="L693">                reverseOrder(node.right());</span>
+<span class="fc" id="L694">                System.out.print(node.key() + &quot; &quot;);</span>
+<span class="fc" id="L695">                reverseOrder(node.left());</span>
+            }
+<span class="fc" id="L697">        }</span>
+
+        void postOrder(AbstractNode&lt;K,V&gt; node) {
+<span class="fc bfc" id="L700" title="All 2 branches covered.">            if (node != null) {</span>
+<span class="fc" id="L701">                postOrder(node.left());</span>
+<span class="fc" id="L702">                postOrder(node.right());</span>
+<span class="fc" id="L703">                System.out.print(node.key() + &quot; &quot;);</span>
+            }
+<span class="fc" id="L705">        }</span>
+
+    }
+
+    private static class NodeChangeToExisting&lt;K extends Comparable&lt;K&gt;,V&gt; extends AbstractNodeChange&lt;K,V&gt; {
+
+        private final AbstractNode&lt;K,V&gt; alreadyCreatedNode;
+
+        NodeChangeToExisting(AbstractNode&lt;K,V&gt; alreadyCreatedNode) {
+<span class="fc" id="L714">            super(null, null, null);</span>
+<span class="fc" id="L715">            this.alreadyCreatedNode = alreadyCreatedNode;</span>
+<span class="fc" id="L716">        }</span>
+
+        @Override
+        AbstractNode&lt;K,V&gt; implement() {
+<span class="fc" id="L720">            return this.alreadyCreatedNode;</span>
+        }
+
+    }
+
+    private static class NodeChangeToNull&lt;K extends Comparable&lt;K&gt;,V&gt; extends AbstractNodeChange&lt;K,V&gt; {
+
+        private NodeChangeToNull() {
+<span class="fc" id="L728">            super(null, null, null);</span>
+<span class="fc" id="L729">        }</span>
+
+        @Override
+        AbstractNode&lt;K,V&gt; implement() {
+<span class="fc" id="L733">            return null;</span>
+        }
+
+    }
+
+    private static class SetNodeChange&lt;K extends Comparable&lt;K&gt;&gt; extends AbstractNodeChange&lt;K,K&gt; {
+
+        SetNodeChange(AbstractNode&lt;K,K&gt; left, K key, AbstractNode&lt;K,K&gt; right) {
+<span class="fc" id="L741">            super(left, key, right);</span>
+<span class="fc" id="L742">        }</span>
+
+        @Override
+        AbstractNode&lt;K,K&gt; implement() {
+<span class="fc" id="L746">            return new SetNode&lt;&gt;(super.left, super.key, super.right, super.height);</span>
+        }
+
+    }
+
+    private static class SetNode&lt;K extends Comparable&lt;K&gt;&gt; extends AbstractBalancedNode&lt;K,K&gt; {
+
+        private SetNode(AbstractNode&lt;K,K&gt; left, K key, AbstractNode&lt;K,K&gt; right) {
+<span class="fc" id="L754">            super(left, key, right);</span>
+<span class="fc" id="L755">        }</span>
+
+        private SetNode(AbstractNode&lt;K,K&gt; left, K key, AbstractNode&lt;K,K&gt; right, int height) {
+<span class="fc" id="L758">            super(left, key, right, height);</span>
+<span class="fc" id="L759">        }</span>
+
+        @Override
+        void updateValue(ValueUpdate&lt;K&gt; valueUpdater) {
+            // value is key. key can not be updated
+<span class="fc" id="L764">        }</span>
+
+        @Override
+        void setValue(K value) {
+            // value is key. key can not be updated
+<span class="fc" id="L769">        }</span>
+
+        @Override
+        final AbstractNodeChange&lt;K,K&gt; change(AbstractNode&lt;K,K&gt; left, AbstractNode&lt;K,K&gt; right) {
+<span class="fc" id="L773">            return new SetNodeChange&lt;&gt;(left, super.key, right);</span>
+        }
+
+        @Override
+        SetLeafNode&lt;K&gt; createLeaf(K keyToInsert, ValueFactory&lt;K&gt; valueFactory) {
+<span class="fc" id="L778">            return new SetLeafNode&lt;&gt;(keyToInsert);</span>
+        }
+
+        @Override
+        AbstractBalancedNode&lt;K,K&gt; create(AbstractNode&lt;K,K&gt; left, AbstractNode&lt;K,K&gt; right) {
+<span class="fc" id="L783">            return new SetNode&lt;&gt;(left, super.key, right);</span>
+        }
+
+        @Override
+        public K value() {
+<span class="fc" id="L788">            return super.key;</span>
+        }
+
+    }
+
+    private static class SetLeafNode&lt;K extends Comparable&lt;K&gt;&gt; extends AbstractLeafNode&lt;K,K&gt; {
+
+        SetLeafNode(K valueToInsert) {
+<span class="fc" id="L796">            super(valueToInsert);</span>
+<span class="fc" id="L797">        }</span>
+
+        @Override
+        void updateValue(ValueUpdate&lt;K&gt; valueUpdater) {
+            // value is key. key can not be updated
+<span class="nc" id="L802">        }</span>
+
+        @Override
+        void setValue(K value) {
+            // value is key. key can not be updated
+<span class="nc" id="L807">        }</span>
+
+        @Override
+        public K value() {
+<span class="fc" id="L811">            return super.key;</span>
+        }
+
+        @Override
+        AbstractNodeChange&lt;K,K&gt; change(AbstractNode&lt;K,K&gt; left, AbstractNode&lt;K,K&gt; right) {
+<span class="fc" id="L816">            return new SetNodeChange&lt;&gt;(left, super.key, right);</span>
+        }
+
+        @Override
+        SetLeafNode&lt;K&gt; createLeaf(K keyToInsert, ValueFactory&lt;K&gt; valueFactory) {
+<span class="fc" id="L821">            return new SetLeafNode&lt;&gt;(keyToInsert);</span>
+        }
+
+    }
+
+    /**
+     * A set backed by an AVL tree. Elements are stored as keys; duplicates replace existing entries.
+     *
+     * @param &lt;K&gt; the element type, must implement Comparable
+     */
+    public static class Set&lt;K extends Comparable&lt;K&gt;&gt; extends AbstractTree&lt;K,K&gt; implements Iterable&lt;K&gt; {
+
+        /**
+         * Creates a new, empty AvlTree-backed set.
+         *
+         * &lt;p&gt;The constructed set is initially empty and ready to accept elements via
+         * {@link AvlTree.Set#insertIntoTree(K)}. Elements are ordered by their
+         * natural ordering (keys must implement {@code Comparable}).
+         *
+         * &lt;p&gt;Note: this constructor runs in constant time and performs no I/O. The
+         * set's instance methods use internal synchronization for concurrent access;
+         * callers should apply external synchronization if they require atomicity
+         * across multiple operations.
+         */
+<span class="fc" id="L845">        public Set() {}</span>
+
+        /**
+         * Insert a key into the set-backed AVL tree.
+         * If the key is null, the method returns without inserting.
+         *
+         * @param keyToInsert the key to insert into the tree
+         */
+        void insertIntoTree(K keyToInsert) {
+<span class="fc bfc" id="L854" title="All 2 branches covered.">            if(keyToInsert == null){</span>
+                //throw new NullPointerException(&quot;can not insert null&quot;);
+<span class="fc" id="L856">                return;</span>
+            }
+<span class="fc" id="L858">            super.insert(</span>
+                keyToInsert,
+<span class="nc" id="L860">                ()-&gt;{return keyToInsert;},</span>
+<span class="nc" id="L861">                (K existingKey)-&gt;{return existingKey;}</span>
+            );
+<span class="fc" id="L863">        }</span>
+
+        /**
+         * Returns an iterator over the elements in this set in ascending (in-order) order.
+         *
+         * @return an iterator over the keys in ascending order
+         */
+        @Override
+        public Iterator&lt;K&gt; iterator() {
+<span class="fc" id="L872">            return new SetIterator&lt;&gt;(this.getRoot());</span>
+        }
+
+        /**
+         * Returns an iterable that iterates over the elements in descending (reverse in-order) order.
+         *
+         * @return an iterable for reverse-order traversal of keys
+         */
+        public Iterable&lt;K&gt; reverseIterable() {
+<span class="fc" id="L881">            return () -&gt; new ReverseSetIterator&lt;&gt;(this.getRoot());</span>
+        }
+
+        /**
+         * Returns an iterator that iterates over the elements in descending (reverse in-order) order.
+         *
+         * @return an iterator for reverse-order traversal of keys
+         */
+        public Iterator&lt;K&gt; reverseIterator() {
+<span class="fc" id="L890">            return new ReverseSetIterator&lt;&gt;(this.getRoot());</span>
+        }
+
+        @Override
+        SetLeafNode&lt;K&gt; create(K key, ValueFactory&lt;K&gt; valueFactory) {
+<span class="fc" id="L895">            return new SetLeafNode&lt;&gt;(key);</span>
+        }
+
+    }
+
+    private static class MapNodeChange&lt;K extends Comparable&lt;K&gt;,V&gt; extends AbstractNodeChange&lt;K,V&gt; {
+
+        private final V value;
+
+        MapNodeChange(AbstractNode&lt;K,V&gt; left, K key, V value, AbstractNode&lt;K,V&gt; right) {
+<span class="nc" id="L905">            super(left, key, right);</span>
+<span class="nc" id="L906">            this.value = value;</span>
+<span class="nc" id="L907">        }</span>
+
+        @Override
+        AbstractNode&lt;K,V&gt; implement() {
+<span class="nc" id="L911">            return new MapNode&lt;&gt;(super.left, super.key, this.value, super.right, super.height);</span>
+        }
+
+    }
+
+    private static class MapNode&lt;K extends Comparable&lt;K&gt;, V&gt; extends AbstractBalancedNode&lt;K,V&gt; {
+
+        private V value;
+
+        private MapNode(AbstractNode&lt;K,V&gt; left, K key, V value, AbstractNode&lt;K,V&gt; right) {
+<span class="nc" id="L921">            super(left, key, right);</span>
+<span class="nc" id="L922">            this.value = value;</span>
+<span class="nc" id="L923">        }</span>
+
+        private MapNode(AbstractNode&lt;K,V&gt; left, K key, V value, AbstractNode&lt;K,V&gt; right, int height) {
+<span class="nc" id="L926">            super(left, key, right, height);</span>
+<span class="nc" id="L927">            this.value = value;</span>
+<span class="nc" id="L928">        }</span>
+
+        @Override
+        void updateValue(ValueUpdate&lt;V&gt; valueUpdater) {
+<span class="nc" id="L932">            this.value = valueUpdater.update(this.value);</span>
+<span class="nc" id="L933">        }</span>
+
+        @Override
+        void setValue(V value) {
+<span class="nc" id="L937">            this.value = value;</span>
+<span class="nc" id="L938">        }</span>
+
+        @Override
+        public V value() {
+<span class="nc" id="L942">            return this.value;</span>
+        }
+
+        @Override
+        AbstractNodeChange&lt;K,V&gt; change(AbstractNode&lt;K,V&gt; left, AbstractNode&lt;K,V&gt; right) {
+<span class="nc" id="L947">            return new MapNodeChange&lt;&gt;(left, super.key, this.value, right);</span>
+        }
+
+        @Override
+        MapLeafNode&lt;K, V&gt; createLeaf(K keyToInsert, ValueFactory&lt;V&gt; valueFactory) {
+<span class="nc" id="L952">            return new MapLeafNode&lt;&gt;(keyToInsert, valueFactory.create());</span>
+        }
+
+        @Override
+        AbstractBalancedNode&lt;K,V&gt; create(AbstractNode&lt;K,V&gt; left, AbstractNode&lt;K,V&gt; right) {
+<span class="nc" id="L957">            return new MapNode&lt;&gt;(left, super.key, this.value, right);</span>
+        }
+
+    }
+
+    private static class MapLeafNode&lt;K extends Comparable&lt;K&gt;, V&gt; extends AbstractLeafNode&lt;K,V&gt; {
+
+        private V value;
+
+        private MapLeafNode(K key, V value) {
+<span class="nc" id="L967">            super(key);</span>
+<span class="nc" id="L968">            this.value = value;</span>
+<span class="nc" id="L969">        }</span>
+
+        @Override
+        void updateValue(ValueUpdate&lt;V&gt; valueUpdater) {
+<span class="nc" id="L973">            this.value = valueUpdater.update(this.value);</span>
+<span class="nc" id="L974">        }</span>
+
+        @Override
+        void setValue(V value) {
+<span class="nc" id="L978">            this.value = value;</span>
+<span class="nc" id="L979">        }</span>
+
+        @Override
+        public V value() {
+<span class="nc" id="L983">            return this.value;</span>
+        }
+
+        @Override
+        AbstractNodeChange&lt;K,V&gt; change(AbstractNode&lt;K,V&gt; left, AbstractNode&lt;K,V&gt; right) {
+<span class="nc" id="L988">            return new MapNodeChange&lt;&gt;(left, super.key, this.value, right);</span>
+        }
+
+        @Override
+        MapLeafNode&lt;K, V&gt; createLeaf(K keyToInsert, ValueFactory&lt;V&gt; valueFactory) {
+<span class="nc" id="L993">            return new MapLeafNode&lt;&gt;(keyToInsert, valueFactory.create());</span>
+        }
+
+    }
+
+    /**
+     * A map backed by an AVL tree. Keys are ordered by their natural ordering.
+     *
+     * @param &lt;K&gt; the key type, must implement Comparable
+     * @param &lt;V&gt; the value type
+     */
+    public static class Map&lt;K extends Comparable&lt;K&gt;, V&gt; extends AbstractTree&lt;K,V&gt; implements Iterable&lt;Entry&lt;K,V&gt;&gt; {
+
+        /**
+         * Creates a new, empty AvlTree-backed map.
+         *
+         * &lt;p&gt;The constructed map is initially empty and ready to accept key/value
+         * pairs via {@link AvlTree.Map#insertIntoTree(K, V)}. Keys are
+         * ordered by their natural ordering (they must implement {@code Comparable}).
+         *
+         * &lt;p&gt;Note: this constructor does not perform any I/O and runs in constant
+         * time. The map's instance methods use internal synchronization for
+         * concurrent access; callers should still apply external synchronization if
+         * they require atomicity across multiple operations.
+         */
+<span class="nc" id="L1018">        public Map() {}</span>
+
+        /**
+         * Insert a key/value pair into the map-backed AVL tree.
+         * If the key is null, the method returns without inserting.
+         *
+         * @param keyToInsert the key to insert
+         * @param valueToInsert the value associated with the key
+         */
+        void insertIntoTree(K keyToInsert, V valueToInsert) {
+<span class="nc bnc" id="L1028" title="All 2 branches missed.">            if(keyToInsert == null){</span>
+                //throw new NullPointerException(&quot;can not insert null&quot;);
+<span class="nc" id="L1030">                return;</span>
+            }
+<span class="nc" id="L1032">            super.insert(</span>
+                keyToInsert,
+<span class="nc" id="L1034">                ()    -&gt; {return valueToInsert;},</span>
+<span class="nc" id="L1035">                (V a) -&gt; {return valueToInsert;}</span>
+            );
+<span class="nc" id="L1037">        }</span>
+
+        public void insertIntoTree(K keyToInsert, ValueFactory&lt;V&gt; v, ValueUpdate&lt;V&gt; u) {
+<span class="nc bnc" id="L1040" title="All 2 branches missed.">            if(keyToInsert == null){</span>
+                //throw new NullPointerException(&quot;can not insert null&quot;);
+<span class="nc" id="L1042">                return;</span>
+            }
+<span class="nc" id="L1044">            super.insert(</span>
+                    keyToInsert,
+                    v,
+                    u
+            );
+<span class="nc" id="L1049">        }</span>
+
+        /**
+         * Returns an iterator over the map entries in ascending (in-order) key order.
+         *
+         * @return an iterator over entries (key/value pairs) in ascending key order
+         */
+        @Override
+        public Iterator&lt;Entry&lt;K,V&gt;&gt; iterator() {
+<span class="nc" id="L1058">            return new MapIterator&lt;&gt;(this.getRoot());</span>
+        }
+
+        /**
+         * Returns an iterable that iterates over the map entries in descending (reverse in-order) key order.
+         *
+         * @return an iterable for reverse-order traversal of entries
+         */
+        public Iterable&lt;Entry&lt;K,V&gt;&gt; reverseIterable() {
+<span class="nc" id="L1067">            return () -&gt; new ReverseMapIterator&lt;&gt;(this.getRoot());</span>
+        }
+
+        /**
+         * Returns an iterator that iterates over the map entries in descending (reverse in-order) key order.
+         *
+         * @return an iterator for reverse-order traversal of entries
+         */
+        public Iterator&lt;Entry&lt;K,V&gt;&gt; reverseIterator() {
+<span class="nc" id="L1076">            return new ReverseMapIterator&lt;&gt;(this.getRoot());</span>
+        }
+
+        @Override
+        MapLeafNode&lt;K, V&gt; create(K keyToInsert, ValueFactory&lt;V&gt; valueFactory) {
+<span class="nc" id="L1081">            return new MapLeafNode&lt;&gt;(keyToInsert, valueFactory.create());</span>
+        }
+
+    }
+
+<span class="fc" id="L1086">    private record LinkedListEntry&lt;K extends Comparable&lt;K&gt;, V&gt;(</span>
+            AbstractNode&lt;K, V&gt; value,
+            LinkedListEntry&lt;K, V&gt; next
+    ) {}
+
+    private static abstract class AbstractNodeIterator&lt;K extends Comparable&lt;K&gt;, V&gt;  {
+
+        private LinkedListEntry&lt;K,V&gt; stack;
+
+<span class="fc" id="L1095">        AbstractNodeIterator() {}</span>
+
+        /**
+         * Returns {@code true} if the reverse-order iterator has more elements to yield.
+         *
+         * &lt;p&gt;This method inspects the iterator's internal stack to determine whether
+         * there are remaining nodes to traverse in reverse in-order sequence.
+         *
+         * &lt;p&gt;Note: the result reflects the iterator's current state and may change if
+         * the underlying tree is modified concurrently. The iterator's methods are not
+         * safe for concurrent modification without external synchronization.
+         *
+         * @return {@code true} if there is at least one more element available, {@code false} otherwise
+         */
+        public final boolean hasNext() {
+<span class="fc bfc" id="L1110" title="All 2 branches covered.">            return this.stack != null;</span>
+        }
+
+    }
+
+    // InOrder Node iterator (yields AbstractNode&lt;K,V&gt;) — no imports, full qualified types
+    private static class NodeIterator&lt;K extends Comparable&lt;K&gt;, V&gt; extends AbstractNodeIterator&lt;K,V&gt; {
+
+<span class="fc" id="L1118">        NodeIterator(AbstractNode&lt;K,V&gt; root) {</span>
+<span class="fc" id="L1119">            pushLeft(root);</span>
+<span class="fc" id="L1120">        }</span>
+
+        private void pushLeft(AbstractNode&lt;K,V&gt; node) {
+<span class="fc bfc" id="L1123" title="All 2 branches covered.">            while (node != null) {</span>
+<span class="fc" id="L1124">                super.stack = new LinkedListEntry&lt;&gt;(node, super.stack);</span>
+<span class="fc" id="L1125">                node = node.left();</span>
+            }
+<span class="fc" id="L1127">        }</span>
+
+        /**
+         * Returns the next node in in-order traversal and advances the iterator.
+         *
+         * &lt;p&gt;If the iterator has no more elements this method returns {@code null}
+         * (the implementation does not throw {@code NoSuchElementException}).
+         *
+         * &lt;p&gt;The returned object implements {@link AvlTree.Entry} and provides access
+         * to the node's key and value. The iterator's internal stack is advanced so
+         * subsequent calls continue the traversal.
+         *
+         * &lt;p&gt;Note: the result reflects the iterator's state at the time of the call
+         * and may become invalid if the underlying tree is modified concurrently.
+         *
+         * @return the next {@code Entry&lt;K,V&gt;} in ascending (in-order) order, or {@code null} if none
+         */
+        public Entry&lt;K,V&gt; nextNode() {
+<span class="pc bpc" id="L1145" title="1 of 2 branches missed.">            if (hasNext()) {</span>
+<span class="fc" id="L1146">                AbstractNode&lt;K,V&gt; node = super.stack.value;</span>
+<span class="fc" id="L1147">                super.stack = super.stack.next;</span>
+<span class="fc" id="L1148">                pushLeft(node.right());</span>
+<span class="fc" id="L1149">                return node;</span>
+            }
+            //throw new NoSuchElementException();
+<span class="nc" id="L1152">            return null;</span>
+        }
+
+    }
+
+    private static class ReverseNodeIterator&lt;K extends Comparable&lt;K&gt;, V&gt; extends AbstractNodeIterator&lt;K,V&gt; {
+
+<span class="fc" id="L1159">        ReverseNodeIterator(AbstractNode&lt;K,V&gt; root) {</span>
+<span class="fc" id="L1160">            pushRight(root);</span>
+<span class="fc" id="L1161">        }</span>
+
+        private void pushRight(AbstractNode&lt;K,V&gt; node) {
+<span class="fc bfc" id="L1164" title="All 2 branches covered.">            while (node != null) {</span>
+<span class="fc" id="L1165">                super.stack = new LinkedListEntry&lt;&gt;(node, super.stack);</span>
+<span class="fc" id="L1166">                node = node.right();</span>
+            }
+<span class="fc" id="L1168">        }</span>
+
+        /**
+         * Returns the next node in reverse in-order traversal and advances the iterator.
+         *
+         * &lt;p&gt;If the iterator has no more elements this method returns {@code null}
+         * (the implementation does not throw {@code NoSuchElementException}).
+         *
+         * &lt;p&gt;The returned value is the internal {@code AbstractNode&lt;K,V&gt;} representing
+         * the next element; callers can use {@code key()} and {@code value()} on the
+         * returned node. The iterator's internal stack is advanced so subsequent calls
+         * continue the reverse traversal.
+         *
+         * &lt;p&gt;Note: the result reflects the iterator's state at the time of the call
+         * and may become invalid if the underlying tree is modified concurrently.
+         *
+         * @return the next {@code AbstractNode&lt;K,V&gt;} in descending (reverse in-order) order, or {@code null} if none
+         */
+        public AbstractNode&lt;K,V&gt; nextNode() {
+<span class="pc bpc" id="L1187" title="1 of 2 branches missed.">            if (!hasNext()) {</span>
+                //throw new NoSuchElementException();
+<span class="nc" id="L1189">                return null;</span>
+            }
+<span class="fc" id="L1191">            AbstractNode&lt;K,V&gt; node = super.stack.value;</span>
+<span class="fc" id="L1192">            super.stack = super.stack.next;</span>
+<span class="fc" id="L1193">            pushRight(node.left());</span>
+<span class="fc" id="L1194">            return node;</span>
+        }
+
+    }
+
+    /**
+     * Iterator over set elements in ascending order.
+     *
+     * @param &lt;K&gt; element type
+     */
+    public static class SetIterator&lt;K extends Comparable&lt;K&gt;&gt; extends NodeIterator&lt;K, K&gt; implements java.util.Iterator&lt;K&gt; {
+
+        SetIterator(AbstractNode&lt;K, K&gt; root) {
+<span class="fc" id="L1207">            super(root);</span>
+<span class="fc" id="L1208">        }</span>
+
+        /**
+         * Returns the next key in ascending order.
+         *
+         * @return the next key
+         */
+        @Override
+        public K next() {
+<span class="fc" id="L1217">            Entry&lt;K,K&gt; node = super.nextNode();</span>
+<span class="fc" id="L1218">            return node.key();</span>
+        }
+    }
+
+    /**
+     * Iterator over set elements in descending order.
+     *
+     * @param &lt;K&gt; element type
+     */
+    public static class ReverseSetIterator&lt;K extends Comparable&lt;K&gt;&gt; extends ReverseNodeIterator&lt;K, K&gt; implements java.util.Iterator&lt;K&gt; {
+
+        ReverseSetIterator(AbstractNode&lt;K, K&gt; root) {
+<span class="fc" id="L1230">            super(root);</span>
+<span class="fc" id="L1231">        }</span>
+
+        /**
+         * Returns the next key in descending order.
+         *
+         * @return the next key
+         */
+        @Override
+        public K next() {
+<span class="fc" id="L1240">            AbstractNode&lt;K,K&gt; node = super.nextNode();</span>
+<span class="fc" id="L1241">            return node.key();</span>
+        }
+    }
+
+    /**
+     * Iterator over map entries in ascending key order.
+     *
+     * @param &lt;K&gt; key type
+     * @param &lt;V&gt; value type
+     */
+    public static class MapIterator&lt;K extends Comparable&lt;K&gt;, V&gt; extends NodeIterator&lt;K, V&gt; implements java.util.Iterator&lt;Entry&lt;K,V&gt;&gt; {
+
+        MapIterator(AbstractNode&lt;K, V&gt; root) {
+<span class="nc" id="L1254">            super(root);</span>
+<span class="nc" id="L1255">        }</span>
+
+        /**
+         * Returns the next map entry (key/value pair) in ascending key order.
+         *
+         * @return the next entry
+         */
+        @Override
+        public Entry&lt;K, V&gt; next() {
+<span class="nc" id="L1264">            return super.nextNode();</span>
+        }
+    }
+
+    /**
+     * Iterator over map entries in descending key order.
+     *
+     * @param &lt;K&gt; key type
+     * @param &lt;V&gt; value type
+     */
+    public static class ReverseMapIterator&lt;K extends Comparable&lt;K&gt;, V&gt; extends ReverseNodeIterator&lt;K, V&gt; implements java.util.Iterator&lt;Entry&lt;K,V&gt;&gt; {
+
+        ReverseMapIterator(AbstractNode&lt;K, V&gt; root) {
+<span class="nc" id="L1277">            super(root);</span>
+<span class="nc" id="L1278">        }</span>
+
+        /**
+         * Returns the next map entry (key/value pair) in descending key order.
+         *
+         * @return the next entry
+         */
+        @Override
+        public Entry&lt;K, V&gt; next() {
+<span class="nc" id="L1287">            return super.nextNode();</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
