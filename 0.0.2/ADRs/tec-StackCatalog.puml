@@ -1,0 +1,35 @@
+@startuml
+
+!include -umlCatalogSchema.puml
+
+'==============================================================================================
+' MODEL
+'==============================================================================================
+'--------------------------------------------------------------
+' ADR
+'--------------------------------------------------------------
+
+adr(                         008, Avoid Proprietary Infrastructure                            )
+adr(                         005, Aggregate Docs via GitHub Actions                           )
+adr(                         003, core, Documentation as Code                                 )
+adr(                         004, Centralize Doc in Parent Module                             )
+adr(                         002, use AsciiDoc and PlantUML                                   )
+adr(                         001, Restrict Build Toolchain to Java + Maven                    )
+'adr( moduleMetricsCostUnnamed001, problem with cem                                            )
+
+'--------------------------------------------------------------
+' RELATIONS
+'--------------------------------------------------------------
+  exceptionTo(                                    005,                                    008 )
+consequenceOf(                                    001,                                    008 )
+consequenceOf(                                    002,                                    001 )
+     conforms(                                    002,                                    003 )
+     conforms(                                    004,                                    002 )
+consequenceOf(                                    005,                                    001 )
+ simplifiedBy(                                    005,                                    004 )
+'  exceptionTo(                                    004,                                    002 )
+'consequenceOf(                                    003,                                    002 )
+'consequenceOf(                                    003,            moduleMetricsCostUnnamed001 )
+'   supersedes(            moduleMetricsCostUnnamed001,                                    004 )
+
+@enduml
