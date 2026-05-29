@@ -4,4 +4,4 @@
 :jacocoFolder: projectDocs
 :jacocoIndexFile: index.adoc
 :renderedPlantUml: puml
-:srcBasePath: https://github.com/conetex/org-conetex-runtime-instrument/blob/master
+:srcBasePath: https://github.com/conetex/org-conetex-runtime-instrument/blob/main
