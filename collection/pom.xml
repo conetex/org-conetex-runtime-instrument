@@ -6,11 +6,10 @@
     <parent>
         <groupId>org.conetex.runtime.instrument</groupId>
         <artifactId>parent</artifactId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>0.0.2</version>
     </parent>
 
     <artifactId>collection</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
 
     <name>collection for instrument</name>
     <description>thread-safe AVL tree</description>
