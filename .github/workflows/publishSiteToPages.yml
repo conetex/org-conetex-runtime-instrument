@@ -120,11 +120,18 @@ jobs:
       - name: Copy site to version folder
         run: |
 
+          if [[ "${DOCS_VERSION}" == *"-SNAPSHOT" ]]; then
+            LATEST="latest-snapshot"
+          else
+            LATEST="latest"
+          fi
+          
           mkdir -p deploy/${DOCS_VERSION}
-          mkdir -p deploy/latest
+          mkdir -p deploy/${LATEST}
 
           rsync -av --exclude='*/.*' target/site/ deploy/${DOCS_VERSION}/
-          rsync -av --exclude='*/.*' target/site/ deploy/latest/
+          rsync -av --exclude='*/.*' target/site/ deploy/${LATEST}
+
 
       #
       # push deploy folder to branch gh-pages (src of GitHub Pages)
