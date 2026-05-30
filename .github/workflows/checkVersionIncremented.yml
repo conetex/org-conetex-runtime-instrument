@@ -1,0 +1,47 @@
+name: Check Maven Version Increment
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version from PR branch
+        id: pr
+        run: |
+          PR_VERSION=$(xmllint --xpath "string(/project/version)" pom.xml)
+          echo "PR_VERSION=$PR_VERSION" >> $GITHUB_ENV
+
+      - name: Checkout main branch
+        run: |
+          git fetch origin main
+          git checkout origin/main
+
+      - name: Read version from main
+        id: main
+        run: |
+          MAIN_VERSION=$(xmllint --xpath "string(/project/version)" pom.xml)
+          echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_ENV
+
+      - name: Compare versions
+        run: |
+          echo "PR version:   $PR_VERSION"
+          echo "Main version: $MAIN_VERSION"
+
+          # Version comparison using sort -V
+          BIGGER=$(printf "%s\n%s" "$MAIN_VERSION" "$PR_VERSION" | sort -V | tail -n1)
+
+          if [ "$BIGGER" != "$PR_VERSION" ]; then
+            echo "❌ Version in PR is NOT greater than version in main"
+            exit 1
+          fi
+
+          echo "✔️ Version increment OK"

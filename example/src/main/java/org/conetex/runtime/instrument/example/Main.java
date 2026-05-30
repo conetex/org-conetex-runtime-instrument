@@ -1,9 +1,5 @@
 package org.conetex.runtime.instrument.example;
 
-
-
-import org.conetex.runtime.instrument.counter.Counter;
-import org.conetex.runtime.instrument.counter.CountersWeighted;
 import org.conetex.runtime.instrument.example.subpackage.ClassFromOtherPackage;
 import org.conetex.runtime.instrument.metrics.cost.Counters;
 
@@ -11,9 +7,18 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.TreeMap;
 
+/**
+ * Main class
+ */
 public class Main {
 
+    private Main(){}
+
     // -javaagent:/agent/target/agent-0.0.0-SNAPSHOT.jar=pathToTransformerJar:../../metrics-cost/target/metrics-cost-0.0.0-SNAPSHOT.jar
+    /**
+     * Main method
+     * @param args args
+     */
     public static void main(String[] args) {
 
         //Counters.blockIncrement(false);

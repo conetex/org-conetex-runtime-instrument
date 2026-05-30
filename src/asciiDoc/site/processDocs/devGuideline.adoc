@@ -180,10 +180,6 @@ partition "Release" {
 
 @enduml
 ----
-        if (Build successful?) then (yes)
-        else (no)
-            :Fix issues;
-        endif
 
 Push your feature branch to the remote repository.
 Create a merge request / pull request and merge your feature branch into master/main.

@@ -4,13 +4,24 @@ import org.conetex.runtime.instrument.metrics.cost.Counters;
 
 import java.util.TreeMap;
 
+/**
+ * Main class
+ */
 public class Methods {
 
+    private Methods(){}
+
+    /**
+     * static foo method
+     */
 	public static void foo() {
         System.out.println("foo 2");
     }
 
-	public static void bar() {
+    /**
+     * static bar method
+     */
+    public static void bar() {
     	System.out.println("Example Counter b: ".concat( Long.valueOf(Counters.METHOD_ENTRY.peek().getValue()).toString() ));
         System.out.println("bar 2");
         TreeMap<String, String> x = new TreeMap<>();
