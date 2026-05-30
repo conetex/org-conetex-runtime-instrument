@@ -1,4 +1,4 @@
-name: release versions only
+name: Check Maven Version Format
 
 on:
   pull_request:
@@ -9,24 +9,34 @@ permissions:
   contents: read
 
 jobs:
-  check-version:
+  version-format-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install xmllint
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
-      - name: Extract version from pom.xml
-        id: version
+      - name: Read version from PR branch
         run: |
-          VERSION=$(xmllint --xpath "string(/project/version)" pom.xml)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          PR_VERSION=$(mvn -q -Dexpression=project.version -DforceStdout help:evaluate)
+          echo "PR_VERSION=$PR_VERSION" >> $GITHUB_ENV
 
-      - name: Fail if version contains SNAPSHOT
+      - name: Validate version format
         run: |
-          if [[ "$VERSION" == *"-SNAPSHOT" ]]; then
-            echo "❌ SNAPSHOT version detected: $VERSION"
+          echo "version from PR: $PR_VERSION"
+
+          if [[ ! "$PR_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "❌ Version does not match required pattern major.minor.patch (no leading zeros)"
+            echo "   Expected: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$"
+            echo "       e.g.: 1.2.3 or 0.1.2"
             exit 1
           fi
-          echo "✔️ Version is release: $VERSION"
+
+          echo "✔️ Version format OK"

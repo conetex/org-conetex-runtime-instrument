@@ -12,19 +12,20 @@ jobs:
   version-check:
     runs-on: ubuntu-latest
     steps:
-
-      - name: Install xmllint
-        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
-
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
       - name: Read version from PR branch
-        id: pr
         run: |
-          PR_VERSION=$(xmllint --xpath "string(/project/version)" pom.xml)
+          PR_VERSION=$(mvn -q -Dexpression=project.version -DforceStdout help:evaluate)
           echo "PR_VERSION=$PR_VERSION" >> $GITHUB_ENV
 
       - name: Checkout main branch
@@ -33,9 +34,8 @@ jobs:
           git checkout origin/main
 
       - name: Read version from main
-        id: main
         run: |
-          MAIN_VERSION=$(xmllint --xpath "string(/project/version)" pom.xml)
+          MAIN_VERSION=$(mvn -q -Dexpression=project.version -DforceStdout help:evaluate)
           echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_ENV
 
       - name: Compare versions
@@ -43,7 +43,11 @@ jobs:
           echo "PR version:   $PR_VERSION"
           echo "Main version: $MAIN_VERSION"
 
-          # Version comparison using sort -V
+          if [ -z "$PR_VERSION" ] || [ -z "$MAIN_VERSION" ]; then
+            echo "❌ Could not determine versions (one is empty)"
+            exit 1
+          fi
+
           BIGGER=$(printf "%s\n%s" "$MAIN_VERSION" "$PR_VERSION" | sort -V | tail -n1)
 
           if [ "$BIGGER" != "$PR_VERSION" ]; then
