@@ -5,9 +5,13 @@
 == versioning
 
 [IMPORTANT]
-*versions are maven versions*. +
+====
+* *versions are maven versions*. +
 Tags are not used to maintain versions. +
 Tags are just tags.
+* *submodules have no own version*. +
+submodules inherit the parents version
+====
 
 === policies
 
@@ -35,27 +39,102 @@ Just before merging to main a the version in the feature-branch has to be update
 ==== build
 
 [IMPORTANT]
+====
 *release is on main only*: +
-the project uses only one Branch 'main' to build release versions.
+the project uses only one Branch 'main' to build release versions. +
+this means for feature branches:
+
+* `mvn package` is allowed
+* `mvn verify` is *not allowed* exception: SNAPSHOT versions
+* `mvn install` is *not allowed*
+* `mvn deploy` is *not allowed*
+====
 
 === Release Process
 
+++++
+<object data="devGuidelineReleaseProcess.svg"
+        type="image/svg+xml">
+</object>
+++++
+
+[#preRelease]
 ==== Before Release
 
 All steps in this section are performed in your *feature branch* that will be released.
 
+[plantuml]
+----
+@startuml
+title Release Process
+
+partition "Before Release\n(Feature Branch)" {
+
+    start
+
+    :Determine current version\nfrom main/master pom.xml;
+
+    :Choose version increment;
+
+    if (Major?) then (yes)
+        :Set version\nX+1.0.0;
+    elseif (Minor?)
+        :Set version\nX.Y+1.0;
+    else (Patch)
+        :Set version\nX.Y.Z+1;
+    endif
+
+    :Set release version\nmvn versions:set;
+
+    if (Snapshot already matches?) then (yes)
+        :Use script\nversionSnapshotToRelease;
+    endif
+
+    :Verify parent versions\nin all submodule POMs;
+
+    :Remove backup POMs\nmvn versions:commit;
+
+    stop
+
+}
+
+@enduml
+----
+
 ===== determine new release version
 
-we refer to maven versions stored in the `pom.xml` file, since we don't rely on git tags. Determine the new release version - for example `1.2.3`, if the last version in master is '1.2.2'.
+we refer to maven versions stored in the 'pom.xml' file, since we don't rely on git tags. +
+Determine the new release version:
+
+* get current release from pom in main branch +
+_example_: the current version in master is `1.2.2`
+* increase version number (major / minor / patch)
+  ** if you increase patch leave major and minor as is +
+  _example_: increase patch means the new version is `1.2.3`
+  ** if you increase minor leave major as is and set patch version to `0` +
+  _example_: increase minor means the new version is `1.3.0`
+  ** if you increase major set minor and patch version to `0` +
+  _example_: increase major means the new version is `2.0.0`
 
 ===== set new release version
-In your feature branch the version might be '1.2.3-SNAPSHOT'. set the new release version by using this command:
+
+In your feature branch the version to the determined new release version by using this command:
+
+[source,bash]
+----
+mvn versions:set "-DnewVersion=<<new release version>>"
+----
+
+_example:_
 [source,bash]
 ----
 mvn versions:set "-DnewVersion=1.2.3"
 ----
 
-the removal of the suffix '-SNAPSHOT' is implemented in the script *versionSnapshotToRelease*. you can use it if the snapshot version ('1.2.3-SNAPSHOT') in your feature-branch fits to the wanted release version ('1.2.3')
+_tooling_: +
+if the new release version was just an increment of patch, your feature branch might already have the right version extended with the suffix "-SNAPSHOT". So you just habe to remove the suffix '-SNAPSHOT'. +
+this is implemented in the script *versionSnapshotToRelease*. +
+_example_: you can use the script if the wanted release version is `1.2.3` and snapshot version in your feature-branch fits to it since it is `1.2.3-SNAPSHOT`.
 
 ===== Verify all submodule POMs and clean up backups
 
@@ -63,38 +142,106 @@ Verify that all submodule pom.xml files have the correct parent version (the ver
 
 After verification, remove the backup POM files created by the versions plugin:
 
+[source,bash]
 ----
 mvn versions:commit
 ----
 
-
+[#release]
 ==== Release
+
+[plantuml]
+----
+@startuml
+title Release Process
+
+partition "Release" {
+
+    start
+
+    :Push feature branch;
+
+    :Process Pull Request;
+
+    :Build on main branch;
+
+    while (Build successful?) is (no)
+
+        :Fix issues ...\nagain Push feature branch\nagain Process Pull Request;
+
+        :again Build on main branch;
+
+    endwhile (yes)
+
+    :Create Git tag\n(e.g. v1.2.3);
+
+    stop
+}
+
+@enduml
+----
+        if (Build successful?) then (yes)
+        else (no)
+            :Fix issues;
+        endif
 
 Push your feature branch to the remote repository.
 Create a merge request / pull request and merge your feature branch into master/main.
 Build the project from master/main to ensure the release version builds correctly.
-Tag the release commit with the release version (for example v1.2.3 or 1.2.3), using your usual Git tagging conventions.
+Tag the release commit with the release version (example: `v1.2.3`), using your usual Git tagging conventions.
 
+[#postRelease]
 ==== After Release
 
-All steps in this section are performed in your next feature branch that will later be merged into master/main.
+[plantuml]
+----
+@startuml
+title Release Process
+
+partition "After Release\n(New Feature Branch)" {
+
+    start
+
+    if (Use tooling?) then (yes)
+        :create the new feature branch based on head of main;
+        :Run script\nversionIncreaseSnapshot;
+    else
+        :Check released version\n(e.g. 1.2.3);
+        :Increase patch version\n(e.g. 1.2.4);
+        :Append -SNAPSHOT suffix\n(e.g. 1.2.4-SNAPSHOT);
+        :Set new version\n(e.g. mvn versions:set -DnewVersion=1.2.4-SNAPSHOT);
+    endif
+    :Commit version changes;
+
+    stop
+
+}
+
+@enduml
+----
+
+All steps in this section are performed in your next feature branch that will later be merged into main.
 
 ===== Bump the version and set a new -SNAPSHOT version
 
-Check the current version in master/main (for example 1.2.3).
+. Check the current version in master/main (for _example_ `1.2.3`).
 
-Increment the version by one patch level (for example to 1.2.4).
+. Increment the version by one patch level (for _example_ to `1.2.4`).
 
-Append the -SNAPSHOT suffix (for example 1.2.4-SNAPSHOT).
+. Append the -SNAPSHOT suffix (for example `1.2.4-SNAPSHOT`).
 
-In your new feature branch, set this SNAPSHOT version in the pom.xml:
+. In your new feature branch, set this SNAPSHOT version in the pom.xml:
++
+[source,bash]
+----
+mvn versions:set -DnewVersion=1.2.4-SNAPSHOT
+mvn versions:commit
+----
 
-`mvn versions:set -DnewVersion=1.2.4-SNAPSHOT
-mvn versions:commit`
+. Commit the changed pom.xml files to your feature branch.
 
-Commit the changed pom.xml files to your feature branch.
-
-Optionally, you can use the versionIncreaseSnapshot script to help with incrementing the version.
+_tooling_: +
+Optionally, you can use the *versionIncreaseSnapshot* script to help with incrementing the version.
 
 [IMPORTANT]
 The process described here is still partly manual and therefore not fully robust. Mistakes can occur, especially when setting or incrementing versions. Please double-check the versions in all pom.xml files and in Git tags.
