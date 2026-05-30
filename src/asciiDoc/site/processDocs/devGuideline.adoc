@@ -1,18 +1,54 @@
 = dev guideline
-
-== Release Process regarding mvn version
 :toc:
-:toclevels: 2
+:toclevels: 5
 
-=== Before the Release
+== versioning
+
+[IMPORTANT]
+*versions are maven versions*. +
+Tags are not used to maintain versions. +
+Tags are just tags.
+
+=== policies
+
+==== release version
+
+[IMPORTANT]
+*release versions are fixed versions* +
+release versions are published to the central maven repository. +
+release versions must be *immutable* since the published package is immutable.
+
+==== snapshot version
+
+The project makes use of SNAPSHOT versions, +
+which are not published to the maven repository.
+
+==== branch
+
+[IMPORTANT]
+*main is for release only* +
+SNAPSHOT versions do not appear in main. +
+SNAPSHOT versions are in feature-branches.
+
+Just before merging to main a the version in the feature-branch has to be updated to a NEW release version by removing the suffix "-SNAPSHOT".
+
+==== build
+
+[IMPORTANT]
+*release is on main only*: +
+the project uses only one Branch 'main' to build release versions.
+
+=== Release Process
+
+==== Before Release
 
 All steps in this section are performed in your *feature branch* that will be released.
 
-==== determine new release version
+===== determine new release version
 
 we refer to maven versions stored in the `pom.xml` file, since we don't rely on git tags. Determine the new release version - for example `1.2.3`, if the last version in master is '1.2.2'.
 
-==== set new release version
+===== set new release version
 In your feature branch the version might be '1.2.3-SNAPSHOT'. set the new release version by using this command:
 [source,bash]
 ----
@@ -21,7 +57,7 @@ mvn versions:set "-DnewVersion=1.2.3"
 
 the removal of the suffix '-SNAPSHOT' is implemented in the script *versionSnapshotToRelease*. you can use it if the snapshot version ('1.2.3-SNAPSHOT') in your feature-branch fits to the wanted release version ('1.2.3')
 
-=== Verify all submodule POMs and clean up backups
+===== Verify all submodule POMs and clean up backups
 
 Verify that all submodule pom.xml files have the correct parent version (the version you just set).
 
@@ -32,18 +68,18 @@ mvn versions:commit
 ----
 
 
-=== Release
+==== Release
 
 Push your feature branch to the remote repository.
 Create a merge request / pull request and merge your feature branch into master/main.
 Build the project from master/main to ensure the release version builds correctly.
 Tag the release commit with the release version (for example v1.2.3 or 1.2.3), using your usual Git tagging conventions.
 
-=== After the Release
+==== After Release
 
 All steps in this section are performed in your next feature branch that will later be merged into master/main.
 
-==== Bump the version and set a new -SNAPSHOT version
+===== Bump the version and set a new -SNAPSHOT version
 
 Check the current version in master/main (for example 1.2.3).
 
@@ -62,3 +98,31 @@ Optionally, you can use the versionIncreaseSnapshot script to help with incremen
 
 [IMPORTANT]
 The process described here is still partly manual and therefore not fully robust. Mistakes can occur, especially when setting or incrementing versions. Please double-check the versions in all pom.xml files and in Git tags.
+
+== documenting
+
+=== policies
+
+==== doc as code
+
+* docs are part of the git repository.
+* docs are part of the release (package / final artifact) +
+so generating / rendering the docs is done within build
+
+==== tec stack
+* we use adoc and plantuml. see xref:../ADRs/002.adoc[ADR 002: Standardize Documentation Stack on AsciiDoc and PlantUML]
+
+==== docs are in parent module
+exception: generated docs like jacoco or javadoc
+
+=== Publish Process
+
+* release version: +
+after pushing to main (merging into main) a CI-step publishes the docs.
+
+* snapshot version: +
+only after pushing changes in src/\*\* to a branch named \*Site\* a CI-step publishes the docs.
+
+publishing the docs is implemented by the github action 'xref:{srcBasePath}/.github/workflows/publishSiteToPages.yml[publishSiteToPages.yml]' +
+this also implements collecting generated docs (jacoco, javadoc) from submodules, since a maven implementation is complex and ugly.
+see xref:../ADRs/005.adoc[ADR 005: Aggregate ... via GitHub Actions]
