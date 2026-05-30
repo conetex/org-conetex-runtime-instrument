@@ -1,4 +1,4 @@
-name: Check Maven Version Format
+name: conetex - Check Maven Version Format
 
 on:
   pull_request:
@@ -33,7 +33,7 @@ jobs:
           echo "version from PR: $PR_VERSION"
 
           if [[ ! "$PR_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-            echo "❌ Version does not match required pattern major.minor.patch (no leading zeros)"
+            echo "❌ Version '$PR_VERSION' does not match required pattern major.minor.patch (no leading zeros)"
             echo "   Expected: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$"
             echo "       e.g.: 1.2.3 or 0.1.2"
             exit 1

@@ -1,4 +1,4 @@
-name: Check Maven Version Increment
+name: conetex - Check Maven Version Increment
 
 on:
   pull_request:
