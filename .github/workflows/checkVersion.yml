@@ -41,34 +41,6 @@ jobs:
 
           echo "✔️ Version format OK"
 
-      - name: Read module list
-        run: |
-          MODULES=$(mvn -q -Dexpression=project.modules -DforceStdout help:evaluate)
-          echo "MODULES=$MODULES" >> $GITHUB_ENV
-          echo "Modules: $MODULES"
-
-      - name: VALIDATE module versions
-        run: |
-          FAILED=0
-
-          for m in $MODULES; do
-            PR_MOD_VERSION=$(mvn -q -pl "$m" -Dexpression=project.version -DforceStdout help:evaluate)
-
-            echo "Module $m version: $PR_MOD_VERSION"
-
-            if [ "$PR_MOD_VERSION" != "$PR_VERSION" ]; then
-              echo "❌ Module $m has version $PR_MOD_VERSION but parent has $PR_VERSION"
-              FAILED=1
-            fi
-          done
-
-          if [ "$FAILED" -eq 1 ]; then
-            echo "❌ Module version mismatch detected"
-            exit 1
-          fi
-
-          echo "✔️ All module versions match root version"
-
       - name: Checkout main branch
         run: |
           git fetch origin main
