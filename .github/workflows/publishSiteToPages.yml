@@ -7,8 +7,6 @@ name: conetex - Publish Site to Pages (incl. Jacoco, JavaDoc)
 # https://conetex.github.io/org-conetex-runtime-instrument/jacoco/collection/index.html
 # https://conetex.github.io/org-conetex-runtime-instrument/asciidoc/
 # https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture.md
-#  - '**Site**/**'
-#  - '**site**/**'
 # =======================================================
 
 on:
@@ -17,6 +15,8 @@ on:
       - main
       - '**/**Site**'
       - '**/**site**'
+      - '**Site**/**'
+      - '**site**/**'
       - '**Site**'
       - '**site**'
     paths:
