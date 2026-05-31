@@ -1,0 +1,150 @@
+name: conetex - Publish Site to Pages (incl. Jacoco, JavaDoc)
+
+# =======================================================
+#
+# https://conetex.github.io/org-conetex-runtime-instrument/latest/projectDocs/
+# https://conetex.github.io/org-conetex-runtime-instrument/apiDocs/agent/org.conetex.runtime.instrument.agent/org/conetex/runtime/instrument/agent/Instrument.AgentLog.html
+# https://conetex.github.io/org-conetex-runtime-instrument/jacoco/collection/index.html
+# https://conetex.github.io/org-conetex-runtime-instrument/asciidoc/
+# https://conetex.github.io/org-conetex-runtime-instrument/latest/raw/architecture.md
+#  - '**/**Site**'
+#  - '**/**site**'
+#  - '**Site**/**'
+#  - '**site**/**'
+# =======================================================
+
+on:
+  push:
+    branches:
+      - main
+      - '**Site**'
+      - '**site**'
+    paths:
+      - 'src/**'
+
+permissions:
+  contents: write
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      #
+      # Java
+      #
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # =======================================================
+      # BUILD DOCUMENTATION - site and reports   (Maven verify)
+      # =======================================================
+      - name: Build Documentation
+        run: mvn -B clean verify
+
+      # =======================================================
+      # COLLECT javaDoc, jacoco:     copy MODULE to PARENT site
+      # =======================================================
+      - name: Collect Documentation and Reports
+        run: |
+          
+          modules=(
+            interfaces
+            counter
+            collection
+            metrics-cost
+            metrics-cost-unnamed
+            agent
+            example
+          
+            tests/empty
+            tests/jar
+            tests/jar-blocked
+            tests/jar-module
+            tests/integration
+          )
+          
+          for module in "${modules[@]}"; do
+          
+            module_name=$(basename "$module")
+          
+            echo "Processing $module"
+          
+            # -------------------------------------------------
+            # JavaDoc
+            # -------------------------------------------------
+          
+            if [ -d "$module/target/reports/apidocs" ]; then
+              mkdir -p "target/site/apiDoc/$module_name"
+          
+              cp -r \
+                "$module/target/reports/apidocs/"* \
+                "target/site/apiDoc/$module_name/"
+            fi
+          
+            # -------------------------------------------------
+            # JaCoCo
+            # -------------------------------------------------
+          
+            if [ -d "$module/target/site/jacoco" ]; then
+              mkdir -p "target/site/jacoco/$module_name"
+          
+              cp -r \
+                "$module/target/site/jacoco/"* \
+                "target/site/jacoco/$module_name/"
+            fi
+          
+          done
+
+      # =======================================================
+      # CREATE A VERSIONED DOCUMENTATION SITE
+      # =======================================================
+
+      #
+      # Maven version
+      #
+      - name: Extract maven version
+        run: |
+          VERSION=$(mvn help:evaluate \
+            -Dexpression=project.version \
+            -q \
+            -DforceStdout)
+
+          echo "DOCS_VERSION=$VERSION" >> $GITHUB_ENV
+
+      #
+      # copy site to versioned deploy folder
+      #
+      - name: Copy site to version folder
+        run: |
+
+          if [[ "${DOCS_VERSION}" == *"-SNAPSHOT" ]]; then
+            LATEST="latest-snapshot"
+          else
+            LATEST="latest"
+          fi
+          
+          mkdir -p deploy/${DOCS_VERSION}
+          mkdir -p deploy/${LATEST}
+
+          rsync -av --exclude='*/.*' target/site/ deploy/${DOCS_VERSION}/
+          rsync -av --exclude='*/.*' target/site/ deploy/${LATEST}
+
+
+      #
+      # push deploy folder to branch gh-pages (src of GitHub Pages)
+      #
+      - name: Deploy version folders to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: deploy
+          clean: false
