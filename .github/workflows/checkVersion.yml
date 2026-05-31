@@ -61,6 +61,11 @@ jobs:
             exit 1
           fi
 
+          if [ "$PR_VERSION" = "$MAIN_VERSION" ]; then
+            echo "❌ Version in PR is equal to main"
+            exit 1
+          fi
+
           BIGGER=$(printf "%s\n%s" "$MAIN_VERSION" "$PR_VERSION" | sort -V | tail -n1)
 
           if [ "$BIGGER" != "$PR_VERSION" ]; then
