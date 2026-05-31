@@ -198,17 +198,51 @@ svg *,
 <div id="header">
 <h1>dev guideline</h1>
 <div class="details">
-<span id="revnumber">version 0.0.2-SNAPSHOT,</span>
-<span id="revdate">2026-05-28T19:49:50Z</span>
+<span id="revnumber">version 0.0.3-SNAPSHOT,</span>
+<span id="revdate">2026-05-31T00:50:00Z</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_release_process_regarding_mvn_version">Release Process regarding mvn version</a>
+<li><a href="#_versioning">versioning</a>
 <ul class="sectlevel2">
-<li><a href="#_before_the_release">Before the Release</a></li>
-<li><a href="#_release">Release</a></li>
-<li><a href="#_after_the_release">After the Release</a></li>
+<li><a href="#_policies">policies</a>
+<ul class="sectlevel3">
+<li><a href="#_release_version">release version</a></li>
+<li><a href="#_snapshot_version">snapshot version</a></li>
+<li><a href="#_branch">branch</a></li>
+<li><a href="#_build">build</a></li>
+</ul>
+</li>
+<li><a href="#_release_process">Release Process</a>
+<ul class="sectlevel3">
+<li><a href="#preRelease">Before Release</a>
+<ul class="sectlevel4">
+<li><a href="#_determine_new_release_version">determine new release version</a></li>
+<li><a href="#_set_new_release_version">set new release version</a></li>
+<li><a href="#_verify_all_submodule_poms_and_clean_up_backups">Verify all submodule POMs and clean up backups</a></li>
+</ul>
+</li>
+<li><a href="#release">Release</a></li>
+<li><a href="#postRelease">After Release</a>
+<ul class="sectlevel4">
+<li><a href="#_bump_the_version_and_set_a_new_snapshot_version">Bump the version and set a new -SNAPSHOT version</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_documenting">documenting</a>
+<ul class="sectlevel2">
+<li><a href="#_policies_2">policies</a>
+<ul class="sectlevel3">
+<li><a href="#_doc_as_code">doc as code</a></li>
+<li><a href="#_tec_stack">tec stack</a></li>
+<li><a href="#_docs_are_in_parent_module">docs are in parent module</a></li>
+</ul>
+</li>
+<li><a href="#_publish_process">Publish Process</a></li>
 </ul>
 </li>
 </ul>
@@ -216,86 +250,257 @@ svg *,
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_release_process_regarding_mvn_version">Release Process regarding mvn version</h2>
+<h2 id="_versioning">versioning</h2>
 <div class="sectionbody">
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>versions are maven versions</strong>.<br>
+Tags are not used to maintain versions.<br>
+Tags are just tags.</p>
+</li>
+<li>
+<p><strong>submodules have no own version</strong>.<br>
+submodules inherit the parents version</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="sect2">
-<h3 id="_before_the_release">Before the Release</h3>
+<h3 id="_policies">policies</h3>
+<div class="sect3">
+<h4 id="_release_version">release version</h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<strong>release versions are fixed versions</strong><br>
+release versions are published to the central maven repository.<br>
+release versions must be <strong>immutable</strong> since the published package is immutable.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_snapshot_version">snapshot version</h4>
+<div class="paragraph">
+<p>The project makes use of SNAPSHOT versions,<br>
+which are not published to the maven repository.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_branch">branch</h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<strong>main is for release only</strong><br>
+SNAPSHOT versions do not appear in main.<br>
+SNAPSHOT versions are in feature-branches.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Just before merging to main a the version in the feature-branch has to be updated to a NEW release version by removing the suffix "-SNAPSHOT".</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_build">build</h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>release is on main only</strong>:<br>
+the project uses only one Branch 'main' to build release versions.<br>
+this means for feature branches:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>mvn package</code> is allowed</p>
+</li>
+<li>
+<p><code>mvn verify</code> is <strong>not allowed</strong> exception: SNAPSHOT versions</p>
+</li>
+<li>
+<p><code>mvn install</code> is <strong>not allowed</strong></p>
+</li>
+<li>
+<p><code>mvn deploy</code> is <strong>not allowed</strong></p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_release_process">Release Process</h3>
+<object data="devGuidelineReleaseProcess.svg"
+        type="image/svg+xml">
+</object>
+<div class="sect3">
+<h4 id="preRelease">Before Release</h4>
 <div class="paragraph">
 <p>All steps in this section are performed in your <strong>feature branch</strong> that will be released.</p>
 </div>
-<div class="sect3">
-<h4 id="_remove_the_snapshot_suffix">Remove the <code>-SNAPSHOT</code> suffix</h4>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Determine the new release version, for example <code>1.2.3</code>.</p>
-</li>
-<li>
-<p>In your feature branch, update the version in <code>pom.xml</code> by removing the <code>-SNAPSHOT</code> suffix using Maven:</p>
-<div class="literalblock">
+<div class="imageblock">
 <div class="content">
-<pre>   ```bash
-   mvn versions:set -DnewVersion=NEW_VERSION
-Replace NEW_VERSION with the target release version, e.g.:</pre>
+<img src="diag-plantuml-md5-53edecb71135fc1601f2b9c7da77533c.svg" alt="Diagram" width="352" height="809">
 </div>
+</div>
+<div class="sect4">
+<h5 id="_determine_new_release_version">determine new release version</h5>
+<div class="paragraph">
+<p>we refer to maven versions stored in the 'pom.xml' file, since we don&#8217;t rely on git tags.<br>
+Determine the new release version:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>get current release from pom in main branch<br>
+<em>example</em>: the current version in master is <code>1.2.2</code></p>
+</li>
+<li>
+<p>increase version number (major / minor / patch)</p>
+<div class="ulist">
+<ul>
+<li>
+<p>if you increase patch leave major and minor as is<br>
+<em>example</em>: increase patch means the new version is <code>1.2.3</code></p>
+</li>
+<li>
+<p>if you increase minor leave major as is and set patch version to <code>0</code><br>
+<em>example</em>: increase minor means the new version is <code>1.3.0</code></p>
+</li>
+<li>
+<p>if you increase major set minor and patch version to <code>0</code><br>
+<em>example</em>: increase major means the new version is <code>2.0.0</code></p>
+</li>
+</ul>
 </div>
 </li>
-</ol>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_set_new_release_version">set new release version</h5>
+<div class="paragraph">
+<p>In your feature branch the version to the determined new release version by using this command:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn versions:set "-DnewVersion=&lt;&lt;new release version&gt;&gt;"</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p>copy
-mvn versions:set -DnewVersion=1.2.3
-=== 1.2 Verify all submodule POMs and clean up backups</p>
+<p><em>example:</em></p>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn versions:set "-DnewVersion=1.2.3"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><em>tooling</em>:<br>
+if the new release version was just an increment of patch, your feature branch might already have the right version extended with the suffix "-SNAPSHOT". So you just habe to remove the suffix '-SNAPSHOT'.<br>
+this is implemented in the script <strong>versionSnapshotToRelease</strong>.<br>
+<em>example</em>: you can use the script if the wanted release version is <code>1.2.3</code> and snapshot version in your feature-branch fits to it since it is <code>1.2.3-SNAPSHOT</code>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_verify_all_submodule_poms_and_clean_up_backups">Verify all submodule POMs and clean up backups</h5>
 <div class="paragraph">
 <p>Verify that all submodule pom.xml files have the correct parent version (the version you just set).</p>
 </div>
 <div class="paragraph">
 <p>After verification, remove the backup POM files created by the versions plugin:</p>
 </div>
-<div class="paragraph">
-<p>copy
-mvn versions:commit</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn versions:commit</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_release">Release</h3>
+</div>
+<div class="sect3">
+<h4 id="release">Release</h4>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-363087b61a60b61ae60f2bc5289a06e9.svg" alt="Diagram" width="269" height="606">
+</div>
+</div>
 <div class="paragraph">
 <p>Push your feature branch to the remote repository.
 Create a merge request / pull request and merge your feature branch into master/main.
 Build the project from master/main to ensure the release version builds correctly.
-Tag the release commit with the release version (for example v1.2.3 or 1.2.3), using your usual Git tagging conventions.</p>
+Tag the release commit with the release version (example: <code>v1.2.3</code>), using your usual Git tagging conventions.</p>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_after_the_release">After the Release</h3>
-<div class="paragraph">
-<p>All steps in this section are performed in your next feature branch that will later be merged into master/main.</p>
 </div>
 <div class="sect3">
-<h4 id="_bump_the_version_and_set_a_new_snapshot_version">Bump the version and set a new -SNAPSHOT version</h4>
-<div class="paragraph">
-<p>Check the current version in master/main (for example 1.2.3).</p>
+<h4 id="postRelease">After Release</h4>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-28d43155b5601f771b7241fef8d28469.svg" alt="Diagram" width="792" height="582">
+</div>
 </div>
 <div class="paragraph">
-<p>Increment the version by one patch level (for example to 1.2.4).</p>
+<p>All steps in this section are performed in your next feature branch that will later be merged into main.</p>
 </div>
-<div class="paragraph">
-<p>Append the -SNAPSHOT suffix (for example 1.2.4-SNAPSHOT).</p>
-</div>
-<div class="paragraph">
+<div class="sect4">
+<h5 id="_bump_the_version_and_set_a_new_snapshot_version">Bump the version and set a new -SNAPSHOT version</h5>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Check the current version in master/main (for <em>example</em> <code>1.2.3</code>).</p>
+</li>
+<li>
+<p>Increment the version by one patch level (for <em>example</em> to <code>1.2.4</code>).</p>
+</li>
+<li>
+<p>Append the -SNAPSHOT suffix (for example <code>1.2.4-SNAPSHOT</code>).</p>
+</li>
+<li>
 <p>In your new feature branch, set this SNAPSHOT version in the pom.xml:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn versions:set -DnewVersion=1.2.4-SNAPSHOT
+mvn versions:commit</code></pre>
 </div>
-<div class="paragraph">
-<p><code>mvn versions:set -DnewVersion=1.2.4-SNAPSHOT
-mvn versions:commit</code></p>
 </div>
-<div class="paragraph">
+</li>
+<li>
 <p>Commit the changed pom.xml files to your feature branch.</p>
+</li>
+</ol>
 </div>
 <div class="paragraph">
-<p>Optionally, you can use the updateVersion script to help with incrementing the version.</p>
+<p><em>tooling</em>:<br>
+Optionally, you can use the <strong>versionIncreaseSnapshot</strong> script to help with incrementing the version.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -314,10 +519,69 @@ The process described here is still partly manual and therefore not fully robust
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_documenting">documenting</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_policies_2">policies</h3>
+<div class="sect3">
+<h4 id="_doc_as_code">doc as code</h4>
+<div class="ulist">
+<ul>
+<li>
+<p>docs are part of the git repository.</p>
+</li>
+<li>
+<p>docs are part of the release (package / final artifact)<br>
+so generating / rendering the docs is done within build</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_tec_stack">tec stack</h4>
+<div class="ulist">
+<ul>
+<li>
+<p>we use adoc and plantuml. see <a href="../ADRs/002.html">ADR 002: Standardize Documentation Stack on AsciiDoc and PlantUML</a></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_docs_are_in_parent_module">docs are in parent module</h4>
+<div class="paragraph">
+<p>exception: generated docs like jacoco or javadoc</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_publish_process">Publish Process</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>release version:<br>
+after pushing to main (merging into main) a CI-step publishes the docs.</p>
+</li>
+<li>
+<p>snapshot version:<br>
+only after pushing changes in src/*\* to a branch named *Site\* a CI-step publishes the docs.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>publishing the docs is implemented by the github action '<a href="https://github.com/conetex/org-conetex-runtime-instrument/blob/main/.github/workflows/publishSiteToPages.yml">publishSiteToPages.yml</a>'<br>
+this also implements collecting generated docs (jacoco, javadoc) from submodules, since a maven implementation is complex and ugly.
+see <a href="../ADRs/005.html">ADR 005: Aggregate &#8230;&#8203; via GitHub Actions</a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
 <div id="footer">
 <div id="footer-text">
-Version 0.0.2-SNAPSHOT<br>
-Last updated 2026-05-28 19:49:47 UTC
+Version 0.0.3-SNAPSHOT<br>
+Last updated 2026-05-31 00:49:57 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

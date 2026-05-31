@@ -1,0 +1,10 @@
+@startuml
+title Release Process
+
+start
+: [[devGuideline.html#preRelease Before Release]];
+: [[devGuideline.html#release Release]];
+: [[devGuideline.html#postRelease After Release]];
+stop
+
+@enduml
