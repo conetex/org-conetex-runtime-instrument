@@ -2,6 +2,8 @@
 :toc:
 :toclevels: 5
 
+include::./-navigation.adoc[]
+
 == versioning
 
 [IMPORTANT]

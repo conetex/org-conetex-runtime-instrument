@@ -1,0 +1,4 @@
+:pathToIndexes: ../
+
+== Navigation
+include::../-indexes.adoc[]
