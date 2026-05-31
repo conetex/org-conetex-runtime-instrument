@@ -1,0 +1,71 @@
+name: conetex - Check Maven Version Format & Increment
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Read version from PR branch
+        run: |
+          PR_VERSION=$(mvn -q -Dexpression=project.version -DforceStdout help:evaluate)
+          echo "PR_VERSION=$PR_VERSION" >> $GITHUB_ENV
+
+      - name: VALIDATE version format
+        run: |
+          echo "version from PR: $PR_VERSION"
+
+          if [[ ! "$PR_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "❌ Version '$PR_VERSION' does not match required pattern major.minor.patch (no leading zeros)"
+            echo "   Expected: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$"
+            echo "       e.g.: 1.2.3 or 0.1.2"
+            exit 1
+          fi
+
+          echo "✔️ Version format OK"
+
+      - name: Checkout main branch
+        run: |
+          git fetch origin main
+          git checkout origin/main
+
+      - name: Read version from main
+        run: |
+          MAIN_VERSION=$(mvn -q -Dexpression=project.version -DforceStdout help:evaluate)
+          echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_ENV
+
+      - name: VALIDATE version incremented
+        run: |
+          echo "PR version:   $PR_VERSION"
+          echo "Main version: $MAIN_VERSION"
+
+          if [ -z "$PR_VERSION" ] || [ -z "$MAIN_VERSION" ]; then
+            echo "❌ Could not determine versions (one is empty)"
+            exit 1
+          fi
+
+          BIGGER=$(printf "%s\n%s" "$MAIN_VERSION" "$PR_VERSION" | sort -V | tail -n1)
+
+          if [ "$BIGGER" != "$PR_VERSION" ]; then
+            echo "❌ Version in PR is NOT greater than version in main"
+            exit 1
+          fi
+
+          echo "✔️ Version increment OK"

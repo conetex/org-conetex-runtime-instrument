@@ -1,4 +1,4 @@
-name: Publish Site to Pages (incl. Jacoco, JavaDoc)
+name: conetex - Publish Site to Pages (incl. Jacoco, JavaDoc)
 
 # =======================================================
 #
@@ -12,7 +12,13 @@ name: Publish Site to Pages (incl. Jacoco, JavaDoc)
 on:
   push:
     branches:
-      - master
+      - main
+      - '**/**Site**'
+      - '**/**site**'
+      - '**Site**'
+      - '**site**'
+    paths:
+      - 'src/**'
 
 permissions:
   contents: write
@@ -118,11 +124,18 @@ jobs:
       - name: Copy site to version folder
         run: |
 
+          if [[ "${DOCS_VERSION}" == *"-SNAPSHOT" ]]; then
+            LATEST="latest-snapshot"
+          else
+            LATEST="latest"
+          fi
+          
           mkdir -p deploy/${DOCS_VERSION}
-          mkdir -p deploy/latest
+          mkdir -p deploy/${LATEST}
 
           rsync -av --exclude='*/.*' target/site/ deploy/${DOCS_VERSION}/
-          rsync -av --exclude='*/.*' target/site/ deploy/latest/
+          rsync -av --exclude='*/.*' target/site/ deploy/${LATEST}
+
 
       #
       # push deploy folder to branch gh-pages (src of GitHub Pages)
