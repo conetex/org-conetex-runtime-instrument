@@ -1,4 +1,4 @@
-name: conetex - Check Maven Version Format Increment and Inheritance
+name: conetex - Check Maven Version Format and Increment
 
 on:
   pull_request:
