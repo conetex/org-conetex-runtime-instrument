@@ -66,7 +66,7 @@ All steps in this section are performed in your *feature branch* that will be re
 [plantuml]
 ----
 @startuml
-title Release Process
+title Process
 
 partition "Before Release\n(Feature Branch)" {
 
@@ -153,7 +153,7 @@ mvn versions:commit
 [plantuml]
 ----
 @startuml
-title Release Process
+title Process
 
 partition "Release" {
 
@@ -192,7 +192,7 @@ Tag the release commit with the release version (example: `v1.2.3`), using your 
 [plantuml]
 ----
 @startuml
-title Release Process
+title Process
 
 partition "After Release\n(New Feature Branch)" {
 

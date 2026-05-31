@@ -6,7 +6,7 @@
 
     <groupId>org.conetex.runtime.instrument</groupId>
     <artifactId>parent</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3-SNAPSHOT</version>
 
     <name>org.conetex.runtime.instrument</name>
     <description>org.conetex.runtime.instrument</description>
@@ -140,7 +140,7 @@
                             <backend>html5</backend>
                             <attributes>
                                 <toc>left</toc>
-                                <!-- <toclevels>3</toclevels> -->
+                                <toclevels>5</toclevels>
                                 <icons>font</icons>
                                 <source-highlighter>highlightjs</source-highlighter>
                                 <plantuml-format>svg</plantuml-format>
@@ -153,14 +153,16 @@
                                 <!-- style                  -->
                                 <stylesheet>blackWhite.css</stylesheet>
                                 <stylesdir>${project.basedir}/src/asciiDoc/resources</stylesdir>
-                                <!-- custom linking         -->
+                                <!-- CUSTOM ATTRIBUTES      -->
+                                <!-- see .asciidoctorconfig -->
+                                <!-- linking                -->
                                 <prjdocFolder>projectDocs</prjdocFolder>
                                 <apidocFolder>apiDoc</apidocFolder>
                                 <apidocIndexFile>index.html</apidocIndexFile>
                                 <jacocoFolder>jacoco</jacocoFolder>
                                 <jacocoIndexFile>index.html</jacocoIndexFile>
                                 <renderedPlantUml>svg</renderedPlantUml>
-                                <srcBasePath>https://github.com/conetex/org-conetex-runtime-instrument/blob/master</srcBasePath>
+                                <srcBasePath>https://github.com/conetex/org-conetex-runtime-instrument/blob/main</srcBasePath>
                             </attributes>
                         </configuration>
                     </execution>
