@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.conetex.runtime.instrument</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.0.3-SNAPSHOT</version>
+
+    <name>org.conetex.runtime.instrument</name>
+    <description>org.conetex.runtime.instrument</description>
+
+    <packaging>pom</packaging>
+
+    <properties>
+        <maven.compiler.source>18</maven.compiler.source>
+        <maven.compiler.target>18</maven.compiler.target>
+        <maven.compiler.release>18</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
+    </properties>
+
+    <modules>
+        <!-- dependencies between modules are managed
+             here in dependencyManagement                   -->
+        <module>interfaces</module>
+        <module>counter</module>
+        <module>collection</module>
+        <module>metrics-cost</module>
+        <module>metrics-cost-unnamed</module>
+        <module>agent</module>
+        <module>tests</module>
+        <module>example</module>
+    </modules>
+
+    <build>
+        <plugins>
+
+            <!-- ======== BASICS ========================== -->
+            <!-- JAR (DEPLOY TO CENTRAL depends on it)      -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Javadoc (DEPLOY TO CENTRAL depends on it)  -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.12.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ======== GOVERNANCE & REPORTING ========== -->
+            <!-- JaCoCo java code coverage                  -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.14</version>
+                <executions>
+                    <!-- start the jacoco agent before test -->
+                    <!-- the execution is bind to phase
+                         initialize. it provides a argline
+                         to SureFire/Failsafe  so the Agent
+                         will instrument the JVM at test    -->
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <!-- create HTML-report after tests     -->
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ======== DOCUMENTATION (in parent only) == -->
+            <!-- site adoc files via Asciidoctor            -->
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>3.2.0</version>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-pdf</artifactId>
+                        <version>2.3.19</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram</artifactId>
+                        <version>2.3.2</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj-diagram-plantuml</artifactId>
+                        <version>1.2024.3</version>
+                    </dependency>
+                </dependencies>
+
+                <executions>
+                    <execution>
+                        <id>generate-docs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                        <inherited>false</inherited>                    <!-- in parent only -->
+                        <configuration>
+                            <requires>
+                                <require>asciidoctor-diagram</require>
+                            </requires>
+                            <sourceDirectory>${project.basedir}/src/asciiDoc/site</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/site/</outputDirectory>
+                            <preserveDirectories>true</preserveDirectories>
+                            <relativeBaseDir>true</relativeBaseDir>                            <!-- needed to make plantuml:: understand relativ paths      -->
+                            <backend>html5</backend>
+                            <attributes>
+                                <toc>left</toc>
+                                <toclevels>5</toclevels>
+                                <icons>font</icons>
+                                <source-highlighter>highlightjs</source-highlighter>
+                                <plantuml-format>svg</plantuml-format>
+                                <sectnums>false</sectnums>
+                                <!-- <imagesoutdir/>           looks like references do not always work if we do this                                       -->
+                                <revnumber>${project.version}</revnumber>
+                                <revdate>${maven.build.timestamp}</revdate>
+                                <organization>${project.organization.name}</organization>
+                                <baseDirFollowsSourceDir>true</baseDirFollowsSourceDir>        <!-- needed to make plantuml:: understand relativ paths      -->
+                                <!-- style                  -->
+                                <stylesheet>blackWhite.css</stylesheet>
+                                <stylesdir>${project.basedir}/src/asciiDoc/resources</stylesdir>
+                                <!-- CUSTOM ATTRIBUTES      -->
+                                <!-- see .asciidoctorconfig -->
+                                <!-- linking                -->
+                                <prjdocFolder>projectDocs</prjdocFolder>
+                                <apidocFolder>apiDoc</apidocFolder>
+                                <apidocIndexFile>index.html</apidocIndexFile>
+                                <jacocoFolder>jacoco</jacocoFolder>
+                                <jacocoIndexFile>index.html</jacocoIndexFile>
+                                <renderedPlantUml>svg</renderedPlantUml>
+                                <srcBasePath>https://github.com/conetex/org-conetex-runtime-instrument/blob/main</srcBasePath>
+                            </attributes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- site raw files (no transform or render)    -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>collect-javadocs</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <inherited>false</inherited>                    <!-- in parent only -->
+                        <configuration>
+                            <outputDirectory>
+                                ${project.build.directory}/site
+                            </outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>
+                                        ${project.basedir}/src/rawDoc/site
+                                    </directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+          Profiles Overview
+
+          Purpose
+          - This project exposes several build profiles to support different publishing workflows.
+          - All publishing-related behavior (where to deploy, whether to sign, which credentials to use) is implemented via profiles.
+          - This keeps sensitive data out of the POM and lets each machine or CI decide which profiles to activate.
+
+          How to use
+          - You are free to add your own profiles for other repositories or workflows.
+          - The POM documents available profiles and contains plugin configuration, but it does NOT contain credentials.
+          - Credentials and machine-specific activation belong in the user's ~/.m2/settings.xml or in CI secret stores.
+
+          Responsibility
+          - The POM does not and cannot enforce who may use which profile.
+          - Access control for publishing (who may sign or push to central) is handled outside the POM (keys, server credentials, CI permissions).
+
+          Existing profiles
+          - This project already defines two important profiles:
+            * gpg-signing  — produces .asc signatures for artifacts
+            * deploy-to-central — stages and publishes to Sonatype / Maven Central
+          - Developers or build servers that should publish will receive credentials and/or settings to activate these profiles.
+        -->
+
+        <!-- ======== CODE SIGNING  ======================= -->
+        <!-- (DEPLOY TO CENTRAL depends on it)              -->
+        <profile>
+            <id>gpg-code-signing</id>
+            <!--
+              gpg-code-signing profile
+
+              Purpose
+              - Produce GPG signatures for the main artifact, sources JAR, javadoc JAR and the POM.
+              - The plugin configuration (maven-gpg-plugin) and executions are declared here so the build steps are visible in the POM.
+
+              Security and activation
+              - Do NOT put key IDs, passphrases or other secrets in this POM.
+              - Put machine-specific values in ~/.m2/settings.xml or in CI secrets (for example: gpg.keyname, gpg.passphrase).
+              - Activate this profile explicitly when you need signing:
+                  mvn -Pgpg-code-signing verify
+                or together with the publish profile:
+                  mvn -Pgpg-code-signing,deploy-to-central clean deploy
+
+              Notes on phase binding
+              - Signing must run after the artifacts exist (see comment below about phase choice).
+              - The profile only contains plugin configuration; actual secrets and activation are external.
+            -->
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.4</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- ======== DEPLOY TO CENTRAL =================== -->
+        <profile>
+            <id>deploy-to-central</id>
+            <!--
+              deploy-to-central profile
+
+              Purpose
+              - Configure central-publishing-maven-plugin to stage and publish artifacts to Sonatype / Maven Central.
+              - The profile contains plugin configuration but no credentials.
+
+              Credentials and activation
+              - Sonatype server credentials must be stored in ~/.m2/settings.xml under <servers> with the server id used here (for example 'central').
+              - This profile expects signing to be active when publishing. Activate both profiles together:
+                  mvn -Pgpg-signing,deploy-to-central clean deploy
+                or enable gpg-signing in settings.xml on machines that are allowed to publish.
+
+              Behaviour and responsibility
+              - The POM documents the publish workflow and contains the plugin configuration.
+              - Who may publish and which machines are allowed to do so is controlled outside the POM (keys, settings, CI permissions).
+            -->
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.9.0</version>
+                        <!-- the extensions of this plugin are mapping to phase deploy -->
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <excludeArtifacts>
+                                <!-- tutorial modules       -->
+                                <artifact>example</artifact>
+                                <!-- tests modules          -->
+                                <artifact>test-parent</artifact>
+                                <artifact>empty</artifact>
+                                <artifact>integration</artifact>
+                                <artifact>jar</artifact>
+                                <artifact>jar-blocked</artifact>
+                                <artifact>jar-module</artifact>
+                            </excludeArtifacts>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>interfaces</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>counter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>collection</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>metrics-cost</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>metrics-cost-unnamed</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>agent</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>tests</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.conetex.runtime.instrument</groupId>
+                <artifactId>example</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <url>https://conetex.github.io/org-conetex-runtime-instrument/latest/</url>
+
+    <scm>
+        <url>https://github.com/conetex/org-conetex-runtime-instrument</url>
+        <connection>scm:git:https://github.com/conetex/org-conetex-runtime-instrument.git</connection>
+        <developerConnection>scm:git:git@github.com/conetex/org-conetex-runtime-instrument.git</developerConnection>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>matthias-franke</id>
+            <name>Matthias Franke</name>
+        </developer>
+    </developers>
+
+</project>
