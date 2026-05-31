@@ -24,7 +24,7 @@
 
     <modules>
         <!-- dependencies between modules are managed
-             here in dependencyManagement                   -->
+             in this pom via dependencyManagement           -->
         <module>interfaces</module>
         <module>counter</module>
         <module>collection</module>
