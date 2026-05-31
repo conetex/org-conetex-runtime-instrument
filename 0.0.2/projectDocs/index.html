@@ -199,7 +199,7 @@ svg *,
 <h1>parent module - overall Architecture</h1>
 <div class="details">
 <span id="revnumber">version 0.0.2,</span>
-<span id="revdate">2026-05-30T09:50:20Z</span>
+<span id="revdate">2026-05-31T00:26:10Z</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -244,38 +244,9 @@ It summarizes the purpose of each module, shows how they interact, and includes 
 <div class="paragraph">
 <p>For detailed responsibilities and boundaries, each module has its own purpose description.</p>
 </div>
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre>Failed to generate image: PlantUML image generation failed: Cannot invoke "java.lang.reflect.Method.invoke(Object, Object[])" because "org.asciidoctor.diagram.plantuml.PlantUML.SET_LOCAL_IMAGE_LIMIT" is null
-@startuml
-title Module Overview — Class Instrumentation
-
-left to right direction
-
-component agent as A
-component interfaces as B
-component counter as C
-component "metrics-cost" as D
-component "metrics-cost-unnamed" as E
-component collection as F
-
-' Core modules
-A --&gt; B
-A --&gt; C
-A --&gt; D
-A --&gt; E
-A --&gt; F
-
-' Instrumentation logic
-C --&gt; B
-D --&gt; B
-E --&gt; B
-
-' Data flow
-C --&gt; F
-D --&gt; C
-E --&gt; C
-@enduml</pre>
+<img src="moduleOverview.svg" alt="Diagram" width="599" height="226">
 </div>
 </div>
 </div>
@@ -343,45 +314,9 @@ Together, they implement a modular Java runtime instrumentation framework based 
 <div class="sect1">
 <h2 id="_module_dependency_diagram">Module Dependency Diagram</h2>
 <div class="sectionbody">
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre>Failed to generate image: PlantUML image generation failed: Cannot invoke "java.lang.reflect.Method.invoke(Object, Object[])" because "org.asciidoctor.diagram.plantuml.PlantUML.SET_LOCAL_IMAGE_LIMIT" is null
-@startuml
-title Module Overview — Class Instrumentation
-
-'left to right direction
-
-component counter as C
-component agent as A
-component interfaces as B
-component "metrics-cost" as D
-component "metrics-cost-unnamed" as E
-component collection as F
-
-' Core modules
-A --&gt; B
-A --&gt; C
-A --&gt; D
-A --&gt; E
-A --&gt; F
-
-' Instrumentation logic
-C --&gt; B
-' Data flow
-C --&gt; F
-
-' Instrumentation logic
-D --&gt; B
-' Data flow
-D --&gt; C
-
-' Instrumentation logic
-E --&gt; B
-' Data flow
-E --&gt; C
-
-
-@enduml</pre>
+<img src="diag-plantuml-md5-b8098bc9538472294a76ddb3128acb72.svg" alt="Diagram" width="433" height="347">
 </div>
 </div>
 </div>
@@ -389,45 +324,9 @@ E --&gt; C
 <div class="sect1">
 <h2 id="_module_roles_diagram">Module Roles Diagram</h2>
 <div class="sectionbody">
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre>Failed to generate image: PlantUML image generation failed: Cannot invoke "java.lang.reflect.Method.invoke(Object, Object[])" because "org.asciidoctor.diagram.plantuml.PlantUML.SET_LOCAL_IMAGE_LIMIT" is null
-@startuml
-
-top to bottom direction
-
-component "agent\nActivation Layer" as A
-component "interfaces\nShared API" as B
-component "counter\nCounters" as C
-component "metrics-cost\nCost Metrics" as D
-component "metrics-cost-unnamed\nCost Metrics Unnamed" as E
-component "collection\nData Collection" as F
-rectangle "example\nDemonstration" as G
-rectangle "tests\nValidation" as H
-
-A --&gt; B
-A --&gt; C
-A --&gt; D
-A --&gt; E
-A --&gt; F
-
-C --&gt; F
-D --&gt; F
-E --&gt; F
-
-'G --&gt; A
-'G --&gt; C
-'G --&gt; D
-'G --&gt; E
-'G --&gt; F
-
-'H --&gt; A
-'H --&gt; C
-'H --&gt; D
-'H --&gt; E
-'H --&gt; F
-
-@enduml</pre>
+<img src="diag-plantuml-md5-e3c72f433df3dd87ce2682945184605b.svg" alt="Diagram" width="648" height="278">
 </div>
 </div>
 </div>
@@ -435,51 +334,9 @@ E --&gt; F
 <div class="sect1">
 <h2 id="_class_instrumentation_sequence">Class Instrumentation Sequence</h2>
 <div class="sectionbody">
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre>Failed to generate image: PlantUML image generation failed: Cannot invoke "java.lang.reflect.Method.invoke(Object, Object[])" because "org.asciidoctor.diagram.plantuml.PlantUML.SET_LOCAL_IMAGE_LIMIT" is null
-@startuml
-
-autonumber
-
-participant "JVM ClassLoader" as JVM
-participant "agent\npremain/agentmain" as Agent
-participant "Instrumentation\nTransformer Registry" as Trans
-participant "metrics-cost\nBytecode Transformer" as MC
-participant "counter\nData Collector" as Co
-participant "Application Class" as App
-
-JVM -&gt; Agent: Start JVM with -javaagent or attach at runtime
-
-Agent -&gt; Trans: Register ClassFileTransformer(s)
-
-note right of Agent
-agent does NOT transform bytecode
-only registers and configures
-end note
-
-JVM -&gt; Trans: load / reload Classes not transformed yet (e.g. "Application Class")
-
-note right of Trans
-metrics-cost / counter
-modify bytecode
-end note
-
-Trans -&gt; MC: delegate transform(classBytes)
-
-MC --&gt; Trans:
-return transformedClassBytes
-
-Trans --&gt; JVM:
-return transformedClassBytes
-
-JVM -&gt; App: redefineClass("Application Class")
-
-App -&gt; Co: emit measurement events (increase counters)
-
-Co -&gt; Co: calculate metrics
-
-@enduml</pre>
+<img src="diag-plantuml-md5-dede0ca61930f2b3ccc1afd0267d8b64.svg" alt="Diagram" width="1444" height="558">
 </div>
 </div>
 </div>
@@ -488,7 +345,7 @@ Co -&gt; Co: calculate metrics
 <div id="footer">
 <div id="footer-text">
 Version 0.0.2<br>
-Last updated 2026-05-30 09:50:16 UTC
+Last updated 2026-05-31 00:26:06 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
