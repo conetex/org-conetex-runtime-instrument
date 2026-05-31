@@ -46,7 +46,7 @@ All documentation and build steps must run on the JVM, and CI workflows must rem
 
 === Consequences
 
-Consequences might are reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
+Consequences might be reflected by other ADRs. see xref:./{catalog}Catalog.adoc[{catalog}]
 
 consequences for implementation:
 
