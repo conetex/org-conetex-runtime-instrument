@@ -1,0 +1,325 @@
+= Metric Handoff
+
+include::./-navigation.adoc[]
+
+== Context
+
+The Java instrumentation agent records low-level bytecode execution events across the entire application stack, including significant portions of the JDK and third-party libraries.
+
+Key characteristics:
+
+* Instrumentation is applied very broadly ("instrument everything").
+* Event volume during execution can potentially be very high.
+* The final analysis is only relevant after the instrumented JVM has terminated.
+* Trace files are expected to remain relatively small in practice.
+* Robustness and reproducibility are prioritized over real-time processing.
+
+The goal is to transfer measurement results from the instrumentation agent to a separate analysis service.
+
+== Considered Options
+
+=== Telemetry Platforms
+
+Examples:
+
+* OpenTelemetry
+* Prometheus
+* Jaeger
+* Grafana ecosystem
+
+These solutions are well suited for:
+
+* Metrics
+* Distributed tracing
+* Continuous monitoring
+* Real-time observability
+
+However, they are not a natural fit for this use case because:
+
+* The instrumentation operates at bytecode-event granularity.
+* Event rates can be significantly higher than typical telemetry workloads.
+* Results are only needed after JVM termination.
+* Runtime communication introduces unnecessary complexity and potential failure modes.
+
+Therefore, telemetry-based approaches are not pursued further.
+
+=== Direct Runtime Communication
+
+Possible implementations include:
+
+* HTTP/gRPC
+* Message queues
+* Kafka
+
+Advantages:
+
+* Near real-time processing
+* Immediate availability of measurements
+
+Disadvantages:
+
+* Additional runtime overhead
+* Backpressure concerns
+* More difficult failure handling
+* Potential recursion problems when instrumenting JDK networking components
+
+Since post-execution analysis is sufficient, these approaches are not preferred.
+
+== Selected Architecture
+
+The preferred design is an offline analysis model.
+
+[plantuml]
+----
+@startuml
+
+component "Instrumented JVM" as JVM
+component "Instrumentation Agent" as Agent
+database "Trace File" as Trace
+folder "Analysis Inbox" as Inbox
+component "Offline Analysis Service" as Analysis
+
+JVM --> Agent
+Agent --> Trace : write events
+Trace --> Inbox : move after JVM termination
+Inbox --> Analysis : consume trace
+
+@enduml
+----
+
+The instrumentation agent writes execution events to a local trace file.
+
+After JVM termination:
+
+. Buffers are flushed.
+. The trace file is closed.
+. The trace file is atomically moved into an analysis inbox.
+. The analysis service discovers and processes the file.
+
+No runtime network communication is required.
+
+== Trace Lifecycle
+
+[plantuml]
+----
+@startuml
+
+start
+
+:Application starts;
+
+:Record bytecode events;
+
+:Write events to trace file;
+
+:Application terminates;
+
+:Flush buffers;
+
+:Close trace file;
+
+:Move trace to inbox;
+
+:Analysis service picks up trace;
+
+:Run offline analysis;
+
+stop
+
+@enduml
+----
+
+== Trace Recording Strategy
+
+=== Runtime Responsibilities
+
+During application execution the agent should only:
+
+* Record events
+* Buffer data efficiently
+* Write to local storage
+
+The agent should avoid:
+
+* Complex analysis
+* Network communication
+* Expensive serialization
+* Dependencies on heavily instrumented libraries
+
+This minimizes runtime overhead and reduces the risk of instrumentation feedback loops.
+
+=== Shutdown Responsibilities
+
+A JVM shutdown hook should perform only minimal work:
+
+* Flush buffers
+* Close files
+* Move the completed trace into the inbox
+
+The shutdown hook should not:
+
+* Execute analysis logic
+* Perform large uploads
+* Build reports
+
+Keeping shutdown logic simple improves reliability.
+
+== Inbox Pattern
+
+The analysis handoff follows a filesystem-based inbox pattern.
+
+[plantuml]
+----
+@startuml
+
+folder Outbox
+folder Processing
+folder Done
+folder Error
+
+component "Analysis Service" as Analysis
+
+Outbox --> Processing : acquire file
+Processing --> Analysis : parse & analyze
+
+Analysis --> Done : success
+Analysis --> Error : failure
+
+@enduml
+----
+
+Typical flow:
+
+. Agent writes trace into `outbox`.
+. Analysis service atomically moves file to `processing`.
+. Analysis is executed.
+. File is moved to:
+** `done` on success
+** `error` on failure
+
+Benefits:
+
+* Crash resilience
+* Easy recovery
+* Simple operational model
+* Good observability
+
+== Trace Format
+
+A lightweight binary format is recommended.
+
+[plantuml]
+----
+@startuml
+
+class TraceFile {
+  magicNumber
+  formatVersion
+  startTimestamp
+  eventCount
+}
+
+class SymbolTable {
+  classId
+  methodId
+  className
+  methodName
+}
+
+class Event {
+  timestamp
+  threadId
+  eventType
+  classId
+  methodId
+}
+
+TraceFile *-- SymbolTable
+TraceFile *-- Event
+
+@enduml
+----
+
+=== Header
+
+The file should contain:
+
+* Magic Number
+* Format Version
+* Start Timestamp
+* Event Count
+
+=== Event Record
+
+Each event should contain:
+
+* Timestamp
+* Thread ID
+* Event Type
+* Class ID
+* Method ID
+
+=== Symbol Table
+
+Class names and method names should not be repeated in every event.
+
+Instead, identifiers should be resolved through a symbol table embedded in the trace file.
+
+Advantages:
+
+* Smaller files
+* Faster parsing
+* Lower memory consumption
+
+== Analysis Service
+
+[plantuml]
+----
+@startuml
+
+component "File Watcher" as Watcher
+component "Trace Parser" as Parser
+component "Execution Model Builder" as Model
+component "Analysis Engine" as Engine
+database "Results Store" as Store
+component "Reporting" as Report
+
+Watcher --> Parser
+Parser --> Model
+Model --> Engine
+Engine --> Store
+Store --> Report
+
+@enduml
+----
+
+Responsibilities:
+
+* Watch the inbox directory
+* Parse trace files
+* Build an internal execution model
+* Execute analysis algorithms
+* Persist results
+* Generate reports
+
+Potential future analyses include:
+
+* Call graph generation
+* Hotspot detection
+* Execution statistics
+* Dependency analysis
+* Architectural rule validation
+
+== Rationale
+
+The offline-analysis architecture was selected because it provides:
+
+* Minimal runtime overhead
+* High robustness
+* Deterministic processing
+* Simple debugging
+* Easy replayability
+* Independence from network availability
+* Clean separation between recording and analysis
+
+For a post-execution bytecode instrumentation system, this approach offers an effective balance between simplicity, reliability, and future extensibility.

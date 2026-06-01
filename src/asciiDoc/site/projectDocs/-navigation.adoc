@@ -1,7 +1,10 @@
 :pathToIndexes: ../
 :pathToModules: ./
+:pathToThoughts: ./
 
 == Navigation
 include::../-indexes.adoc[]
 |
 include::./-modules.adoc[]
+|
+include::./-thoughts.adoc[]

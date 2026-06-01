@@ -1,0 +1,227 @@
+= Test Tools
+
+include::./-navigation.adoc[]
+
+== Running Maven Surefire Multiple Times with Different `argLine` Configurations
+
+=== Overview
+
+It is possible to execute the Maven Surefire Plugin multiple times within a single build, using different `argLine` values and different subsets of tests.
+
+This is useful for scenarios such as:
+
+* Running tests with different Java agents
+* Running instrumentation and non-instrumentation tests separately
+* Executing specific test groups under different JVM configurations
+
+=== Multiple Surefire Executions
+
+The Surefire Plugin can be configured with multiple executions.
+
+Example:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>3.2.5</version>
+
+    <executions>
+        <execution>
+            <id>agent1-tests</id>
+            <goals>
+                <goal>test</goal>
+            </goals>
+            <configuration>
+                <argLine>-javaagent:agent1.jar</argLine>
+                <includes>
+                    <include>**/*Agent1Test.java</include>
+                </includes>
+            </configuration>
+        </execution>
+
+        <execution>
+            <id>agent2-tests</id>
+            <goals>
+                <goal>test</goal>
+            </goals>
+            <configuration>
+                <argLine>-javaagent:agent2.jar</argLine>
+                <includes>
+                    <include>**/*Agent2Test.java</include>
+                </includes>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+----
+
+Each execution can have its own:
+
+* `argLine`
+* `includes`
+* `excludes`
+* system properties
+* JVM configuration
+
+=== Formatting Long `argLine` Values
+
+Long `argLine` values can be split across multiple lines for readability.
+
+Example:
+
+[source,xml]
+----
+<argLine>
+    -Xbootclasspath/a:${project.basedir}/path/to/lib.jar
+    -javaagent:${project.basedir}/agent.jar=
+    transformerArgs:visit_mv_static;
+    pathToTransformerJar:path1.jar,path2.jar
+</argLine>
+----
+
+Maven treats the contained whitespace as part of the final command line.
+
+=== Maven Properties
+
+Properties can be defined at project level:
+
+[source,xml]
+----
+<properties>
+    <agent1.argline>-javaagent:agent1.jar</agent1.argline>
+    <agent2.argline>-javaagent:agent2.jar</agent2.argline>
+</properties>
+----
+
+and referenced from plugin configurations:
+
+[source,xml]
+----
+<argLine>${agent1.argline}</argLine>
+----
+
+=== Where Properties Can Be Defined
+
+Properties may be defined in:
+
+* `<project>`
+* `<profile>`
+
+Properties cannot be defined inside:
+
+* `<plugin>`
+* `<execution>`
+* `<configuration>`
+
+The following is not valid:
+
+[source,xml]
+----
+<execution>
+    <properties>
+        ...
+    </properties>
+</execution>
+----
+
+=== Reusing Common Parts of an `argLine`
+
+A common pattern is to compose properties from smaller reusable parts.
+
+[source,xml]
+----
+<properties>
+    <base.argline>-Xmx2g</base.argline>
+
+    <agent1.argline>
+        ${base.argline}
+        -javaagent:agent1.jar
+    </agent1.argline>
+
+    <agent2.argline>
+        ${base.argline}
+        -javaagent:agent2.jar
+    </agent2.argline>
+</properties>
+----
+
+Usage:
+
+[source,xml]
+----
+<execution>
+    <configuration>
+        <argLine>${agent1.argline}</argLine>
+    </configuration>
+</execution>
+----
+
+This reduces duplication and makes maintenance easier.
+
+=== Interaction with Other Plugins
+
+Some plugins (e.g. JaCoCo) modify `argLine`.
+
+To preserve values contributed by other plugins, prepend the existing value:
+
+[source,xml]
+----
+<argLine>
+    ${argLine}
+    ${agent1.argline}
+</argLine>
+----
+
+This ensures that:
+
+* arguments added by other plugins are retained
+* custom agent configuration is appended
+
+=== Alternative: Profiles
+
+Different configurations can also be selected via Maven profiles.
+
+[source,xml]
+----
+<profiles>
+    <profile>
+        <id>agent1</id>
+        <properties>
+            <test.argline>-javaagent:agent1.jar</test.argline>
+        </properties>
+    </profile>
+
+    <profile>
+        <id>agent2</id>
+        <properties>
+            <test.argline>-javaagent:agent2.jar</test.argline>
+        </properties>
+    </profile>
+</profiles>
+----
+
+Plugin configuration:
+
+[source,xml]
+----
+<argLine>${test.argline}</argLine>
+----
+
+Execution:
+
+[source,bash]
+----
+mvn test -Pagent1
+mvn test -Pagent2
+----
+
+=== Summary
+
+* Surefire can be executed multiple times using multiple `<execution>` blocks.
+* Each execution can use a different `argLine` and a different set of tests.
+* Long `argLine` values may be formatted across multiple lines.
+* Properties can only be defined at project or profile level.
+* Properties can be reused and combined to avoid duplication.
+* When other plugins contribute to `argLine`, use `${argLine}` to preserve their settings.

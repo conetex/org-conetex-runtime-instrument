@@ -1,0 +1,303 @@
+= Java Agent Instrumentation and JPMS (Java Module System)
+
+include::./-navigation.adoc[]
+
+== Initial Situation
+
+A Java agent instruments classes using ASM and injects calls to a static helper method:
+
+[source,java]
+----
+Helper.onOpcode(...);
+----
+
+Instrumentation also targets bootstrap classes such as:
+
+* java.lang.*
+* java.util.*
+* classes from java.base
+
+To make the helper accessible to all instrumented classes, it was previously loaded through the bootstrap class loader:
+
+[source,java]
+----
+Instrumentation.appendToBootstrapClassLoaderSearch(...)
+----
+
+== Problem When Migrating to JPMS
+
+Before JPMS (classpath mode):
+
+* All classes effectively belonged to the unnamed module.
+* Visibility was mostly determined by class loaders.
+* Static calls to the helper class worked without additional configuration.
+
+With JPMS (module path mode):
+
+* Instrumented classes belong to named modules.
+* The helper class also belongs to a module.
+* The injected bytecode still contains:
+
+[source]
+----
+invokestatic helper/Helper.onOpcode(...)
+----
+
+When the JVM links the instrumented class, it must:
+
+. resolve the helper class
+. verify module readability
+. verify package exports
+
+If the helper module is not readable from the instrumented module, errors such as the following may occur:
+
+* ClassNotFoundException
+* NoClassDefFoundError
+* IllegalAccessError
+
+== Why Loading the Helper via the Bootstrap Class Loader Worked
+
+If the helper is added using:
+
+[source,java]
+----
+appendToBootstrapClassLoaderSearch(...)
+----
+
+and the helper JAR does not contain a module descriptor (`module-info.class`), it becomes part of the bootstrap loader's unnamed module.
+
+As a result, the helper becomes visible to all instrumented classes, including those from `java.base`.
+
+== Alternative: invokedynamic
+
+Instead of injecting:
+
+[source]
+----
+invokestatic Helper.onOpcode(...)
+----
+
+the agent injects:
+
+[source]
+----
+invokedynamic ...
+----
+
+The call site is resolved through a Bootstrap Method (BSM).
+
+Example:
+
+[source,java]
+----
+public static CallSite bootstrap(
+        MethodHandles.Lookup lookup,
+        String name,
+        MethodType type)
+        throws Throwable {
+
+    Class<?> helperClass =
+            Class.forName("agent.helper.Helper");
+
+    MethodHandle mh =
+            MethodHandles.lookup()
+                    .findStatic(
+                            helperClass,
+                            "onOpcode",
+                            MethodType.methodType(
+                                    void.class,
+                                    int.class));
+
+    return new ConstantCallSite(
+            mh.asType(type));
+}
+----
+
+== Benefit of invokedynamic
+
+Without invokedynamic:
+
+[source]
+----
+Instrumented Class
+    -> Helper
+----
+
+Every instrumented class must be able to resolve and access the helper class.
+
+With invokedynamic:
+
+[source]
+----
+Instrumented Class
+    -> IndyBootstrap
+           -> Helper
+----
+
+Only the bootstrap method must be visible.
+
+The helper itself can:
+
+* reside in a different module
+* reside in a different class loader
+* be loaded lazily
+
+Instrumented classes no longer require a direct dependency on the helper.
+
+== Important Limitation
+
+invokedynamic does not completely eliminate visibility requirements.
+
+The bootstrap method itself must still be reachable.
+
+The bootstrap method is referenced from the constant pool:
+
+[source]
+----
+Handle(
+    H_INVOKESTATIC,
+    "agent/indy/IndyBootstrap",
+    "bootstrap",
+    ...
+)
+----
+
+If the JVM cannot resolve `IndyBootstrap`, the call site linkage fails with:
+
+[source]
+----
+BootstrapMethodError
+----
+
+== Recommended Deployment Layout
+
+=== agent.jar
+
+Contains:
+
+* premain
+* transformers
+* ASM code
+
+May be packaged as a named module.
+
+=== indy-bootstrap.jar
+
+Contains only:
+
+* agent.indy.IndyBootstrap
+
+Characteristics:
+
+* no module-info.class
+* added via appendToBootstrapClassLoaderSearch(...)
+
+=== helper.jar
+
+Contains:
+
+* agent.helper.Helper
+
+May:
+
+* be loaded by the system class loader
+* belong to a module
+* be loaded lazily
+
+== JVM Startup
+
+[source,bash]
+----
+java \
+  -javaagent:agent.jar \
+  --module-path modules \
+  --add-modules app.main \
+  -m app.main/com.example.Main
+----
+
+Inside premain:
+
+[source,java]
+----
+inst.appendToBootstrapClassLoaderSearch(
+        new JarFile("indy-bootstrap.jar"));
+
+inst.addTransformer(...);
+----
+
+== Class Data Sharing (CDS)
+
+When using:
+
+[source,java]
+----
+appendToBootstrapClassLoaderSearch(...)
+----
+
+the JVM typically prints a warning similar to:
+
+[source]
+----
+Sharing is only supported for boot loader classes
+because bootstrap classpath has been appended
+----
+
+or:
+
+[source]
+----
+Class data sharing disabled because bootstrap classpath has been appended
+----
+
+Reason:
+
+* CDS requires an unchanged bootstrap class path.
+* Appending a JAR invalidates the CDS archive.
+
+Effects:
+
+* no functional impact
+* slightly slower startup
+* slightly higher memory usage
+
+This warning is normal and commonly accepted by Java agents.
+
+== Can appendToBootstrapClassLoaderSearch Be Replaced?
+
+For agents that instrument bootstrap classes (especially classes from `java.base`), there is effectively no equivalent replacement.
+
+Alternatives such as:
+
+* system class loader visibility
+* --add-reads
+* --add-opens
+* module exports
+* -Xbootclasspath
+
+do not provide the same guarantees for JPMS-aware bootstrap instrumentation.
+
+== Conclusion
+
+For instrumentation of bootstrap classes and classes from `java.base`, the standard solution remains:
+
+[source,java]
+----
+appendToBootstrapClassLoaderSearch(...)
+----
+
+Using invokedynamic changes the dependency structure from:
+
+[source]
+----
+All instrumented classes -> Helper
+----
+
+to:
+
+[source]
+----
+All instrumented classes -> IndyBootstrap
+IndyBootstrap -> Helper
+----
+
+This significantly reduces module and class loader visibility issues by moving them to a single, controlled integration point, but it does not eliminate them entirely.

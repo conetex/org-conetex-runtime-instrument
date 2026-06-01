@@ -1,0 +1,7 @@
+thoughts on:
+xref:{pathToThoughts}thoughtsOnJPMS .adoc[JPMS] |
+xref:{pathToThoughts}thoughtsOnInstrumentationExclusion.adoc[uninstrumentable] |
+xref:{pathToThoughts}thoughtsOnTestTools.adoc[test tools] |
+xref:{pathToThoughts}thoughtsOnMetricHandoff.adoc[Metric Handoff]
+
+

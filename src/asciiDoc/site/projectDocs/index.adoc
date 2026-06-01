@@ -29,7 +29,13 @@ Together, they implement a modular Java runtime instrumentation framework based 
 |xref:./metrics-cost/index.adoc#purpose[metrics-cost] |Implements cost and timing measurement for JPMS modules.
 |xref:./metrics-cost-unnamed/index.adoc#purpose[metrics-cost-unnamed] |Cost instrumentation for unnamed/classpath modules.
 |xref:./example/index.adoc#purpose[example] |Demonstrates how instrumentation behaves in real code.
-|xref:./tests/index.adoc#purpose[tests] |Validates correctness and stability of the instrumentation system.
+|xref:./tests/index.adoc#purpose[tests] |Validates correctness and stability of the instrumentation system. +
+ +
+
+in submodule org.conetex.runtime.instrument.tests.jar we use the maven-surefire-plugin +
+maven-failsafe-plugin is not in use yet. maybe it is helpfully for integration... looks like it is like +
+Surefire → normal Unit Tests +
+Failsafe → Instrumentation-Tests with Agent
 |===
 
 == Module Dependency Diagram

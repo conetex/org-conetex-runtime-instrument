@@ -5,13 +5,19 @@
 == Overview
 
 :pathToCatalogs: ./ADRs/
+:pathToThoughts: ./projectDocs/
 
 * Source: link:{srcBasePath}/readme.md[github^]
-* Design: xref:./{prjdocFolder}/index.adoc#architecture[parent module - overall Architecture]
+* Design:
+   ** xref:./{prjdocFolder}/index.adoc#architecture[parent module - overall Architecture]
+   ** ->
+include::{pathToThoughts}-thoughts.adoc[]
 * ->
 include::{pathToCatalogs}-catalogs.adoc[]
 * Guidelines:
     ** xref:./processDocs/devGuideline.adoc[Development]
+
+
 
 == Modules
 
