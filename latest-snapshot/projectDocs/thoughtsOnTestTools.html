@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Test Tools</title>
+<style>
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
+@import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+html,
+body {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body,
+body *:not(.hljs):not(.hljs *) {
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
+
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
+  background: #fff !important;
+}
+
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: #000 !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+/* Syntax Highlighting NICHT überschreiben */
+
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Test Tools</h1>
+<div class="details">
+<span id="revnumber">version 0.0.3-SNAPSHOT,</span>
+<span id="revdate">2026-06-01T00:09:48Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_navigation">Navigation</a></li>
+<li><a href="#_running_maven_surefire_multiple_times_with_different_argline_configurations">Running Maven Surefire Multiple Times with Different <code>argLine</code> Configurations</a>
+<ul class="sectlevel2">
+<li><a href="#_overview">Overview</a></li>
+<li><a href="#_multiple_surefire_executions">Multiple Surefire Executions</a></li>
+<li><a href="#_formatting_long_argline_values">Formatting Long <code>argLine</code> Values</a></li>
+<li><a href="#_maven_properties">Maven Properties</a></li>
+<li><a href="#_where_properties_can_be_defined">Where Properties Can Be Defined</a></li>
+<li><a href="#_reusing_common_parts_of_an_argline">Reusing Common Parts of an <code>argLine</code></a></li>
+<li><a href="#_interaction_with_other_plugins">Interaction with Other Plugins</a></li>
+<li><a href="#_alternative_profiles">Alternative: Profiles</a></li>
+<li><a href="#_summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_navigation">Navigation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="../index.html">../index</a>
+|
+modules:
+<a href="./index.html">parent</a> |
+<a href="./agent/index.html">agent</a> |
+<a href="./collection/index.html">collection</a> |
+<a href="./counter/index.html">counter</a> |
+<a href="./example/index.html">example</a> |
+<a href="./interfaces/index.html">interfaces</a> |
+<a href="./metrics-cost/index.html">metrics-cost</a> |
+<a href="./metrics-cost-unnamed/index.html">metrics-cost-unnamed</a> |
+<a href="./tests/index.html">test</a>
+|
+thoughts on:
+<a href="./thoughtsOnJPMS .html">JPMS</a> |
+<a href="./thoughtsOnInstrumentationExclusion.html">uninstrumentable</a> |
+<a href="./thoughtsOnTestTools.html">test tools</a> |
+<a href="./thoughtsOnMetricHandoff.html">Metric Handoff</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_running_maven_surefire_multiple_times_with_different_argline_configurations">Running Maven Surefire Multiple Times with Different <code>argLine</code> Configurations</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_overview">Overview</h3>
+<div class="paragraph">
+<p>It is possible to execute the Maven Surefire Plugin multiple times within a single build, using different <code>argLine</code> values and different subsets of tests.</p>
+</div>
+<div class="paragraph">
+<p>This is useful for scenarios such as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Running tests with different Java agents</p>
+</li>
+<li>
+<p>Running instrumentation and non-instrumentation tests separately</p>
+</li>
+<li>
+<p>Executing specific test groups under different JVM configurations</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_multiple_surefire_executions">Multiple Surefire Executions</h3>
+<div class="paragraph">
+<p>The Surefire Plugin can be configured with multiple executions.</p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;plugin&gt;
+    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+    &lt;artifactId&gt;maven-surefire-plugin&lt;/artifactId&gt;
+    &lt;version&gt;3.2.5&lt;/version&gt;
+
+    &lt;executions&gt;
+        &lt;execution&gt;
+            &lt;id&gt;agent1-tests&lt;/id&gt;
+            &lt;goals&gt;
+                &lt;goal&gt;test&lt;/goal&gt;
+            &lt;/goals&gt;
+            &lt;configuration&gt;
+                &lt;argLine&gt;-javaagent:agent1.jar&lt;/argLine&gt;
+                &lt;includes&gt;
+                    &lt;include&gt;**/*Agent1Test.java&lt;/include&gt;
+                &lt;/includes&gt;
+            &lt;/configuration&gt;
+        &lt;/execution&gt;
+
+        &lt;execution&gt;
+            &lt;id&gt;agent2-tests&lt;/id&gt;
+            &lt;goals&gt;
+                &lt;goal&gt;test&lt;/goal&gt;
+            &lt;/goals&gt;
+            &lt;configuration&gt;
+                &lt;argLine&gt;-javaagent:agent2.jar&lt;/argLine&gt;
+                &lt;includes&gt;
+                    &lt;include&gt;**/*Agent2Test.java&lt;/include&gt;
+                &lt;/includes&gt;
+            &lt;/configuration&gt;
+        &lt;/execution&gt;
+    &lt;/executions&gt;
+&lt;/plugin&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Each execution can have its own:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>argLine</code></p>
+</li>
+<li>
+<p><code>includes</code></p>
+</li>
+<li>
+<p><code>excludes</code></p>
+</li>
+<li>
+<p>system properties</p>
+</li>
+<li>
+<p>JVM configuration</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_formatting_long_argline_values">Formatting Long <code>argLine</code> Values</h3>
+<div class="paragraph">
+<p>Long <code>argLine</code> values can be split across multiple lines for readability.</p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;argLine&gt;
+    -Xbootclasspath/a:${project.basedir}/path/to/lib.jar
+    -javaagent:${project.basedir}/agent.jar=
+    transformerArgs:visit_mv_static;
+    pathToTransformerJar:path1.jar,path2.jar
+&lt;/argLine&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Maven treats the contained whitespace as part of the final command line.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_maven_properties">Maven Properties</h3>
+<div class="paragraph">
+<p>Properties can be defined at project level:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;properties&gt;
+    &lt;agent1.argline&gt;-javaagent:agent1.jar&lt;/agent1.argline&gt;
+    &lt;agent2.argline&gt;-javaagent:agent2.jar&lt;/agent2.argline&gt;
+&lt;/properties&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and referenced from plugin configurations:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;argLine&gt;${agent1.argline}&lt;/argLine&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_where_properties_can_be_defined">Where Properties Can Be Defined</h3>
+<div class="paragraph">
+<p>Properties may be defined in:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>&lt;project&gt;</code></p>
+</li>
+<li>
+<p><code>&lt;profile&gt;</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Properties cannot be defined inside:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>&lt;plugin&gt;</code></p>
+</li>
+<li>
+<p><code>&lt;execution&gt;</code></p>
+</li>
+<li>
+<p><code>&lt;configuration&gt;</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The following is not valid:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;execution&gt;
+    &lt;properties&gt;
+        ...
+    &lt;/properties&gt;
+&lt;/execution&gt;</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_reusing_common_parts_of_an_argline">Reusing Common Parts of an <code>argLine</code></h3>
+<div class="paragraph">
+<p>A common pattern is to compose properties from smaller reusable parts.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;properties&gt;
+    &lt;base.argline&gt;-Xmx2g&lt;/base.argline&gt;
+
+    &lt;agent1.argline&gt;
+        ${base.argline}
+        -javaagent:agent1.jar
+    &lt;/agent1.argline&gt;
+
+    &lt;agent2.argline&gt;
+        ${base.argline}
+        -javaagent:agent2.jar
+    &lt;/agent2.argline&gt;
+&lt;/properties&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Usage:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;execution&gt;
+    &lt;configuration&gt;
+        &lt;argLine&gt;${agent1.argline}&lt;/argLine&gt;
+    &lt;/configuration&gt;
+&lt;/execution&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This reduces duplication and makes maintenance easier.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_interaction_with_other_plugins">Interaction with Other Plugins</h3>
+<div class="paragraph">
+<p>Some plugins (e.g. JaCoCo) modify <code>argLine</code>.</p>
+</div>
+<div class="paragraph">
+<p>To preserve values contributed by other plugins, prepend the existing value:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;argLine&gt;
+    ${argLine}
+    ${agent1.argline}
+&lt;/argLine&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This ensures that:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>arguments added by other plugins are retained</p>
+</li>
+<li>
+<p>custom agent configuration is appended</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_alternative_profiles">Alternative: Profiles</h3>
+<div class="paragraph">
+<p>Different configurations can also be selected via Maven profiles.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;profiles&gt;
+    &lt;profile&gt;
+        &lt;id&gt;agent1&lt;/id&gt;
+        &lt;properties&gt;
+            &lt;test.argline&gt;-javaagent:agent1.jar&lt;/test.argline&gt;
+        &lt;/properties&gt;
+    &lt;/profile&gt;
+
+    &lt;profile&gt;
+        &lt;id&gt;agent2&lt;/id&gt;
+        &lt;properties&gt;
+            &lt;test.argline&gt;-javaagent:agent2.jar&lt;/test.argline&gt;
+        &lt;/properties&gt;
+    &lt;/profile&gt;
+&lt;/profiles&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Plugin configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;argLine&gt;${test.argline}&lt;/argLine&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Execution:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn test -Pagent1
+mvn test -Pagent2</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_summary">Summary</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Surefire can be executed multiple times using multiple <code>&lt;execution&gt;</code> blocks.</p>
+</li>
+<li>
+<p>Each execution can use a different <code>argLine</code> and a different set of tests.</p>
+</li>
+<li>
+<p>Long <code>argLine</code> values may be formatted across multiple lines.</p>
+</li>
+<li>
+<p>Properties can only be defined at project or profile level.</p>
+</li>
+<li>
+<p>Properties can be reused and combined to avoid duplication.</p>
+</li>
+<li>
+<p>When other plugins contribute to <code>argLine</code>, use <code>$-javaagent:/home/runner/.m2/repository/org/jacoco/org.jacoco.agent/0.8.14/org.jacoco.agent-0.8.14-runtime.jar=destfile=/home/runner/work/org-conetex-runtime-instrument/org-conetex-runtime-instrument/target/jacoco.exec</code> to preserve their settings.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.0.3-SNAPSHOT<br>
+Last updated 2026-06-01 00:09:43 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>

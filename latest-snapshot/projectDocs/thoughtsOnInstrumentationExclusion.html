@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Java Agent Instrumentation Exclusion Strategy</title>
+<style>
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
+@import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+html,
+body {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body,
+body *:not(.hljs):not(.hljs *) {
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
+
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
+  background: #fff !important;
+}
+
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: #000 !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+/* Syntax Highlighting NICHT überschreiben */
+
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Java Agent Instrumentation Exclusion Strategy</h1>
+<div class="details">
+<span id="revnumber">version 0.0.3-SNAPSHOT,</span>
+<span id="revdate">2026-06-01T00:09:48Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_navigation">Navigation</a></li>
+<li><a href="#_overview">Overview</a></li>
+<li><a href="#_why_exclusions_are_necessary">Why Exclusions Are Necessary</a></li>
+<li><a href="#_common_failure_modes">Common Failure Modes</a>
+<ul class="sectlevel2">
+<li><a href="#_self_instrumentation">Self-Instrumentation</a></li>
+</ul>
+</li>
+<li><a href="#_instrumentation_framework_exclusions">Instrumentation Framework Exclusions</a>
+<ul class="sectlevel2">
+<li><a href="#_byte_buddy">Byte Buddy</a></li>
+<li><a href="#_asm">ASM</a></li>
+<li><a href="#_javassist">Javassist</a></li>
+</ul>
+</li>
+<li><a href="#_class_loading_exclusions">Class Loading Exclusions</a>
+<ul class="sectlevel2">
+<li><a href="#_potential_class_loading_deadlock">Potential Class Loading Deadlock</a></li>
+</ul>
+</li>
+<li><a href="#_jvm_internal_classes">JVM Internal Classes</a></li>
+<li><a href="#_reflection_infrastructure">Reflection Infrastructure</a></li>
+<li><a href="#_logging_frameworks">Logging Frameworks</a>
+<ul class="sectlevel2">
+<li><a href="#_logging_recursion_example">Logging Recursion Example</a></li>
+</ul>
+</li>
+<li><a href="#_generated_and_proxy_classes">Generated and Proxy Classes</a></li>
+<li><a href="#_comparison_of_existing_java_agents">Comparison of Existing Java Agents</a>
+<ul class="sectlevel2">
+<li><a href="#_opentelemetry_java_agent">OpenTelemetry Java Agent</a></li>
+<li><a href="#_datadog_java_agent">Datadog Java Agent</a></li>
+<li><a href="#_new_relic">New Relic</a></li>
+<li><a href="#_appdynamics">AppDynamics</a></li>
+<li><a href="#_glowroot">Glowroot</a></li>
+</ul>
+</li>
+<li><a href="#_maximum_coverage_strategy">Maximum Coverage Strategy</a></li>
+<li><a href="#_recommended_modern_strategy">Recommended Modern Strategy</a>
+<ul class="sectlevel2">
+<li><a href="#_exclude">Exclude</a></li>
+<li><a href="#_instrument">Instrument</a></li>
+</ul>
+</li>
+<li><a href="#_recommended_exclusion_baseline">Recommended Exclusion Baseline</a></li>
+<li><a href="#_conclusion">Conclusion</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_navigation">Navigation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="../index.html">../index</a>
+|
+modules:
+<a href="./index.html">parent</a> |
+<a href="./agent/index.html">agent</a> |
+<a href="./collection/index.html">collection</a> |
+<a href="./counter/index.html">counter</a> |
+<a href="./example/index.html">example</a> |
+<a href="./interfaces/index.html">interfaces</a> |
+<a href="./metrics-cost/index.html">metrics-cost</a> |
+<a href="./metrics-cost-unnamed/index.html">metrics-cost-unnamed</a> |
+<a href="./tests/index.html">test</a>
+|
+thoughts on:
+<a href="./thoughtsOnJPMS .html">JPMS</a> |
+<a href="./thoughtsOnInstrumentationExclusion.html">uninstrumentable</a> |
+<a href="./thoughtsOnTestTools.html">test tools</a> |
+<a href="./thoughtsOnMetricHandoff.html">Metric Handoff</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_overview">Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A Java agent that aims for maximum observability should instrument as much application and framework code as possible while excluding a small set of critical classes and packages that can jeopardize JVM stability, cause recursive instrumentation, or introduce excessive overhead.</p>
+</div>
+<div class="paragraph">
+<p>The objective is not to minimize instrumentation, but rather to apply a carefully designed exclusion strategy that preserves:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>JVM stability</p>
+</li>
+<li>
+<p>Agent reliability</p>
+</li>
+<li>
+<p>Class loading safety</p>
+</li>
+<li>
+<p>Predictable performance</p>
+</li>
+<li>
+<p>Maximum visibility into application behavior</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_exclusions_are_necessary">Why Exclusions Are Necessary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Blindly instrumenting every loaded class frequently leads to several categories of problems:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Category</th>
+<th class="tableblock halign-left valign-top">Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Agent Classes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Self-instrumentation and infinite recursion</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bytecode Manipulation Libraries</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instrumentation of the instrumentation framework itself</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Class Loading Infrastructure</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Class loading deadlocks and circular dependencies</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JVM Internal Classes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Version-specific behavior and JVM instability</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reflection Infrastructure</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very high invocation frequency and overhead</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Logging Frameworks</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recursive logging loops</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generated Proxies</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Large volume of low-value telemetry</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_common_failure_modes">Common Failure Modes</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_self_instrumentation">Self-Instrumentation</h3>
+<div class="paragraph">
+<p>When an agent instruments its own implementation classes, every internal agent operation may trigger additional instrumentation.</p>
+</div>
+<div class="paragraph">
+<p>This can create an infinite recursive loop.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-3982586e64f6bf6b3831daee669d9838.svg" alt="Diagram" width="429" height="296">
+</div>
+</div>
+<div class="paragraph">
+<p>For this reason, agent packages should always be excluded.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">com.mycompany.agent.*
+io.opentelemetry.javaagent.*
+com.newrelic.*
+datadog.*</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_instrumentation_framework_exclusions">Instrumentation Framework Exclusions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Instrumentation frameworks should never instrument themselves.</p>
+</div>
+<div class="sect2">
+<h3 id="_byte_buddy">Byte Buddy</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">net.bytebuddy.*</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_asm">ASM</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">org.objectweb.asm.*</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_javassist">Javassist</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">javassist.*</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Without these exclusions, class transformations may recursively trigger additional transformations.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-047c192d48170cd72414ea17aa9f9a6e.svg" alt="Diagram" width="419" height="296">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_class_loading_exclusions">Class Loading Exclusions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Class loading is one of the most sensitive areas of the JVM.</p>
+</div>
+<div class="paragraph">
+<p>Instrumenting class loader infrastructure can lead to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ClassCircularityError</p>
+</li>
+<li>
+<p>LinkageError</p>
+</li>
+<li>
+<p>Deadlocks</p>
+</li>
+<li>
+<p>Bootstrap failures</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Recommended exclusions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">java.lang.ClassLoader
+java.security.SecureClassLoader
+jdk.internal.loader.*</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_potential_class_loading_deadlock">Potential Class Loading Deadlock</h3>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-cd0b208ea7e1a2653915634d54bb9420.svg" alt="Diagram" width="543" height="273">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_jvm_internal_classes">JVM Internal Classes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>JVM internal classes are implementation details and may vary across Java versions.</p>
+</div>
+<div class="paragraph">
+<p>Recommended exclusions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">sun.*
+jdk.internal.*</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Reasons:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Not part of the public Java API</p>
+</li>
+<li>
+<p>Frequently changed between JDK releases</p>
+</li>
+<li>
+<p>Increased compatibility risks</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reflection_infrastructure">Reflection Infrastructure</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Reflection is often extremely hot in enterprise applications.</p>
+</div>
+<div class="paragraph">
+<p>Recommended exclusions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">java.lang.reflect.*
+sun.reflect.*</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Reasons:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Very high call frequency</p>
+</li>
+<li>
+<p>Potentially significant instrumentation overhead</p>
+</li>
+<li>
+<p>Usually limited business value</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_logging_frameworks">Logging Frameworks</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Logging instrumentation requires special consideration.</p>
+</div>
+<div class="paragraph">
+<p>Common logging frameworks:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">org.slf4j.*
+ch.qos.logback.*
+org.apache.logging.*</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_logging_recursion_example">Logging Recursion Example</h3>
+<div class="paragraph">
+<p>If instrumentation emits logs and logging itself is instrumented, recursion may occur.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="diag-plantuml-md5-c1bf490f52935a919cbf95516ff90886.svg" alt="Diagram" width="423" height="267">
+</div>
+</div>
+<div class="paragraph">
+<p>For APM and tracing agents, excluding logging frameworks is often recommended.</p>
+</div>
+<div class="paragraph">
+<p>For security monitoring agents, logging instrumentation may still be desirable.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_generated_and_proxy_classes">Generated and Proxy Classes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Generated classes frequently contribute large telemetry volumes while providing limited insight.</p>
+</div>
+<div class="paragraph">
+<p>Examples:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">*$Proxy*
+*$$Lambda$*
+*$$EnhancerBySpringCGLIB*
+*$$FastClassBySpringCGLIB*</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Whether to exclude them depends on the use case.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Use Case</th>
+<th class="tableblock halign-left valign-top">Recommendation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">APM</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Usually exclude</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Performance Analysis</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Usually exclude</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Security Monitoring</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Often instrument</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Runtime Behavior Analysis</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Often instrument</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_comparison_of_existing_java_agents">Comparison of Existing Java Agents</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_opentelemetry_java_agent">OpenTelemetry Java Agent</h3>
+<div class="paragraph">
+<p>Characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Broad framework coverage</p>
+</li>
+<li>
+<p>Excludes agent implementation</p>
+</li>
+<li>
+<p>Excludes Byte Buddy and ASM</p>
+</li>
+<li>
+<p>Excludes JVM internals</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Typical exclusions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">io.opentelemetry.javaagent.*
+net.bytebuddy.*
+org.objectweb.asm.*
+sun.*
+jdk.internal.*</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_datadog_java_agent">Datadog Java Agent</h3>
+<div class="paragraph">
+<p>Characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Aggressive framework support</p>
+</li>
+<li>
+<p>Extensive compatibility checks</p>
+</li>
+<li>
+<p>Strong exclusion controls</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Typical exclusions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">datadog.*
+net.bytebuddy.*
+sun.*
+com.sun.*
+jdk.*</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_new_relic">New Relic</h3>
+<div class="paragraph">
+<p>Characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>More conservative instrumentation model</p>
+</li>
+<li>
+<p>Focus on supported frameworks</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Typical exclusions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">com.newrelic.*
+java.*
+javax.management.*
+sun.*</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_appdynamics">AppDynamics</h3>
+<div class="paragraph">
+<p>Characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Similar approach to New Relic</p>
+</li>
+<li>
+<p>Conservative JDK instrumentation</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Typical exclusions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">com.appdynamics.*
+java.*
+sun.*
+jdk.*</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_glowroot">Glowroot</h3>
+<div class="paragraph">
+<p>Characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Broad application visibility</p>
+</li>
+<li>
+<p>Conservative JVM instrumentation</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Typical exclusions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">org.glowroot.*
+java.*
+sun.*</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_maximum_coverage_strategy">Maximum Coverage Strategy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Many traditional agents use a broad exclusion strategy:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">exclude:
+java.*
+javax.*
+jdk.*
+sun.*</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This significantly reduces risk but also removes visibility into important JDK operations such as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>HTTP clients</p>
+</li>
+<li>
+<p>File system access</p>
+</li>
+<li>
+<p>Socket communication</p>
+</li>
+<li>
+<p>Concurrency primitives</p>
+</li>
+<li>
+<p>CompletableFuture execution</p>
+</li>
+<li>
+<p>NIO operations</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Examples:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">HttpClient.send(...)
+
+Files.readAllBytes(...)
+
+Socket.connect(...)
+
+CompletableFuture.thenApply(...)</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_recommended_modern_strategy">Recommended Modern Strategy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Instead of excluding entire JDK namespaces, only exclude critical infrastructure classes.</p>
+</div>
+<div class="sect2">
+<h3 id="_exclude">Exclude</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">&lt;agent-package&gt;.*
+net.bytebuddy.*
+org.objectweb.asm.*
+javassist.*
+
+sun.*
+jdk.internal.*
+
+java.lang.instrument.*
+
+java.lang.ClassLoader
+java.security.SecureClassLoader
+java.lang.Class
+
+java.lang.invoke.*</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_instrument">Instrument</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">java.lang.*
+java.util.*
+java.time.*
+java.net.*
+java.nio.*
+
+javax.*
+jakarta.*
+
+application packages
+framework packages
+third-party libraries</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_recommended_exclusion_baseline">Recommended Exclusion Baseline</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text"># Agent implementation
+
+com.mycompany.agent.*
+
+# Instrumentation frameworks
+
+net.bytebuddy.*
+org.objectweb.asm.*
+javassist.*
+
+# JVM internals
+
+sun.*
+jdk.internal.*
+
+# Instrumentation API
+
+java.lang.instrument.*
+
+# Class loading
+
+java.lang.ClassLoader
+java.security.SecureClassLoader
+
+# Dynamic invocation infrastructure
+
+java.lang.invoke.*
+
+# Reflection (optional)
+
+java.lang.reflect.*
+
+# Logging (optional)
+
+org.slf4j.*
+ch.qos.logback.*
+org.apache.logging.*</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A modern Java agent should follow an "Allow Most, Block Critical" strategy.</p>
+</div>
+<div class="paragraph">
+<p>Rather than excluding entire JDK namespaces, the agent should exclude only:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Agent implementation packages</p>
+</li>
+<li>
+<p>Bytecode manipulation frameworks</p>
+</li>
+<li>
+<p>JVM internals</p>
+</li>
+<li>
+<p>Class loading infrastructure</p>
+</li>
+<li>
+<p>Dynamic invocation infrastructure</p>
+</li>
+<li>
+<p>Optional high-frequency subsystems such as logging and reflection</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This approach typically achieves approximately 90–95% of the maximum observable execution surface while maintaining JVM stability and avoiding recursive instrumentation failures.</p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.0.3-SNAPSHOT<br>
+Last updated 2026-06-01 00:09:43 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>

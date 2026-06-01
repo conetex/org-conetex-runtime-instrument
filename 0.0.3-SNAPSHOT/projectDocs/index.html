@@ -199,7 +199,7 @@ svg *,
 <h1>parent module - overall Architecture</h1>
 <div class="details">
 <span id="revnumber">version 0.0.3-SNAPSHOT,</span>
-<span id="revdate">2026-05-31T21:07:36Z</span>
+<span id="revdate">2026-06-01T00:09:48Z</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -230,7 +230,13 @@ modules:
 <a href="./interfaces/index.html">interfaces</a> |
 <a href="./metrics-cost/index.html">metrics-cost</a> |
 <a href="./metrics-cost-unnamed/index.html">metrics-cost-unnamed</a> |
-<a href="./tests/index.html">test</a></p>
+<a href="./tests/index.html">test</a>
+|
+thoughts on:
+<a href="./thoughtsOnJPMS .html">JPMS</a> |
+<a href="./thoughtsOnInstrumentationExclusion.html">uninstrumentable</a> |
+<a href="./thoughtsOnTestTools.html">test tools</a> |
+<a href="./thoughtsOnMetricHandoff.html">Metric Handoff</a></p>
 </div>
 </div>
 </div>
@@ -305,7 +311,12 @@ Together, they implement a modular Java runtime instrumentation framework based 
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="./tests/index.html#purpose">tests</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Validates correctness and stability of the instrumentation system.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validates correctness and stability of the instrumentation system.<br>
+<br></p>
+<p class="tableblock">in submodule org.conetex.runtime.instrument.tests.jar we use the maven-surefire-plugin<br>
+maven-failsafe-plugin is not in use yet. maybe it is helpfully for integration&#8230;&#8203; looks like it is like<br>
+Surefire → normal Unit Tests<br>
+Failsafe → Instrumentation-Tests with Agent</p></td>
 </tr>
 </tbody>
 </table>
@@ -345,7 +356,7 @@ Together, they implement a modular Java runtime instrumentation framework based 
 <div id="footer">
 <div id="footer-text">
 Version 0.0.3-SNAPSHOT<br>
-Last updated 2026-05-31 21:07:32 UTC
+Last updated 2026-06-01 00:09:43 UTC
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Java Agent Instrumentation and JPMS (Java Module System)</title>
+<style>
+/*
+ * Pure Black & White Override Theme for Asciidoctor
+ *
+ * Goal:
+ * - Uses the original Asciidoctor default theme
+ * - Enforces pure black and white
+ * - No grayscale
+ * - No colors (exception: syntax highlighting colors)
+ * - Preserves the layout and structure of the original theme
+ */
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";
+@import "https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css";
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+html,
+body {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+body,
+body *:not(.hljs):not(.hljs *) {
+  color: #000 !important;
+  border-color: #000 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   BACKGROUNDS
+   ========================================================= */
+
+.sidebarblock,
+.exampleblock,
+.literalblock,
+.listingblock,
+.openblock,
+.tableblock,
+.quoteblock,
+.verseblock,
+#toc,
+#header,
+#footer,
+table thead,
+table tfoot,
+code:not(.hljs),
+pre:not(.hljs),
+.listingblock > .content > pre:not(.highlight),
+.literalblock pre {
+  background: #fff !important;
+}
+
+/* Tabellen-Zebra entfernen */
+
+table tr,
+table tr:nth-of-type(even),
+table tr:nth-of-type(odd),
+table tr.even,
+table tr.alt {
+  background: #fff !important;
+}
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a,
+a:hover,
+a:focus,
+a:visited {
+  color: #000 !important;
+  text-decoration: underline !important;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+h1 small,
+h2 small,
+h3 small,
+h4 small,
+h5 small,
+h6 small {
+  color: #000 !important;
+}
+
+/* =========================================================
+   CODE BLOCKS
+   ========================================================= */
+
+/* Normale Codeblöcke */
+
+code:not(.hljs),
+pre:not(.hljs),
+kbd {
+  color: #000 !important;
+  background: #fff !important;
+  border-color: #000 !important;
+}
+
+/* Syntax Highlighting NICHT überschreiben */
+
+.hljs,
+.hljs *,
+pre.highlight,
+pre.highlight * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   ADMONITIONS
+   ========================================================= */
+
+.admonitionblock td.icon .icon-note::before,
+.admonitionblock td.icon .icon-tip::before,
+.admonitionblock td.icon .icon-warning::before,
+.admonitionblock td.icon .icon-caution::before,
+.admonitionblock td.icon .icon-important::before {
+  color: #000 !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+.button,
+input[type="submit"] {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   IMAGES
+   ========================================================= */
+
+.imageblock img {
+  border: 1px solid #000 !important;
+}
+
+/* =========================================================
+   SVG / ICONS
+   ========================================================= */
+
+svg,
+svg *,
+.icon,
+.fa,
+.fas,
+.far,
+.fab {
+  fill: #000 !important;
+  color: #000 !important;
+}
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@media print {
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/github.min.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Java Agent Instrumentation and JPMS (Java Module System)</h1>
+<div class="details">
+<span id="revnumber">version 0.0.3-SNAPSHOT,</span>
+<span id="revdate">2026-06-01T00:09:48Z</span>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_navigation">Navigation</a></li>
+<li><a href="#_initial_situation">Initial Situation</a></li>
+<li><a href="#_problem_when_migrating_to_jpms">Problem When Migrating to JPMS</a></li>
+<li><a href="#_why_loading_the_helper_via_the_bootstrap_class_loader_worked">Why Loading the Helper via the Bootstrap Class Loader Worked</a></li>
+<li><a href="#_alternative_invokedynamic">Alternative: invokedynamic</a></li>
+<li><a href="#_benefit_of_invokedynamic">Benefit of invokedynamic</a></li>
+<li><a href="#_important_limitation">Important Limitation</a></li>
+<li><a href="#_recommended_deployment_layout">Recommended Deployment Layout</a>
+<ul class="sectlevel2">
+<li><a href="#_agent_jar">agent.jar</a></li>
+<li><a href="#_indy_bootstrap_jar">indy-bootstrap.jar</a></li>
+<li><a href="#_helper_jar">helper.jar</a></li>
+</ul>
+</li>
+<li><a href="#_jvm_startup">JVM Startup</a></li>
+<li><a href="#_class_data_sharing_cds">Class Data Sharing (CDS)</a></li>
+<li><a href="#_can_appendtobootstrapclassloadersearch_be_replaced">Can appendToBootstrapClassLoaderSearch Be Replaced?</a></li>
+<li><a href="#_conclusion">Conclusion</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_navigation">Navigation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="../index.html">../index</a>
+|
+modules:
+<a href="./index.html">parent</a> |
+<a href="./agent/index.html">agent</a> |
+<a href="./collection/index.html">collection</a> |
+<a href="./counter/index.html">counter</a> |
+<a href="./example/index.html">example</a> |
+<a href="./interfaces/index.html">interfaces</a> |
+<a href="./metrics-cost/index.html">metrics-cost</a> |
+<a href="./metrics-cost-unnamed/index.html">metrics-cost-unnamed</a> |
+<a href="./tests/index.html">test</a>
+|
+thoughts on:
+<a href="./thoughtsOnJPMS .html">JPMS</a> |
+<a href="./thoughtsOnInstrumentationExclusion.html">uninstrumentable</a> |
+<a href="./thoughtsOnTestTools.html">test tools</a> |
+<a href="./thoughtsOnMetricHandoff.html">Metric Handoff</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_initial_situation">Initial Situation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A Java agent instruments classes using ASM and injects calls to a static helper method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Helper.onOpcode(...);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Instrumentation also targets bootstrap classes such as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>java.lang.*</p>
+</li>
+<li>
+<p>java.util.*</p>
+</li>
+<li>
+<p>classes from java.base</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To make the helper accessible to all instrumented classes, it was previously loaded through the bootstrap class loader:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Instrumentation.appendToBootstrapClassLoaderSearch(...)</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_problem_when_migrating_to_jpms">Problem When Migrating to JPMS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before JPMS (classpath mode):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>All classes effectively belonged to the unnamed module.</p>
+</li>
+<li>
+<p>Visibility was mostly determined by class loaders.</p>
+</li>
+<li>
+<p>Static calls to the helper class worked without additional configuration.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>With JPMS (module path mode):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Instrumented classes belong to named modules.</p>
+</li>
+<li>
+<p>The helper class also belongs to a module.</p>
+</li>
+<li>
+<p>The injected bytecode still contains:</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">invokestatic helper/Helper.onOpcode(...)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the JVM links the instrumented class, it must:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>resolve the helper class</p>
+</li>
+<li>
+<p>verify module readability</p>
+</li>
+<li>
+<p>verify package exports</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>If the helper module is not readable from the instrumented module, errors such as the following may occur:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>ClassNotFoundException</p>
+</li>
+<li>
+<p>NoClassDefFoundError</p>
+</li>
+<li>
+<p>IllegalAccessError</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_why_loading_the_helper_via_the_bootstrap_class_loader_worked">Why Loading the Helper via the Bootstrap Class Loader Worked</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If the helper is added using:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">appendToBootstrapClassLoaderSearch(...)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and the helper JAR does not contain a module descriptor (<code>module-info.class</code>), it becomes part of the bootstrap loader&#8217;s unnamed module.</p>
+</div>
+<div class="paragraph">
+<p>As a result, the helper becomes visible to all instrumented classes, including those from <code>java.base</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_alternative_invokedynamic">Alternative: invokedynamic</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Instead of injecting:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">invokestatic Helper.onOpcode(...)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>the agent injects:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">invokedynamic ...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The call site is resolved through a Bootstrap Method (BSM).</p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">public static CallSite bootstrap(
+        MethodHandles.Lookup lookup,
+        String name,
+        MethodType type)
+        throws Throwable {
+
+    Class&lt;?&gt; helperClass =
+            Class.forName("agent.helper.Helper");
+
+    MethodHandle mh =
+            MethodHandles.lookup()
+                    .findStatic(
+                            helperClass,
+                            "onOpcode",
+                            MethodType.methodType(
+                                    void.class,
+                                    int.class));
+
+    return new ConstantCallSite(
+            mh.asType(type));
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_benefit_of_invokedynamic">Benefit of invokedynamic</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Without invokedynamic:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Instrumented Class
+    -&gt; Helper</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Every instrumented class must be able to resolve and access the helper class.</p>
+</div>
+<div class="paragraph">
+<p>With invokedynamic:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Instrumented Class
+    -&gt; IndyBootstrap
+           -&gt; Helper</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Only the bootstrap method must be visible.</p>
+</div>
+<div class="paragraph">
+<p>The helper itself can:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>reside in a different module</p>
+</li>
+<li>
+<p>reside in a different class loader</p>
+</li>
+<li>
+<p>be loaded lazily</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Instrumented classes no longer require a direct dependency on the helper.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_important_limitation">Important Limitation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>invokedynamic does not completely eliminate visibility requirements.</p>
+</div>
+<div class="paragraph">
+<p>The bootstrap method itself must still be reachable.</p>
+</div>
+<div class="paragraph">
+<p>The bootstrap method is referenced from the constant pool:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Handle(
+    H_INVOKESTATIC,
+    "agent/indy/IndyBootstrap",
+    "bootstrap",
+    ...
+)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If the JVM cannot resolve <code>IndyBootstrap</code>, the call site linkage fails with:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">BootstrapMethodError</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_recommended_deployment_layout">Recommended Deployment Layout</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_agent_jar">agent.jar</h3>
+<div class="paragraph">
+<p>Contains:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>premain</p>
+</li>
+<li>
+<p>transformers</p>
+</li>
+<li>
+<p>ASM code</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>May be packaged as a named module.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_indy_bootstrap_jar">indy-bootstrap.jar</h3>
+<div class="paragraph">
+<p>Contains only:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>agent.indy.IndyBootstrap</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Characteristics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>no module-info.class</p>
+</li>
+<li>
+<p>added via appendToBootstrapClassLoaderSearch(&#8230;&#8203;)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_helper_jar">helper.jar</h3>
+<div class="paragraph">
+<p>Contains:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>agent.helper.Helper</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>May:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>be loaded by the system class loader</p>
+</li>
+<li>
+<p>belong to a module</p>
+</li>
+<li>
+<p>be loaded lazily</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_jvm_startup">JVM Startup</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">java \
+  -javaagent:agent.jar \
+  --module-path modules \
+  --add-modules app.main \
+  -m app.main/com.example.Main</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Inside premain:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">inst.appendToBootstrapClassLoaderSearch(
+        new JarFile("indy-bootstrap.jar"));
+
+inst.addTransformer(...);</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_class_data_sharing_cds">Class Data Sharing (CDS)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When using:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">appendToBootstrapClassLoaderSearch(...)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>the JVM typically prints a warning similar to:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Sharing is only supported for boot loader classes
+because bootstrap classpath has been appended</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>or:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">Class data sharing disabled because bootstrap classpath has been appended</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Reason:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>CDS requires an unchanged bootstrap class path.</p>
+</li>
+<li>
+<p>Appending a JAR invalidates the CDS archive.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Effects:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>no functional impact</p>
+</li>
+<li>
+<p>slightly slower startup</p>
+</li>
+<li>
+<p>slightly higher memory usage</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This warning is normal and commonly accepted by Java agents.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_can_appendtobootstrapclassloadersearch_be_replaced">Can appendToBootstrapClassLoaderSearch Be Replaced?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For agents that instrument bootstrap classes (especially classes from <code>java.base</code>), there is effectively no equivalent replacement.</p>
+</div>
+<div class="paragraph">
+<p>Alternatives such as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>system class loader visibility</p>
+</li>
+<li>
+<p>--add-reads</p>
+</li>
+<li>
+<p>--add-opens</p>
+</li>
+<li>
+<p>module exports</p>
+</li>
+<li>
+<p>-Xbootclasspath</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>do not provide the same guarantees for JPMS-aware bootstrap instrumentation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For instrumentation of bootstrap classes and classes from <code>java.base</code>, the standard solution remains:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">appendToBootstrapClassLoaderSearch(...)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Using invokedynamic changes the dependency structure from:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">All instrumented classes -&gt; Helper</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>to:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">All instrumented classes -&gt; IndyBootstrap
+IndyBootstrap -&gt; Helper</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This significantly reduces module and class loader visibility issues by moving them to a single, controlled integration point, but it does not eliminate them entirely.</p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 0.0.3-SNAPSHOT<br>
+Last updated 2026-06-01 00:09:43 UTC
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+  hljs.initHighlighting.called = true
+  ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</body>
+</html>
